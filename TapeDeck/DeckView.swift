@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// The closed phone: a tape player with a clear case. The cassette fills the
-/// whole screen, and the brand plate, buttons and key strip are clear plastic
-/// floating over it.
+/// whole screen, and the buttons and key strip are clear plastic floating
+/// over it.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
     var openShelf: () -> Void
@@ -42,7 +42,7 @@ struct DeckView: View {
             let short = upright ? geo.size.width : geo.size.height
             let fit = min(long / 100, short / 63)
             let fill = max(long / 100, short / 63)
-            let scale = min(fill, fit * 1.18)
+            let scale = min(fill, fit * 1.10)
             ZStack {
                 if model.hasTape {
                     CassetteView(title: model.tapeTitle,
@@ -91,23 +91,6 @@ struct DeckView: View {
     private var face: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("TAPEDECK")
-                        .font(.system(size: 20, weight: .heavy, design: .rounded))
-                        .italic()
-                    Text("STEREO CASSETTE PLAYER")
-                        .font(.system(size: 6.5, weight: .semibold))
-                        .tracking(1.2)
-                        .opacity(0.8)
-                }
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-                .foregroundColor(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
-
                 Spacer(minLength: 4)
                 Button {
                     model.soundEffectsOn.toggle()
@@ -123,28 +106,12 @@ struct DeckView: View {
             .buttonStyle(ClearButtonStyle())
 
             Spacer(minLength: 0)
-
-            if model.hasTape {
-                Text(nowPlaying)
-                    .font(.system(size: 11, weight: .semibold))
-                    .lineLimit(1)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
         .onTapGesture {
             if !model.hasTape { openShelf() }
         }
-    }
-
-    private var nowPlaying: String {
-        let line = model.trackLine
-        return line.isEmpty ? model.tapeTitle : line
     }
 
     // MARK: Key strip
@@ -204,19 +171,19 @@ struct TransportKeys: View {
         let layout = vertical ? AnyLayout(VStackLayout(spacing: 6)) : AnyLayout(HStackLayout(spacing: 6))
         layout {
             TapeKey(symbol: "play.fill", label: "PLAY", accent: true, latched: model.motion == .playing,
-                    height: keyHeight, onDown: { model.playKey() })
+                    height: keyHeight, showsLabel: !vertical, onDown: { model.playKey() })
             TapeKey(symbol: "pause.fill", label: "PAUSE", latched: model.motion == .paused,
-                    height: keyHeight, onDown: { model.pauseKey() })
+                    height: keyHeight, showsLabel: !vertical, onDown: { model.pauseKey() })
             TapeKey(symbol: "forward.fill", label: "FF", latched: model.motion == .fastForward,
-                    height: keyHeight,
+                    height: keyHeight, showsLabel: !vertical,
                     onDown: { model.seekKeyDown(forward: true) },
                     onUp: { model.seekKeyUp(forward: true) })
             TapeKey(symbol: "backward.fill", label: "REW", latched: model.motion == .rewind,
-                    height: keyHeight,
+                    height: keyHeight, showsLabel: !vertical,
                     onDown: { model.seekKeyDown(forward: false) },
                     onUp: { model.seekKeyUp(forward: false) })
             TapeKey(symbol: "eject.fill", label: "STOP/EJECT",
-                    height: keyHeight, onDown: { if model.stopKey() { onEject() } })
+                    height: keyHeight, showsLabel: !vertical, onDown: { if model.stopKey() { onEject() } })
         }
         .padding(6)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.28)))
@@ -236,6 +203,7 @@ struct TapeKey: View {
     var accent = false
     var latched = false
     var height: CGFloat = 62
+    var showsLabel = true
     var onDown: () -> Void = {}
     var onUp: () -> Void = {}
 
@@ -245,7 +213,7 @@ struct TapeKey: View {
         let down = pressed || latched
         VStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: 17, weight: .bold))
-            if height >= 50 {
+            if showsLabel, height >= 50 {
                 Text(label).font(.system(size: 7, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.6)
             }
         }
@@ -258,7 +226,15 @@ struct TapeKey: View {
                 .fill(LinearGradient(colors: keyColors(down: down), startPoint: .top, endPoint: .bottom))
         )
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 7))
-        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.30), lineWidth: 0.75))
+        // Light catching the moulded top edge
+        .overlay(alignment: .top) {
+            Capsule()
+                .fill(Color.white.opacity(0.55))
+                .frame(height: 1)
+                .padding(.horizontal, 7)
+                .padding(.top, 2)
+        }
         .offset(y: down ? 3 : 0)
         .shadow(color: .black.opacity(down ? 0.1 : 0.5), radius: down ? 1 : 3, y: down ? 1 : 3)
         .animation(.easeOut(duration: 0.08), value: down)

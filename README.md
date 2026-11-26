@@ -5,7 +5,8 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 ## What it does
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
-* Closed phone (or any ordinary phone screen): a tape player with a clear case. The cassette stands on end and fills the whole screen with its reels spinning. Over it sits the see-through shell, with a reflection that slides as you tilt the phone and a glint that sweeps across every few seconds. The brand plate, the buttons and the strip of five keys down the right edge are frosted clear plastic, so the tape shows through underneath them. Volume is on the phone's own buttons.
+* Closed phone (or any ordinary phone screen): a tape player with a clear case. The cassette stands on end and fills the whole screen with its reels spinning. Over it sits the see-through shell, with a reflection that slides as you tilt the phone and a glint that sweeps across every few seconds. The two round buttons and the strip of five keys down the right edge are frosted clear plastic, so the tape shows through underneath them. Volume is on the phone's own buttons.
+* The cassette is detailed artwork (grained plastic, a paper label, metal screws, window glass) with the reels and the handwriting on the label drawn live. The artwork source is `tools/cassette-art.html`; `node tools/render-art.js` re-renders it.
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. Pick a tape, then close the phone to start it playing. The keys are there too, for screens that cannot fold.
 * The reels behave like a real tape. The left pack shrinks and the right one grows as the track plays, and each reel turns at the rate its pack size calls for.
 * Keys: REW and FF skip a track on a tap and wind the tape on a hold. PLAY and PAUSE latch down. STOP stops, and a second press ejects.

@@ -1,0 +1,142 @@
+<!doctype html>
+<!-- Source artwork for the cassette. Rendered to PNG by tools/render-art.js.
+     ?layer=front  the shell face, label, screws and window glass (the window itself is see-through)
+     ?layer=hub    one reel hub -->
+<html><body style="margin:0;background:transparent"><script>
+const layer = new URLSearchParams(location.search).get('layer') || 'front';
+const screw = (x, y, r = 1.15, a = 20) => `
+  <g transform="translate(${x} ${y})">
+    <circle r="${r + .25}" fill="#050505" opacity=".8"/>
+    <circle r="${r}" fill="url(#metal)"/>
+    <circle r="${r}" fill="none" stroke="#000" stroke-opacity=".5" stroke-width=".08"/>
+    <g transform="rotate(${a})" stroke="#1a1a1a" stroke-width=".26" stroke-linecap="round">
+      <line x1="${-r * .62}" x2="${r * .62}"/><line y1="${-r * .62}" y2="${r * .62}"/></g>
+    <path d="M${-r * .7} ${-r * .5} A ${r} ${r} 0 0 1 ${r * .5} ${-r * .7}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".1"/>
+  </g>`;
+const front = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 63" width="1500" height="945">
+<defs>
+  <linearGradient id="shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2c2f"/><stop offset=".5" stop-color="#1f1f22"/><stop offset="1" stop-color="#151517"/></linearGradient>
+  <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".25" stop-color="#fff" stop-opacity=".06"/><stop offset=".8" stop-color="#000" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1ebdb"/><stop offset=".6" stop-color="#e9e1cd"/><stop offset="1" stop-color="#ddd3bb"/></linearGradient>
+  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".35" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>
+  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".20"/><stop offset=".3" stop-color="#fff" stop-opacity=".03"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".07"/></linearGradient>
+  <linearGradient id="raised" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#303033"/><stop offset="1" stop-color="#1a1a1c"/></linearGradient>
+  <radialGradient id="metal" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#f2f2f2"/><stop offset=".45" stop-color="#a9abae"/><stop offset="1" stop-color="#4c4d50"/></radialGradient>
+  <radialGradient id="hole" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#101012"/></radialGradient>
+  <!-- fine moulded plastic grain -->
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="6" numOctaves="2" seed="4" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  .22 .22 .22 0 -.29" result="spec"/>
+    <feComposite in="spec" in2="SourceAlpha" operator="in" result="s"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="s"/></feMerge>
+  </filter>
+  <!-- paper fibre: darker flecks, plus a soft shadow under the label -->
+  <filter id="fibre" x="-5%" y="-5%" width="110%" height="115%">
+    <feTurbulence type="fractalNoise" baseFrequency="1.4 2.6" numOctaves="3" seed="9" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .15  .3 .3 .3 0 -.4" result="fleck"/>
+    <feComposite in="fleck" in2="SourceAlpha" operator="in" result="f"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation=".22" result="b"/><feOffset in="b" dy=".18" result="o"/>
+    <feComponentTransfer in="o" result="sh"><feFuncA type="linear" slope=".6"/></feComponentTransfer>
+    <feMerge><feMergeNode in="sh"/><feMergeNode in="SourceGraphic"/><feMergeNode in="f"/></feMerge>
+  </filter>
+  <filter id="soft"><feGaussianBlur stdDeviation=".55"/></filter>
+  <filter id="softer"><feGaussianBlur stdDeviation="1.1"/></filter>
+  <clipPath id="win"><rect x="18" y="20" width="64" height="22" rx="2"/></clipPath>
+  <clipPath id="body"><rect width="100" height="63" rx="2.6"/></clipPath>
+</defs>
+
+<!-- shell face with the window cut out -->
+<path fill-rule="evenodd" fill="url(#shell)" filter="url(#grain)"
+  d="M2.6 0H97.4A2.6 2.6 0 0 1 100 2.6V60.4A2.6 2.6 0 0 1 97.4 63H2.6A2.6 2.6 0 0 1 0 60.4V2.6A2.6 2.6 0 0 1 2.6 0Z
+     M20 20H80A2 2 0 0 1 82 22V40A2 2 0 0 1 80 42H20A2 2 0 0 1 18 40V22A2 2 0 0 1 20 20Z"/>
+<rect x=".3" y=".3" width="99.4" height="62.4" rx="2.4" fill="none" stroke="url(#rim)" stroke-width=".6"/>
+<!-- recess the label sits in -->
+<rect x="5.4" y="4.4" width="89.2" height="41.2" rx="1.6" fill="none" stroke="#000" stroke-opacity=".55" stroke-width=".35"/>
+
+<!-- paper label -->
+<g filter="url(#fibre)">
+  <path fill-rule="evenodd" fill="url(#paper)"
+    d="M7.2 5H92.8A1.2 1.2 0 0 1 94 6.2V43.8A1.2 1.2 0 0 1 92.8 45H7.2A1.2 1.2 0 0 1 6 43.8V6.2A1.2 1.2 0 0 1 7.2 5Z
+       M19.2 18.6H80.8A2.6 2.6 0 0 1 83.4 21.2V40.8A2.6 2.6 0 0 1 80.8 43.4H19.2A2.6 2.6 0 0 1 16.6 40.8V21.2A2.6 2.6 0 0 1 19.2 18.6Z"/>
+</g>
+<!-- print on the label -->
+<g clip-path="url(#body)">
+  <g stroke="#8d8676" stroke-width=".13"><line x1="9" x2="91" y1="11.4" y2="11.4"/><line x1="9" x2="91" y1="16.4" y2="16.4"/></g>
+  <g opacity=".88">
+    <path d="M6 36.2H16.6V37.3H6ZM83.4 36.2H94V37.3H83.4Z" fill="#9e2f22"/>
+    <path d="M6 37.9H16.6V39H6ZM83.4 37.9H94V39H83.4Z" fill="#c8702a"/>
+    <path d="M6 39.6H16.6V40.7H6ZM83.4 39.6H94V40.7H83.4Z" fill="#c9a23a"/>
+  </g>
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" fill="#26241f">
+    <circle cx="11.3" cy="25.6" r="2.7" fill="none" stroke="#26241f" stroke-width=".28"/>
+    <text x="11.3" y="27.05" text-anchor="middle" font-size="4" font-weight="700">A</text>
+    <text x="88.7" y="27.6" text-anchor="middle" font-size="5.2" font-weight="200">90</text>
+    <text x="8" y="31.6" font-size="1.25" font-weight="500" letter-spacing=".12">SIDE</text>
+    <text x="88.7" y="31" text-anchor="middle" font-size="1.25" font-weight="500" letter-spacing=".12">MIN</text>
+    <text x="8" y="43.6" font-size="1.3" font-weight="500" letter-spacing=".14">NORMAL</text>
+    <text x="92" y="43.6" text-anchor="end" font-size="1.3" font-weight="500" letter-spacing=".14">TYPE I</text>
+  </g>
+</g>
+
+<!-- window: dark frame, shadow falling inside, glass reflections, footage scale -->
+<g clip-path="url(#win)">
+  <rect x="18" y="20" width="64" height="22" rx="2" fill="none" stroke="#000" stroke-opacity=".9" stroke-width="2.6" filter="url(#soft)"/>
+  <rect x="18" y="20" width="64" height="22" fill="url(#glass)"/>
+  <path d="M27 20H38L29 42H18Z" fill="#fff" opacity=".06"/>
+  <path d="M41 20H44L35 42H32Z" fill="#fff" opacity=".05"/>
+  <g stroke="#e8e4d8" stroke-opacity=".55" stroke-width=".14">
+    ${[...Array(13)].map((_, i) => `<line x1="${44 + i}" x2="${44 + i}" y1="${i % 6 == 0 ? 38.6 : 39.6}" y2="40.6"/>`).join('')}
+  </g>
+</g>
+<rect x="18" y="20" width="64" height="22" rx="2" fill="none" stroke="#070707" stroke-width=".55"/>
+<rect x="17.5" y="19.5" width="65" height="23" rx="2.4" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width=".12"/>
+
+<!-- raised block where the heads reach the tape -->
+<path d="M21 50H79L83 63H17Z" fill="url(#raised)" filter="url(#grain)"/>
+<path d="M21 50H79" stroke="#fff" stroke-opacity=".3" stroke-width=".16"/>
+<path d="M21 50L17 63M79 50L83 63" stroke="#000" stroke-opacity=".6" stroke-width=".2"/>
+<g>
+  <circle cx="30.5" cy="57" r="2.1" fill="url(#hole)"/><circle cx="69.5" cy="57" r="2.1" fill="url(#hole)"/>
+  <path d="M28.5 56.3A2.1 2.1 0 0 1 32.5 56.3" fill="none" stroke="#000" stroke-width=".3"/>
+  <path d="M67.5 56.3A2.1 2.1 0 0 1 71.5 56.3" fill="none" stroke="#000" stroke-width=".3"/>
+  <path d="M28.6 57.9A2.1 2.1 0 0 0 32.4 57.9M67.6 57.9A2.1 2.1 0 0 0 71.4 57.9" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".12"/>
+  <rect x="39.6" y="55.9" width="2.2" height="2.2" rx=".5" fill="url(#hole)"/><rect x="58.2" y="55.9" width="2.2" height="2.2" rx=".5" fill="url(#hole)"/>
+  <!-- opening with the tape strand and the felt pressure pad -->
+  <rect x="43.5" y="59.8" width="13" height="3.2" rx=".4" fill="#060606"/>
+  <rect x="43.5" y="61.9" width="13" height=".5" fill="#4a2c1a"/>
+  <rect x="47.6" y="60.3" width="4.8" height="1.5" rx=".25" fill="#b98a55"/>
+  <rect x="47.6" y="60.3" width="4.8" height=".45" rx=".2" fill="#e2c08c" opacity=".7"/>
+</g>
+
+${screw(4.2, 4.2, 1.15, 25)}${screw(95.8, 4.2, 1.15, 70)}${screw(4.2, 58.8, 1.15, 5)}${screw(95.8, 58.8, 1.15, 48)}${screw(50, 47.6, 1, 33)}
+
+<!-- light across the whole face -->
+<path fill-rule="evenodd" fill="url(#sheen)"
+  d="M2.6 0H97.4A2.6 2.6 0 0 1 100 2.6V60.4A2.6 2.6 0 0 1 97.4 63H2.6A2.6 2.6 0 0 1 0 60.4V2.6A2.6 2.6 0 0 1 2.6 0Z
+     M20 20H80A2 2 0 0 1 82 22V40A2 2 0 0 1 80 42H20A2 2 0 0 1 18 40V22A2 2 0 0 1 20 20Z"/>
+</svg>`;
+
+const teeth = [...Array(6)].map((_, i) => `<path transform="rotate(${i * 60} 10 10)" d="M9.05 4.2H10.95L10.6 7.3H9.4Z" fill="url(#hubface)"/>
+  <path transform="rotate(${i * 60} 10 10)" d="M10.95 4.2L10.6 7.3" stroke="#000" stroke-opacity=".35" stroke-width=".1"/>`).join('');
+const hub = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="400" height="400">
+<defs>
+  <radialGradient id="hubface" cx=".38" cy=".32" r=".85"><stop offset="0" stop-color="#fbfaf6"/><stop offset=".55" stop-color="#e3e1da"/><stop offset="1" stop-color="#aeaba2"/></radialGradient>
+  <radialGradient id="spin" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#d9dadc"/><stop offset="1" stop-color="#54565a"/></radialGradient>
+</defs>
+<circle cx="10" cy="10" r="9.9" fill="#000" opacity=".35"/>
+<path fill-rule="evenodd" fill="url(#hubface)" d="M10 .4A9.6 9.6 0 1 1 9.99 .4ZM10 4.3A5.7 5.7 0 1 0 10.01 4.3Z"/>
+<circle cx="10" cy="10" r="9.6" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".18"/>
+<circle cx="10" cy="10" r="8.2" fill="none" stroke="#000" stroke-opacity=".10" stroke-width=".12"/>
+<circle cx="10" cy="10" r="5.7" fill="#070707"/>
+<circle cx="10" cy="10" r="5.7" fill="none" stroke="#000" stroke-opacity=".6" stroke-width=".3"/>
+${teeth}
+<circle cx="10" cy="10" r="2.5" fill="url(#spin)"/>
+<circle cx="10" cy="10" r="2.5" fill="none" stroke="#000" stroke-opacity=".5" stroke-width=".12"/>
+<g stroke="#26272a" stroke-width=".5" stroke-linecap="round">${[0, 120, 240].map(a => `<line transform="rotate(${a} 10 10)" x1="10" x2="10" y1="8" y2="9.1"/>`).join('')}</g>
+<circle cx="10" cy="10" r=".55" fill="#1c1c1e"/>
+<path d="M3 6.2A8 8 0 0 1 8 2.2" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".25" stroke-linecap="round"/>
+</svg>`;
+document.body.innerHTML = layer === 'hub' ? hub : front;
+</script></body></html>
