@@ -1,32 +1,53 @@
 import SwiftUI
 
 /// The closed phone: a tape player with a clear case. The cassette fills the
-/// whole screen, and the buttons and key strip are clear plastic floating
-/// over it.
+/// whole screen, and the buttons and keys are clear plastic floating over it.
+///
+/// Laid out for the iPhone Duo's outer display: 466 x 678 points, with an
+/// 84 point column down one side that iOS reports as a safe area inset. The
+/// camera, clock and status icons sit at the top of that column, so the keys
+/// go in the column underneath them. On a phone without that column the keys
+/// get a strip of their own inside the safe area.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
     var openShelf: () -> Void
 
+    /// Width of the key column on phones that have no side rail.
     private let stripWidth: CGFloat = 78
+    /// The key column on the Duo is 48 points wide inside the 84 point rail:
+    /// 24 points from the screen edge and 12 from the content.
+    private let railKeyWidth: CGFloat = 48
+    private let railOuterMargin: CGFloat = 24
+    /// Height kept clear at the top of the rail for the camera, clock and
+    /// status icons. Not a published figure: tune it on a real Duo.
+    private let railStatusHeight: CGFloat = 176
 
     var body: some View {
         GeometryReader { geo in
-            let keyHeight = min(64, max(34, (geo.size.height - 130) / 5))
+            let insets = geo.safeAreaInsets
+            let rail = max(insets.leading, insets.trailing) >= 60
+            let railLeading = rail && insets.leading > insets.trailing
             HStack(spacing: 0) {
-                face.padding(14)
-                strip(keyHeight: keyHeight).frame(width: stripWidth)
+                if railLeading { keyColumn(insets: insets, rail: true, leading: true) }
+                face
+                    .padding(.top, insets.top + 14)
+                    .padding(.bottom, insets.bottom + 14)
+                    .padding(.leading, (railLeading ? 0 : insets.leading) + 14)
+                    .padding(.trailing, 14)
+                if !railLeading { keyColumn(insets: insets, rail: rail, leading: false) }
             }
-            .frame(width: geo.size.width, height: geo.size.height)
+            .frame(width: geo.size.width + insets.leading + insets.trailing,
+                   height: geo.size.height + insets.top + insets.bottom)
             .background(
                 ZStack {
-                    // Pale backdrop, so the clear plastic reads as clear
-                    RadialGradient(colors: [Color(white: 0.90), Color(white: 0.66)],
-                                   center: .center, startRadius: 20, endRadius: 560)
+                    // Dark inside of the player, seen through the clear case
+                    RadialGradient(colors: [Color(white: 0.17), Color(white: 0.03)],
+                                   center: .center, startRadius: 20, endRadius: 520)
                     tape
                     clearCase
                 }
-                .ignoresSafeArea()
             )
+            .ignoresSafeArea()
         }
     }
 
@@ -58,7 +79,7 @@ struct DeckView: View {
                         Text("NO TAPE").font(.system(size: 16, weight: .bold)).tracking(3)
                         Text("Tap to choose one").font(.system(size: 12))
                     }
-                    .foregroundColor(Color.black.opacity(0.45))
+                    .foregroundColor(Color.white.opacity(0.5))
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -66,22 +87,19 @@ struct DeckView: View {
         }
     }
 
-    /// The clear shell over everything: a faint tint, a fixed reflection, the
-    /// moving shimmer, and bright edges where the plastic curves.
+    /// The clear shell over everything: a fixed reflection, the glare that
+    /// follows the phone as it moves, and bright edges where the plastic curves.
     private var clearCase: some View {
         ZStack {
-            LinearGradient(colors: [Color.white.opacity(0.30), Color.white.opacity(0.05), .clear],
+            LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.02), .clear],
                            startPoint: .topLeading, endPoint: .center)
-            GlassShimmer(strength: 2.2)
-            RoundedRectangle(cornerRadius: 27)
-                .strokeBorder(Color.black.opacity(0.10), lineWidth: 1)
-                .padding(8)
+            GlassShimmer()
             RoundedRectangle(cornerRadius: 26)
-                .strokeBorder(Color.white.opacity(0.75), lineWidth: 1.5)
+                .strokeBorder(Color.white.opacity(0.10), lineWidth: 1.5)
                 .padding(9)
             RoundedRectangle(cornerRadius: 34)
-                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.95), Color.white.opacity(0.35),
-                                                      Color.black.opacity(0.18)],
+                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.55), Color.white.opacity(0.10),
+                                                      Color.white.opacity(0.28)],
                                              startPoint: .topLeading, endPoint: .bottomTrailing),
                               lineWidth: 3)
         }
@@ -95,12 +113,16 @@ struct DeckView: View {
             HStack(alignment: .top, spacing: 8) {
                 Spacer(minLength: 4)
                 Button {
+                    Haptics.keyDown()
                     model.soundEffectsOn.toggle()
                 } label: {
                     Image(systemName: model.soundEffectsOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
                 }
                 .accessibilityLabel(model.soundEffectsOn ? "Tape sound effects on" : "Tape sound effects off")
-                Button(action: openShelf) {
+                Button {
+                    Haptics.keyDown()
+                    openShelf()
+                } label: {
                     Image(systemName: "square.stack.3d.up.fill")
                 }
                 .accessibilityLabel("Tape shelf")
@@ -116,49 +138,63 @@ struct DeckView: View {
         }
     }
 
-    // MARK: Key strip
+    // MARK: Keys
 
-    private func strip(keyHeight: CGFloat) -> some View {
-        VStack(spacing: 8) {
-            // Battery lamp: lit while the tape is moving
-            VStack(spacing: 2) {
-                Circle()
-                    .fill(lampOn ? Color.red : Color(red: 0.3, green: 0.05, blue: 0.05))
-                    .frame(width: 9, height: 9)
-                    .shadow(color: lampOn ? .red : .clear, radius: 5)
-                Text("BATT").font(.system(size: 6, weight: .bold)).foregroundColor(.white.opacity(0.8))
+    /// The column of keys. In the Duo's rail it is a slim smoked bar that
+    /// starts below the camera and clock; elsewhere it is a frosted strip.
+    @ViewBuilder
+    private func keyColumn(insets: EdgeInsets, rail: Bool, leading: Bool) -> some View {
+        if rail {
+            let width = max(insets.leading, insets.trailing)
+            let inner = max(0, width - railKeyWidth - railOuterMargin)
+            GeometryReader { geo in
+                let room = geo.size.height - railStatusHeight - insets.bottom - 12
+                let keyHeight = min(76, max(34, (room - 4 * 6) / 5))
+                VStack(spacing: 0) {
+                    Color.clear.frame(height: railStatusHeight)
+                    TransportKeys(vertical: true, keyHeight: keyHeight, bare: true, onEject: openShelf)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: railKeyWidth)
+                // Smoked bar behind the camera, the clock and the keys
+                .background(
+                    RoundedRectangle(cornerRadius: 22)
+                        .fill(Color.black.opacity(0.55))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22))
+                        .overlay(RoundedRectangle(cornerRadius: 22)
+                            .strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
+                        .padding(.horizontal, -6)
+                        .padding(.top, 8)
+                        .padding(.bottom, insets.bottom + 4)
+                )
+                .padding(.leading, leading ? railOuterMargin : inner)
+                .padding(.trailing, leading ? inner : railOuterMargin)
             }
-            .accessibilityHidden(true)
-
-            Text(TransportKeys.clock(model.elapsed))
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundColor(.white)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(RoundedRectangle(cornerRadius: 4).fill(Color.black.opacity(0.7)))
-                .accessibilityLabel("Elapsed \(TransportKeys.clock(model.elapsed))")
-
-            Spacer(minLength: 0)
-            TransportKeys(vertical: true, keyHeight: keyHeight, onEject: openShelf)
-            Spacer(minLength: 0)
-            Screw()
+            .frame(width: width)
+        } else {
+            GeometryReader { geo in
+                let room = geo.size.height - insets.top - insets.bottom - 24 - 12
+                let keyHeight = min(64, max(34, (room - 4 * 6) / 5))
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    TransportKeys(vertical: true, keyHeight: keyHeight, onEject: openShelf)
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, insets.top + 12)
+                .padding(.bottom, insets.bottom + 12)
+                .padding(.leading, 8)
+                .padding(.trailing, 8 + insets.trailing)
+                .frame(width: stripWidth + insets.trailing, height: geo.size.height)
+                .background(
+                    ZStack(alignment: .leading) {
+                        Rectangle().fill(.ultraThinMaterial)
+                        Color.black.opacity(0.35)
+                        Color.white.opacity(0.25).frame(width: 1)
+                    }
+                )
+            }
+            .frame(width: stripWidth + insets.trailing)
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 8)
-        .frame(maxHeight: .infinity)
-        // A frosted clear panel: the tape shows through underneath the keys.
-        .background(
-            ZStack(alignment: .leading) {
-                Rectangle().fill(.ultraThinMaterial)
-                Color.white.opacity(0.05)
-                Color.white.opacity(0.35).frame(width: 1)
-            }
-            .ignoresSafeArea()
-        )
-    }
-
-    private var lampOn: Bool {
-        model.motion != .stopped && model.motion != .paused
     }
 }
 
@@ -167,6 +203,8 @@ struct TransportKeys: View {
     @EnvironmentObject private var model: PlayerModel
     var vertical: Bool
     var keyHeight: CGFloat = 62
+    /// Without the tray behind the keys, for places that supply their own.
+    var bare = false
     var onEject: () -> Void = {}
 
     var body: some View {
@@ -187,8 +225,8 @@ struct TransportKeys: View {
             TapeKey(symbol: "eject.fill", label: "STOP/EJECT",
                     height: keyHeight, showsLabel: !vertical, onDown: { if model.stopKey() { onEject() } })
         }
-        .padding(6)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.28)))
+        .padding(bare ? 0 : 6)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(bare ? 0 : 0.28)))
     }
 
     static func clock(_ time: TimeInterval) -> String {
@@ -251,6 +289,7 @@ struct TapeKey: View {
                 }
                 .onEnded { _ in
                     pressed = false
+                    if !latched { Haptics.keyUp() }
                     onUp()
                 }
         )

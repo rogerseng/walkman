@@ -21,10 +21,15 @@ struct TapeDeckApp: App {
 struct ContentView: View {
     @EnvironmentObject private var model: PlayerModel
     @State private var showShelf = false
+    @Environment(\.horizontalSizeClass) private var horizontalSize
+    @Environment(\.verticalSizeClass) private var verticalSize
 
     var body: some View {
         GeometryReader { geo in
-            let open = geo.size.width >= 640 && geo.size.height >= 500
+            // The Duo's inner display is regular in both directions (reported
+            // as 669 x 951 or 626 x 890 points); its outer one is compact.
+            let open = (horizontalSize == .regular && verticalSize == .regular)
+                || (geo.size.width >= 600 && geo.size.height >= 500)
             Group {
                 if open {
                     HStack(spacing: 0) {

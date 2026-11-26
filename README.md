@@ -5,7 +5,9 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 ## What it does
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
-* Closed phone (or any ordinary phone screen): a tape player with a clear case. The cassette stands on end and fills the whole screen with its reels spinning. Over it sits the see-through shell, with a reflection that slides as you tilt the phone and a glint that sweeps across every few seconds. The two round buttons and the strip of five keys down the right edge are frosted clear plastic, so the tape shows through underneath them. Volume is on the phone's own buttons.
+* Closed phone (or any ordinary phone screen): a tape player with a dark, clear case. The cassette stands on end and fills the whole screen with its reels spinning. Glare on the case moves only when the phone moves: reflections slide as it tilts left and right, and a hot spot follows both tilts.
+* Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; the five keys sit in that column underneath them. On other phones the keys get their own strip. Volume is on the phone's own buttons.
+* Haptics: a firm tap when a key goes down, a lighter one when it springs back, a heavy thud for the cassette door, and a soft pulse four times a second while the tape winds.
 * The cassette is a clear one. The shell front is see-through artwork (bright moulded edges and ridges, stickers, a stick-on paper label, guide rollers, black screws, reflections). Under it the whole reels, their clear hubs, the tape running down to the rollers and the handwriting on the label are drawn live. The artwork source is `tools/cassette-art.html`; `node tools/render-art.js` re-renders it.
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. Pick a tape, then close the phone to start it playing. The keys are there too, for screens that cannot fold.
 * The reels behave like a real tape. The left pack shrinks and the right one grows as the track plays, and each reel turns at the rate its pack size calls for.
@@ -25,6 +27,15 @@ You need a Mac with Xcode 16 or later, an Apple Music subscription on the phone,
 
 Music does not play in the Simulator. Use a real device.
 
+## iPhone Duo measurements used
+
+These came from developer write-ups, not from a device, so check them in Xcode's Duo simulator.
+
+* Outer display: 466 x 678 points at 3x (Apple lists 1398 x 2034 pixels, 5.4 inches).
+* Outer safe area: 84 points on the side with the camera, 34 at the bottom, none at the top. The app reads these from the system, so it follows whatever the device reports.
+* Key column: 48 points wide, 24 from the screen edge. `railStatusHeight` in `DeckView.swift` (176 points) is how far down the keys start, to clear the camera and clock. That figure is an estimate.
+* Inner display: reported as 669 x 951 or 626 x 890 points, regular in both size classes. The app treats either as open.
+
 ## Layout of the code
 
 | File | What is in it |
@@ -35,7 +46,8 @@ Music does not play in the Simulator. Use a real device.
 | `CassetteView.swift` | The cassette and its reels |
 | `DeckView.swift` | The closed phone: player body, cassette door and key strip |
 | `OpenTrayView.swift` | The open phone's right half, where the chosen tape waits |
-| `GlassShimmer.swift` | The moving reflection on the door glass, brushed metal and screws |
+| `GlassShimmer.swift` | The glare on the case, driven by the motion sensor |
+| `Haptics.swift` | The taps for keys, door and winding |
 | `ShelfView.swift` | The tape shelf and search |
 | `LockScreenTape.swift` | Starts and updates the lock screen Live Activity |
 | `Shared/TapeActivity.swift` | Data and key actions shared by the app and the widget extension |

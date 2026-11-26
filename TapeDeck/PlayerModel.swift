@@ -84,7 +84,6 @@ final class PlayerModel: ObservableObject {
 
     private let player = ApplicationMusicPlayer.shared
     private let sounds = TapeSounds()
-    private let haptic = UIImpactFeedbackGenerator(style: .rigid)
     private let lockScreen = LockScreenTape()
     private var pausedSince: Date?
     private var waitingForLid = false
@@ -98,6 +97,7 @@ final class PlayerModel: ObservableObject {
         let stored = UserDefaults.standard.object(forKey: "soundEffectsOn") as? Bool
         soundEffectsOn = stored ?? true
         sounds.enabled = soundEffectsOn
+        Haptics.warmUp()
 
         Task { [weak self] in
             while !Task.isCancelled {
@@ -183,7 +183,7 @@ final class PlayerModel: ObservableObject {
             defer { swapping = false }
             if hasTape {
                 sounds.play(.eject)
-                haptic.impactOccurred()
+                Haptics.door()
                 player.stop()
                 withAnimation(.easeIn(duration: 0.25)) { hasTape = false }
                 await pause(seconds: 0.6)
@@ -201,7 +201,11 @@ final class PlayerModel: ObservableObject {
                 duration = 0
                 lastEntryID = nil
                 sounds.play(.insert)
-                haptic.impactOccurred()
+                Haptics.seat()
+                Task {
+                    try? await Task.sleep(nanoseconds: 180_000_000)
+                    Haptics.door()
+                }
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { hasTape = true }
                 if autoPlay {
                     await pause(seconds: 0.55)
@@ -219,7 +223,7 @@ final class PlayerModel: ObservableObject {
 
     private func eject() {
         sounds.play(.eject)
-        haptic.impactOccurred()
+        Haptics.door()
         player.stop()
         player.queue = []
         withAnimation(.easeIn(duration: 0.25)) { hasTape = false }
@@ -289,6 +293,7 @@ final class PlayerModel: ObservableObject {
             player.endSeeking()
             lastKeyPress = Date()
             sounds.play(.keyUp)
+            Haptics.keyUp()
             refresh()
         } else {
             run {
@@ -306,7 +311,7 @@ final class PlayerModel: ObservableObject {
     private func pressFeedback() {
         lastKeyPress = Date()
         sounds.play(.keyDown)
-        haptic.impactOccurred()
+        Haptics.keyDown()
     }
 
     private func run(_ operation: @escaping () async throws -> Void) {
@@ -335,6 +340,7 @@ final class PlayerModel: ObservableObject {
         if old == .playing, motion == .stopped || motion == .paused,
            Date().timeIntervalSince(lastKeyPress) > 1.0 {
             sounds.play(.keyUp)
+            Haptics.keyUp()
         }
     }
 
@@ -352,6 +358,7 @@ final class PlayerModel: ObservableObject {
         let newMotion: TapeMotion
         if let heldSeek {
             newMotion = heldSeek
+            Haptics.windTick() // the motor, felt four times a second
         } else {
             switch player.state.playbackStatus {
             case .playing: newMotion = .playing
