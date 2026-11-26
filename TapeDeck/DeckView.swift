@@ -1,7 +1,8 @@
 import SwiftUI
 import MediaPlayer
 
-/// The player body: cassette door, counter, volume and the row of piano keys.
+/// The outside of the player: anodised body, glass cassette door, a brushed
+/// control plate with counter and volume, and the row of piano keys.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
     var showShelfButton: Bool
@@ -19,23 +20,25 @@ struct DeckView: View {
                         VStack(spacing: 10) {
                             header
                             Spacer(minLength: 0)
-                            readouts
+                            controlPlate
                             transport
                         }
                     }
                 } else {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 14) {
                         header
+                        trim
                         Spacer(minLength: 0)
                         door
-                        readouts
                         Spacer(minLength: 0)
+                        controlPlate
                         transport
                     }
                 }
             }
             .padding(18)
             .frame(width: geo.size.width, height: geo.size.height)
+            .overlay(caseScrews.padding(5))
         }
         .background(bodyFinish.ignoresSafeArea())
     }
@@ -50,7 +53,43 @@ struct DeckView: View {
             // Soft sheen across the metal
             LinearGradient(colors: [Color.white.opacity(0.10), .clear, Color.black.opacity(0.15)],
                            startPoint: .top, endPoint: .bottom)
+            // Bevel where the case edge catches the light
+            RoundedRectangle(cornerRadius: 34)
+                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.35), Color.black.opacity(0.35)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing),
+                              lineWidth: 3)
         }
+    }
+
+    private var caseScrews: some View {
+        VStack {
+            HStack { Screw(); Spacer(); Screw() }
+            Spacer()
+            HStack { Screw(); Spacer(); Screw() }
+        }
+    }
+
+    /// Headphone sockets and a vent, as on the top edge of a real player.
+    private var trim: some View {
+        HStack(spacing: 14) {
+            ForEach(["PHONES A", "B"], id: \.self) { name in
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(Color.black)
+                        .frame(width: 11, height: 11)
+                        .padding(3)
+                        .background(Circle().fill(Color(white: 0.8)))
+                    Text(name).font(.system(size: 7, weight: .bold)).foregroundColor(silver.opacity(0.8))
+                }
+            }
+            Spacer()
+            VStack(spacing: 3) {
+                ForEach(0..<4, id: \.self) { _ in
+                    Capsule().fill(Color.black.opacity(0.55)).frame(width: 74, height: 3)
+                }
+            }
+        }
+        .accessibilityHidden(true)
     }
 
     private var header: some View {
@@ -76,6 +115,104 @@ struct DeckView: View {
             }
             .accessibilityHidden(true)
 
+        }
+    }
+
+    private var lampOn: Bool {
+        model.motion != .stopped && model.motion != .paused
+    }
+
+    private var door: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Color(white: 0.05)
+                if model.hasTape {
+                    CassetteView(title: model.tapeTitle,
+                                 subtitle: cassetteSubtitle,
+                                 progress: model.progress,
+                                 motion: model.motion)
+                        .padding(12)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "eject.fill").font(.system(size: 26))
+                        Text("NO TAPE").font(.system(size: 14, weight: .bold)).tracking(3)
+                        Text(showShelfButton ? "Tap to choose one" : "Pick one from the shelf")
+                            .font(.system(size: 11))
+                    }
+                    .foregroundColor(silver.opacity(0.55))
+                }
+                glass
+            }
+            .aspectRatio(100.0 / 68.0, contentMode: .fit)
+
+            // Printed lip along the bottom of the door
+            Text("STEREO  ·  AUTO SHUT OFF  ·  METAL TAPE")
+                .font(.system(size: 7, weight: .bold))
+                .tracking(1.2)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .foregroundColor(Color(white: 0.2))
+                .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity)
+                .frame(height: 20)
+                .background(BrushedSilver())
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        // Chrome bezel
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(LinearGradient(colors: [Color.white, Color(white: 0.55), Color(white: 0.9),
+                                                      Color(white: 0.45)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing),
+                              lineWidth: 4)
+        )
+        .shadow(color: .black.opacity(0.45), radius: 7, y: 4)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if !model.hasTape { openShelf() }
+        }
+    }
+
+    /// The door window: smoked glass, a fixed reflection in one corner, a dark
+    /// edge where the glass meets the frame, and the moving shimmer.
+    private var glass: some View {
+        ZStack {
+            Color(red: 0.35, green: 0.45, blue: 0.50).opacity(0.10)
+            LinearGradient(colors: [Color.white.opacity(0.20), Color.white.opacity(0.04), .clear],
+                           startPoint: .topLeading, endPoint: .center)
+            Rectangle()
+                .strokeBorder(Color.black.opacity(0.55), lineWidth: 8)
+                .blur(radius: 6)
+            GlassShimmer()
+        }
+        .clipped()
+        .allowsHitTesting(false)
+    }
+
+    private var cassetteSubtitle: String {
+        if model.trackTitle.isEmpty { return model.trackArtist }
+        if model.trackTitle == model.tapeTitle { return model.trackArtist }
+        return model.trackArtist.isEmpty ? model.trackTitle : "\(model.trackTitle) · \(model.trackArtist)"
+    }
+
+    private var controlPlate: some View {
+        HStack(alignment: .bottom, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("COUNTER").font(.system(size: 7, weight: .bold)).foregroundColor(Color(white: 0.2))
+                Text(Self.clock(model.elapsed))
+                    .font(.system(size: 18, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.black))
+                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Color(white: 0.35), lineWidth: 1))
+                    .accessibilityLabel("Elapsed \(Self.clock(model.elapsed))")
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text("VOLUME").font(.system(size: 7, weight: .bold)).foregroundColor(Color(white: 0.2))
+                VolumeSlider().frame(height: 30)
+            }
             Button {
                 model.soundEffectsOn.toggle()
             } label: {
@@ -94,71 +231,12 @@ struct DeckView: View {
                 .accessibilityLabel("Tape shelf")
             }
         }
-    }
-
-    private var lampOn: Bool {
-        model.motion != .stopped && model.motion != .paused
-    }
-
-    private var door: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 16).fill(Color(white: 0.05))
-            if model.hasTape {
-                CassetteView(title: model.tapeTitle,
-                             subtitle: cassetteSubtitle,
-                             progress: model.progress,
-                             motion: model.motion)
-                    .padding(10)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            } else {
-                VStack(spacing: 8) {
-                    Image(systemName: "eject.fill").font(.system(size: 26))
-                    Text("NO TAPE").font(.system(size: 14, weight: .bold)).tracking(3)
-                    Text(showShelfButton ? "Tap to choose one" : "Pick one from the shelf")
-                        .font(.system(size: 11))
-                }
-                .foregroundColor(silver.opacity(0.55))
-            }
-            // Door glass
-            RoundedRectangle(cornerRadius: 16)
-                .fill(LinearGradient(colors: [Color.white.opacity(0.10), .clear, .clear],
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
-                .allowsHitTesting(false)
-        }
-        .aspectRatio(100.0 / 68.0, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(silver, lineWidth: 3))
-        .shadow(color: .black.opacity(0.4), radius: 6, y: 3)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if !model.hasTape { openShelf() }
-        }
-    }
-
-    private var cassetteSubtitle: String {
-        if model.trackTitle.isEmpty { return model.trackArtist }
-        if model.trackTitle == model.tapeTitle { return model.trackArtist }
-        return model.trackArtist.isEmpty ? model.trackTitle : "\(model.trackTitle) · \(model.trackArtist)"
-    }
-
-    private var readouts: some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("COUNTER").font(.system(size: 7, weight: .bold)).foregroundColor(silver.opacity(0.8))
-                Text(Self.clock(model.elapsed))
-                    .font(.system(size: 18, weight: .semibold, design: .monospaced))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.black))
-                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(silver.opacity(0.6), lineWidth: 1))
-                    .accessibilityLabel("Elapsed \(Self.clock(model.elapsed))")
-            }
-            VStack(alignment: .leading, spacing: 3) {
-                Text("VOLUME").font(.system(size: 7, weight: .bold)).foregroundColor(silver.opacity(0.8))
-                VolumeSlider().frame(height: 30)
-            }
-        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(BrushedSilver())
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.black.opacity(0.35), lineWidth: 1))
+        .shadow(color: .black.opacity(0.3), radius: 3, y: 2)
     }
 
     private var transport: some View {

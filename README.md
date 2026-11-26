@@ -5,7 +5,7 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 ## What it does
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
-* Folded phone or any narrow screen: the whole screen is the player, with the cassette, spinning reels and the transport keys.
+* Folded phone or any narrow screen: the whole screen is the outside of the player. A chrome framed glass door shows the cassette and its spinning reels, with a reflection that slides as you tilt the phone and a glint that sweeps across every few seconds. Below it are a brushed metal panel with the counter, volume, sound and shelf buttons, and the five transport keys.
 * Unfolded or any wide screen: the player on the left and the tape shelf on the right.
 * The reels behave like a real tape. The left pack shrinks and the right one grows as the track plays, and each reel turns at the rate its pack size calls for.
 * Keys: REW and FF skip a track on a tap and wind the tape on a hold. PLAY and PAUSE latch down. STOP stops, and a second press ejects.
@@ -33,6 +33,7 @@ Music does not play in the Simulator. Use a real device.
 | `TapeSounds.swift` | Synthesised sound effects |
 | `CassetteView.swift` | The cassette and its reels |
 | `DeckView.swift` | The player body, keys, counter and volume |
+| `GlassShimmer.swift` | The moving reflection on the door glass, brushed metal and screws |
 | `ShelfView.swift` | The tape shelf and search |
 | `LockScreenTape.swift` | Starts and updates the lock screen Live Activity |
 | `Shared/TapeActivity.swift` | Data and key actions shared by the app and the widget extension |
