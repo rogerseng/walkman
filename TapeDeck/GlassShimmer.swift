@@ -27,6 +27,8 @@ struct GlassShimmer: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var tilt = TiltSensor()
+    /// Multiplies the brightness. Pale backgrounds need more than dark ones.
+    var strength = 1.0
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0,
@@ -43,7 +45,6 @@ struct GlassShimmer: View {
                 .frame(width: geo.size.width, height: geo.size.height)
             }
         }
-        .blendMode(.plusLighter)
         .allowsHitTesting(false)
         .onAppear { if !reduceMotion { tilt.start() } }
         .onDisappear { tilt.stop() }
@@ -58,7 +59,7 @@ struct GlassShimmer: View {
 
     private func band(at position: Double, width: Double, strength: Double, in size: CGSize) -> some View {
         Rectangle()
-            .fill(LinearGradient(colors: [.clear, Color.white.opacity(strength), .clear],
+            .fill(LinearGradient(colors: [.clear, Color.white.opacity(min(1, strength * self.strength)), .clear],
                                  startPoint: .leading, endPoint: .trailing))
             .frame(width: size.width * width, height: size.height * 2.2)
             .rotationEffect(.degrees(22))

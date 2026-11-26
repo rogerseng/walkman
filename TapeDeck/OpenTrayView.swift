@@ -27,7 +27,7 @@ struct OpenTrayView: View {
                             .transition(.opacity)
                     } else {
                         RoundedRectangle(cornerRadius: 14)
-                            .strokeBorder(Color.white.opacity(0.25),
+                            .strokeBorder(Color.white.opacity(0.6),
                                           style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
                             .frame(width: width, height: height)
                     }
@@ -41,6 +41,12 @@ struct OpenTrayView: View {
             TransportKeys(vertical: false)
         }
         .padding(20)
-        .background(Color.black.ignoresSafeArea())
+        // A mid grey tray: pale enough for the clear cassette to read as clear,
+        // dark enough for the white keys and lettering.
+        .background(
+            RadialGradient(colors: [Color(white: 0.66), Color(white: 0.34)],
+                           center: .center, startRadius: 20, endRadius: 520)
+                .ignoresSafeArea()
+        )
     }
 }

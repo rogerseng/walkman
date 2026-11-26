@@ -19,9 +19,9 @@ struct DeckView: View {
             .frame(width: geo.size.width, height: geo.size.height)
             .background(
                 ZStack {
-                    // Inside of the player, seen through the case
-                    RadialGradient(colors: [Color(white: 0.16), Color(white: 0.04)],
-                                   center: .center, startRadius: 20, endRadius: 520)
+                    // Pale backdrop, so the clear plastic reads as clear
+                    RadialGradient(colors: [Color(white: 0.90), Color(white: 0.66)],
+                                   center: .center, startRadius: 20, endRadius: 560)
                     tape
                     clearCase
                 }
@@ -58,7 +58,7 @@ struct DeckView: View {
                         Text("NO TAPE").font(.system(size: 16, weight: .bold)).tracking(3)
                         Text("Tap to choose one").font(.system(size: 12))
                     }
-                    .foregroundColor(Color.white.opacity(0.5))
+                    .foregroundColor(Color.black.opacity(0.45))
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -70,16 +70,18 @@ struct DeckView: View {
     /// moving shimmer, and bright edges where the plastic curves.
     private var clearCase: some View {
         ZStack {
-            Color.white.opacity(0.04)
-            LinearGradient(colors: [Color.white.opacity(0.16), Color.white.opacity(0.03), .clear],
+            LinearGradient(colors: [Color.white.opacity(0.30), Color.white.opacity(0.05), .clear],
                            startPoint: .topLeading, endPoint: .center)
-            GlassShimmer()
+            GlassShimmer(strength: 2.2)
+            RoundedRectangle(cornerRadius: 27)
+                .strokeBorder(Color.black.opacity(0.10), lineWidth: 1)
+                .padding(8)
             RoundedRectangle(cornerRadius: 26)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1.5)
+                .strokeBorder(Color.white.opacity(0.75), lineWidth: 1.5)
                 .padding(9)
             RoundedRectangle(cornerRadius: 34)
-                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.55), Color.white.opacity(0.10),
-                                                      Color.white.opacity(0.30)],
+                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.95), Color.white.opacity(0.35),
+                                                      Color.black.opacity(0.18)],
                                              startPoint: .topLeading, endPoint: .bottomTrailing),
                               lineWidth: 3)
         }

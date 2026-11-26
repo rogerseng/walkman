@@ -1,142 +1,117 @@
 <!doctype html>
-<!-- Source artwork for the cassette. Rendered to PNG by tools/render-art.js.
-     ?layer=front  the shell face, label, screws and window glass (the window itself is see-through)
-     ?layer=hub    one reel hub -->
+<!-- Source artwork for the clear cassette. Rendered to PNG by tools/render-art.js.
+     ?layer=front  everything on the front of the clear shell: edges, ribs, stickers,
+                   label strip, rollers, screws and reflections (the plastic itself is see-through)
+     ?layer=hub    one clear reel hub -->
 <html><body style="margin:0;background:transparent"><script>
 const layer = new URLSearchParams(location.search).get('layer') || 'front';
-const screw = (x, y, r = 1.15, a = 20) => `
+const screw = (x, y, a) => `
   <g transform="translate(${x} ${y})">
-    <circle r="${r + .25}" fill="#050505" opacity=".8"/>
-    <circle r="${r}" fill="url(#metal)"/>
-    <circle r="${r}" fill="none" stroke="#000" stroke-opacity=".5" stroke-width=".08"/>
-    <g transform="rotate(${a})" stroke="#1a1a1a" stroke-width=".26" stroke-linecap="round">
-      <line x1="${-r * .62}" x2="${r * .62}"/><line y1="${-r * .62}" y2="${r * .62}"/></g>
-    <path d="M${-r * .7} ${-r * .5} A ${r} ${r} 0 0 1 ${r * .5} ${-r * .7}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".1"/>
+    <circle r="1.75" fill="#fff" fill-opacity=".35" stroke="#7b838b" stroke-opacity=".5" stroke-width=".12"/>
+    <circle r="1.2" fill="url(#blackmetal)"/>
+    <g transform="rotate(${a})" stroke="#000" stroke-width=".3" stroke-linecap="round"><line x1="-.7" x2=".7"/><line y1="-.7" y2=".7"/></g>
+    <path d="M-.85 -.55A1.1 1.1 0 0 1 .3 -1" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".12" stroke-linecap="round"/>
   </g>`;
+// a moulded ridge: bright top edge with a faint shadow under it
+const ridge = (y, x1 = 1.6, x2 = 98.4) => `
+  <line x1="${x1}" x2="${x2}" y1="${y}" y2="${y}" stroke="#fff" stroke-opacity=".9" stroke-width=".3"/>
+  <line x1="${x1}" x2="${x2}" y1="${y + .34}" y2="${y + .34}" stroke="#3f474f" stroke-opacity=".30" stroke-width=".14"/>`;
+const roller = (x, y) => `
+  <circle cx="${x}" cy="${y}" r="3.2" fill="#fff" fill-opacity=".55" stroke="#78808a" stroke-opacity=".55" stroke-width=".16"/>
+  <circle cx="${x}" cy="${y}" r="2.5" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width=".22"/>
+  <circle cx="${x}" cy="${y}" r="1.5" fill="#fff" fill-opacity=".65" stroke="#78808a" stroke-opacity=".5" stroke-width=".13"/>
+  <circle cx="${x}" cy="${y}" r=".5" fill="#aab1b8"/>`;
+const ring = (x, y, r) => `
+  <circle cx="${x}" cy="${y}" r="${r}" fill="#fff" fill-opacity=".22" stroke="#78808a" stroke-opacity=".45" stroke-width=".14"/>
+  <circle cx="${x}" cy="${y}" r="${r - .45}" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width=".2"/>`;
 const front = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 63" width="1500" height="945">
 <defs>
-  <linearGradient id="shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2c2f"/><stop offset=".5" stop-color="#1f1f22"/><stop offset="1" stop-color="#151517"/></linearGradient>
-  <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".25" stop-color="#fff" stop-opacity=".06"/><stop offset=".8" stop-color="#000" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></linearGradient>
-  <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1ebdb"/><stop offset=".6" stop-color="#e9e1cd"/><stop offset="1" stop-color="#ddd3bb"/></linearGradient>
-  <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".35" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>
-  <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".20"/><stop offset=".3" stop-color="#fff" stop-opacity=".03"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".07"/></linearGradient>
-  <linearGradient id="raised" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#303033"/><stop offset="1" stop-color="#1a1a1c"/></linearGradient>
-  <radialGradient id="metal" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#f2f2f2"/><stop offset=".45" stop-color="#a9abae"/><stop offset="1" stop-color="#4c4d50"/></radialGradient>
-  <radialGradient id="hole" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#101012"/></radialGradient>
-  <!-- fine moulded plastic grain -->
-  <filter id="grain" x="0" y="0" width="100%" height="100%">
-    <feTurbulence type="fractalNoise" baseFrequency="6" numOctaves="2" seed="4" result="n"/>
-    <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  .22 .22 .22 0 -.29" result="spec"/>
-    <feComposite in="spec" in2="SourceAlpha" operator="in" result="s"/>
-    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="s"/></feMerge>
-  </filter>
-  <!-- paper fibre: darker flecks, plus a soft shadow under the label -->
-  <filter id="fibre" x="-5%" y="-5%" width="110%" height="115%">
+  <radialGradient id="blackmetal" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#5a5c60"/><stop offset=".5" stop-color="#1b1c1e"/><stop offset="1" stop-color="#050505"/></radialGradient>
+  <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".34"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <linearGradient id="sticker" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c2183a"/><stop offset="1" stop-color="#99102a"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbfaf5"/><stop offset="1" stop-color="#ebe8de"/></linearGradient>
+  <filter id="fibre" x="-3%" y="-10%" width="106%" height="130%">
     <feTurbulence type="fractalNoise" baseFrequency="1.4 2.6" numOctaves="3" seed="9" result="n"/>
-    <feColorMatrix in="n" type="matrix" values="0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .15  .3 .3 .3 0 -.4" result="fleck"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 .4  0 0 0 0 .35  0 0 0 0 .25  .28 .28 .28 0 -.38" result="fleck"/>
     <feComposite in="fleck" in2="SourceAlpha" operator="in" result="f"/>
-    <feGaussianBlur in="SourceAlpha" stdDeviation=".22" result="b"/><feOffset in="b" dy=".18" result="o"/>
-    <feComponentTransfer in="o" result="sh"><feFuncA type="linear" slope=".6"/></feComponentTransfer>
+    <feGaussianBlur in="SourceAlpha" stdDeviation=".25" result="b"/><feOffset in="b" dy=".2" result="o"/>
+    <feComponentTransfer in="o" result="sh"><feFuncA type="linear" slope=".4"/></feComponentTransfer>
     <feMerge><feMergeNode in="sh"/><feMergeNode in="SourceGraphic"/><feMergeNode in="f"/></feMerge>
   </filter>
-  <filter id="soft"><feGaussianBlur stdDeviation=".55"/></filter>
-  <filter id="softer"><feGaussianBlur stdDeviation="1.1"/></filter>
-  <clipPath id="win"><rect x="18" y="20" width="64" height="22" rx="2"/></clipPath>
+  <filter id="blur"><feGaussianBlur stdDeviation=".5"/></filter>
   <clipPath id="body"><rect width="100" height="63" rx="2.6"/></clipPath>
 </defs>
 
-<!-- shell face with the window cut out -->
-<path fill-rule="evenodd" fill="url(#shell)" filter="url(#grain)"
-  d="M2.6 0H97.4A2.6 2.6 0 0 1 100 2.6V60.4A2.6 2.6 0 0 1 97.4 63H2.6A2.6 2.6 0 0 1 0 60.4V2.6A2.6 2.6 0 0 1 2.6 0Z
-     M20 20H80A2 2 0 0 1 82 22V40A2 2 0 0 1 80 42H20A2 2 0 0 1 18 40V22A2 2 0 0 1 20 20Z"/>
-<rect x=".3" y=".3" width="99.4" height="62.4" rx="2.4" fill="none" stroke="url(#rim)" stroke-width=".6"/>
-<!-- recess the label sits in -->
-<rect x="5.4" y="4.4" width="89.2" height="41.2" rx="1.6" fill="none" stroke="#000" stroke-opacity=".55" stroke-width=".35"/>
-
-<!-- paper label -->
-<g filter="url(#fibre)">
-  <path fill-rule="evenodd" fill="url(#paper)"
-    d="M7.2 5H92.8A1.2 1.2 0 0 1 94 6.2V43.8A1.2 1.2 0 0 1 92.8 45H7.2A1.2 1.2 0 0 1 6 43.8V6.2A1.2 1.2 0 0 1 7.2 5Z
-       M19.2 18.6H80.8A2.6 2.6 0 0 1 83.4 21.2V40.8A2.6 2.6 0 0 1 80.8 43.4H19.2A2.6 2.6 0 0 1 16.6 40.8V21.2A2.6 2.6 0 0 1 19.2 18.6Z"/>
+<!-- stickers sit on the inner sheet, behind the ridges -->
+<g font-family="Georgia, 'Times New Roman', serif" fill="#f6e9ec">
+  <rect x="6" y="23.6" width="12.4" height="10" fill="url(#sticker)"/>
+  <text x="12.2" y="31.3" text-anchor="middle" font-size="7.2">90</text>
+  <rect x="81.4" y="23.2" width="12.4" height="12.6" fill="url(#sticker)"/>
+  <text x="87.6" y="27.9" text-anchor="middle" font-size="4.4" font-weight="700">I</text>
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="1.75" text-anchor="middle">
+    <text x="87.6" y="30.6">POSITION</text><text x="87.6" y="32.7">NORMAL</text><text x="87.6" y="34.8">TYPE I</text></g>
 </g>
-<!-- print on the label -->
+<!-- footage marks between the hubs -->
+<g stroke="#30363c" stroke-opacity=".5" stroke-width=".16">
+  ${[44, 46.5, 49, 51.5, 54, 56.5].map(x => `<line x1="${x}" x2="${x}" y1="25.5" y2="31.5"/>`).join('')}</g>
+
+<!-- the plastic: a faint milky wall, bright edges -->
 <g clip-path="url(#body)">
-  <g stroke="#8d8676" stroke-width=".13"><line x1="9" x2="91" y1="11.4" y2="11.4"/><line x1="9" x2="91" y1="16.4" y2="16.4"/></g>
-  <g opacity=".88">
-    <path d="M6 36.2H16.6V37.3H6ZM83.4 36.2H94V37.3H83.4Z" fill="#9e2f22"/>
-    <path d="M6 37.9H16.6V39H6ZM83.4 37.9H94V39H83.4Z" fill="#c8702a"/>
-    <path d="M6 39.6H16.6V40.7H6ZM83.4 39.6H94V40.7H83.4Z" fill="#c9a23a"/>
-  </g>
-  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" fill="#26241f">
-    <circle cx="11.3" cy="25.6" r="2.7" fill="none" stroke="#26241f" stroke-width=".28"/>
-    <text x="11.3" y="27.05" text-anchor="middle" font-size="4" font-weight="700">A</text>
-    <text x="88.7" y="27.6" text-anchor="middle" font-size="5.2" font-weight="200">90</text>
-    <text x="8" y="31.6" font-size="1.25" font-weight="500" letter-spacing=".12">SIDE</text>
-    <text x="88.7" y="31" text-anchor="middle" font-size="1.25" font-weight="500" letter-spacing=".12">MIN</text>
-    <text x="8" y="43.6" font-size="1.3" font-weight="500" letter-spacing=".14">NORMAL</text>
-    <text x="92" y="43.6" text-anchor="end" font-size="1.3" font-weight="500" letter-spacing=".14">TYPE I</text>
-  </g>
-</g>
-
-<!-- window: dark frame, shadow falling inside, glass reflections, footage scale -->
-<g clip-path="url(#win)">
-  <rect x="18" y="20" width="64" height="22" rx="2" fill="none" stroke="#000" stroke-opacity=".9" stroke-width="2.6" filter="url(#soft)"/>
-  <rect x="18" y="20" width="64" height="22" fill="url(#glass)"/>
-  <path d="M27 20H38L29 42H18Z" fill="#fff" opacity=".06"/>
-  <path d="M41 20H44L35 42H32Z" fill="#fff" opacity=".05"/>
-  <g stroke="#e8e4d8" stroke-opacity=".55" stroke-width=".14">
-    ${[...Array(13)].map((_, i) => `<line x1="${44 + i}" x2="${44 + i}" y1="${i % 6 == 0 ? 38.6 : 39.6}" y2="40.6"/>`).join('')}
+  <path fill-rule="evenodd" fill="#fff" fill-opacity=".30" d="M0 0H100V63H0ZM1.5 1.5V61.5H98.5V1.5Z"/>
+  <rect x="1.6" y="21.5" width="96.8" height="14.2" fill="#fff" fill-opacity=".07"/>
+  ${ridge(15.4)}${ridge(21.5)}${ridge(35.7)}${ridge(41.8)}
+  <!-- recess along the top edge -->
+  <path d="M12 1.6V2.6H88V1.6" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width=".25"/>
+  <!-- tape running along the bottom between the rollers -->
+  <line x1="8.3" x2="91.7" y1="61.75" y2="61.75" stroke="#241a14" stroke-width=".5"/>
+  <!-- raised block where the heads reach the tape -->
+  <path d="M22 49H78L82 63H18Z" fill="#fff" fill-opacity=".13"/>
+  <path d="M18 63L22 49H78L82 63" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width=".32"/>
+  <path d="M18.5 63L22.4 49.5H77.6L81.5 63" fill="none" stroke="#3f474f" stroke-opacity=".28" stroke-width=".14"/>
+  ${ring(33, 57, 2.2)}${ring(67, 57, 2.2)}${ring(50, 53.6, 1.5)}${ring(41.5, 58.6, 1.2)}${ring(58.5, 58.6, 1.2)}
+  <rect x="44" y="59.9" width="12" height="1.5" rx=".3" fill="#fff" fill-opacity=".35" stroke="#78808a" stroke-opacity=".45" stroke-width=".12"/>
+  <rect x="48.4" y="60.1" width="3.2" height="1.3" rx=".2" fill="#6b4a33"/>
+  ${roller(11.5, 58.3)}${roller(88.5, 58.3)}
+  <!-- reflections across the plastic -->
+  <g filter="url(#blur)">
+    <path d="M30 -2H44L20 65H6Z" fill="url(#streak)" opacity=".55"/>
+    <path d="M62 -2H67L43 65H38Z" fill="url(#streak)" opacity=".7"/>
+    <path d="M88 -2H97L73 65H64Z" fill="url(#streak)" opacity=".35"/>
   </g>
 </g>
-<rect x="18" y="20" width="64" height="22" rx="2" fill="none" stroke="#070707" stroke-width=".55"/>
-<rect x="17.5" y="19.5" width="65" height="23" rx="2.4" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width=".12"/>
+<rect x=".2" y=".2" width="99.6" height="62.6" rx="2.5" fill="none" stroke="#5d656e" stroke-opacity=".6" stroke-width=".3"/>
+<rect x=".65" y=".65" width="98.7" height="61.7" rx="2.2" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width=".35"/>
+<rect x="1.5" y="1.5" width="97" height="60" rx="1.6" fill="none" stroke="#5d656e" stroke-opacity=".35" stroke-width=".16"/>
+<rect x="1.85" y="1.85" width="96.3" height="59.3" rx="1.4" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".22"/>
 
-<!-- raised block where the heads reach the tape -->
-<path d="M21 50H79L83 63H17Z" fill="url(#raised)" filter="url(#grain)"/>
-<path d="M21 50H79" stroke="#fff" stroke-opacity=".3" stroke-width=".16"/>
-<path d="M21 50L17 63M79 50L83 63" stroke="#000" stroke-opacity=".6" stroke-width=".2"/>
-<g>
-  <circle cx="30.5" cy="57" r="2.1" fill="url(#hole)"/><circle cx="69.5" cy="57" r="2.1" fill="url(#hole)"/>
-  <path d="M28.5 56.3A2.1 2.1 0 0 1 32.5 56.3" fill="none" stroke="#000" stroke-width=".3"/>
-  <path d="M67.5 56.3A2.1 2.1 0 0 1 71.5 56.3" fill="none" stroke="#000" stroke-width=".3"/>
-  <path d="M28.6 57.9A2.1 2.1 0 0 0 32.4 57.9M67.6 57.9A2.1 2.1 0 0 0 71.4 57.9" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".12"/>
-  <rect x="39.6" y="55.9" width="2.2" height="2.2" rx=".5" fill="url(#hole)"/><rect x="58.2" y="55.9" width="2.2" height="2.2" rx=".5" fill="url(#hole)"/>
-  <!-- opening with the tape strand and the felt pressure pad -->
-  <rect x="43.5" y="59.8" width="13" height="3.2" rx=".4" fill="#060606"/>
-  <rect x="43.5" y="61.9" width="13" height=".5" fill="#4a2c1a"/>
-  <rect x="47.6" y="60.3" width="4.8" height="1.5" rx=".25" fill="#b98a55"/>
-  <rect x="47.6" y="60.3" width="4.8" height=".45" rx=".2" fill="#e2c08c" opacity=".7"/>
-</g>
+<!-- stick-on paper label for the handwriting -->
+<g filter="url(#fibre)"><rect x="13" y="3.3" width="74" height="10.3" rx=".5" fill="url(#paper)"/></g>
+<g stroke="#a39f93" stroke-width=".12"><line x1="22.5" x2="85" y1="8.7" y2="8.7"/><line x1="22.5" x2="85" y1="12.5" y2="12.5"/></g>
+<circle cx="17.6" cy="8.4" r="2.3" fill="none" stroke="#2b2a27" stroke-width=".26"/>
+<text x="17.6" y="9.65" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="3.4" font-weight="700" fill="#2b2a27">A</text>
 
-${screw(4.2, 4.2, 1.15, 25)}${screw(95.8, 4.2, 1.15, 70)}${screw(4.2, 58.8, 1.15, 5)}${screw(95.8, 58.8, 1.15, 48)}${screw(50, 47.6, 1, 33)}
-
-<!-- light across the whole face -->
-<path fill-rule="evenodd" fill="url(#sheen)"
-  d="M2.6 0H97.4A2.6 2.6 0 0 1 100 2.6V60.4A2.6 2.6 0 0 1 97.4 63H2.6A2.6 2.6 0 0 1 0 60.4V2.6A2.6 2.6 0 0 1 2.6 0Z
-     M20 20H80A2 2 0 0 1 82 22V40A2 2 0 0 1 80 42H20A2 2 0 0 1 18 40V22A2 2 0 0 1 20 20Z"/>
+${screw(3.4, 3.5, 20)}${screw(96.6, 3.5, 65)}${screw(3.4, 59.5, 8)}${screw(96.6, 59.5, 50)}
 </svg>`;
 
-const teeth = [...Array(6)].map((_, i) => `<path transform="rotate(${i * 60} 10 10)" d="M9.05 4.2H10.95L10.6 7.3H9.4Z" fill="url(#hubface)"/>
-  <path transform="rotate(${i * 60} 10 10)" d="M10.95 4.2L10.6 7.3" stroke="#000" stroke-opacity=".35" stroke-width=".1"/>`).join('');
+const pockets = [...Array(8)].map((_, i) => `<g transform="rotate(${i * 45 + 12} 10 10)">
+  <ellipse cx="10" cy="2.55" rx="1.45" ry=".95" fill="#aeb6bd" fill-opacity=".38"/>
+  <ellipse cx="10" cy="2.55" rx="1.45" ry=".95" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width=".16"/>
+  <path d="M8.7 2.9A1.45 .95 0 0 0 11.3 2.9" fill="none" stroke="#59616a" stroke-opacity=".35" stroke-width=".1"/></g>`).join('');
+const teeth = [...Array(6)].map((_, i) => `<g transform="rotate(${i * 60} 10 10)">
+  <path d="M9.45 5.05H10.55L10.4 6.5H9.6Z" fill="#fff" fill-opacity=".92" stroke="#59616a" stroke-opacity=".5" stroke-width=".1"/></g>`).join('');
 const hub = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="400" height="400">
-<defs>
-  <radialGradient id="hubface" cx=".38" cy=".32" r=".85"><stop offset="0" stop-color="#fbfaf6"/><stop offset=".55" stop-color="#e3e1da"/><stop offset="1" stop-color="#aeaba2"/></radialGradient>
-  <radialGradient id="spin" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#d9dadc"/><stop offset="1" stop-color="#54565a"/></radialGradient>
-</defs>
-<circle cx="10" cy="10" r="9.9" fill="#000" opacity=".35"/>
-<path fill-rule="evenodd" fill="url(#hubface)" d="M10 .4A9.6 9.6 0 1 1 9.99 .4ZM10 4.3A5.7 5.7 0 1 0 10.01 4.3Z"/>
-<circle cx="10" cy="10" r="9.6" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".18"/>
-<circle cx="10" cy="10" r="8.2" fill="none" stroke="#000" stroke-opacity=".10" stroke-width=".12"/>
-<circle cx="10" cy="10" r="5.7" fill="#070707"/>
-<circle cx="10" cy="10" r="5.7" fill="none" stroke="#000" stroke-opacity=".6" stroke-width=".3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="480" height="480">
+<defs><radialGradient id="flange" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".80"/><stop offset="1" stop-color="#e6eaee" stop-opacity=".62"/></radialGradient></defs>
+<path fill-rule="evenodd" fill="url(#flange)" d="M10 .3A9.7 9.7 0 1 1 9.99 .3ZM10 5A5 5 0 1 0 10.01 5Z"/>
+<circle cx="10" cy="10" r="9.7" fill="none" stroke="#59616a" stroke-opacity=".5" stroke-width=".16"/>
+<circle cx="10" cy="10" r="9.25" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width=".2"/>
+${pockets}
+<circle cx="10" cy="10" r="5.75" fill="none" stroke="#59616a" stroke-opacity=".35" stroke-width=".14"/>
+<circle cx="10" cy="10" r="5.35" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width=".5"/>
+<circle cx="10" cy="10" r="5" fill="none" stroke="#59616a" stroke-opacity=".55" stroke-width=".14"/>
 ${teeth}
-<circle cx="10" cy="10" r="2.5" fill="url(#spin)"/>
-<circle cx="10" cy="10" r="2.5" fill="none" stroke="#000" stroke-opacity=".5" stroke-width=".12"/>
-<g stroke="#26272a" stroke-width=".5" stroke-linecap="round">${[0, 120, 240].map(a => `<line transform="rotate(${a} 10 10)" x1="10" x2="10" y1="8" y2="9.1"/>`).join('')}</g>
-<circle cx="10" cy="10" r=".55" fill="#1c1c1e"/>
-<path d="M3 6.2A8 8 0 0 1 8 2.2" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".25" stroke-linecap="round"/>
+<path d="M2.6 6A8.4 8.4 0 0 1 7 2.2" fill="none" stroke="#fff" stroke-width=".3" stroke-linecap="round"/>
 </svg>`;
 document.body.innerHTML = layer === 'hub' ? hub : front;
 </script></body></html>

@@ -18,10 +18,12 @@ private final class SpinState {
     }
 }
 
-/// A compact cassette. The shell, label, screws and window glass are artwork
-/// (see tools/cassette-art.html); the reels and the writing on the label are
-/// drawn live underneath and on top of it. All measurements are in millimetres
-/// of a real 100 x 63 mm shell and scaled to whatever size the view is given.
+/// A clear compact cassette. The front of the shell (edges, ridges, stickers,
+/// label strip, rollers, screws, reflections) is see-through artwork from
+/// tools/cassette-art.html. Underneath it the reels, the tape running down to
+/// the rollers, and the handwriting on the label are drawn live. All
+/// measurements are in millimetres of a real 100 x 63 mm shell and scaled to
+/// whatever size the view is given.
 struct CassetteView: View {
     var title: String
     var subtitle: String
@@ -30,40 +32,45 @@ struct CassetteView: View {
 
     @State private var spin = SpinState()
 
-    private let hubRadius = 6.5
-    private let fullRadius = 18.0
+    private let hubRadius = 10.0
+    private let fullRadius = 25.0
+    private let leftHub = CGPoint(x: 29.5, y: 28.5)
+    private let rightHub = CGPoint(x: 70.5, y: 28.5)
     private let ink = Color(red: 0.07, green: 0.10, blue: 0.33)
+    private let oxide = Color(red: 0.14, green: 0.10, blue: 0.08)
 
     var body: some View {
         GeometryReader { geo in
             let u = geo.size.width / 100
             ZStack {
-                // Inside of the shell, seen through the window
+                // The plastic itself: barely there, with a soft shadow below
                 RoundedRectangle(cornerRadius: 2.6 * u)
-                    .fill(Color(white: 0.03))
-                window(u: u)
-                    .frame(width: 64 * u, height: 22 * u)
-                    .position(x: 50 * u, y: 31 * u)
+                    .fill(Color.white.opacity(0.16))
+                    .shadow(color: .black.opacity(0.35), radius: 2.5 * u, y: 1.2 * u)
+
+                reels(u: u)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipShape(RoundedRectangle(cornerRadius: 2.6 * u))
 
                 Image("CassetteFront")
                     .resizable()
                     .interpolation(.high)
 
-                // Handwriting on the two ruled lines of the label
+                // Handwriting on the stick-on label
                 Text(title.isEmpty ? " " : title)
-                    .font(.custom("BradleyHandITCTT-Bold", fixedSize: 5.0 * u))
+                    .font(.custom("BradleyHandITCTT-Bold", fixedSize: 4.5 * u))
                     .foregroundColor(ink.opacity(0.92))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                    .frame(width: 74 * u, height: 5.6 * u, alignment: .bottomLeading)
-                    .position(x: 52 * u, y: 8.9 * u)
+                    .frame(width: 62 * u, height: 5.0 * u, alignment: .bottomLeading)
+                    .position(x: 54 * u, y: 6.3 * u)
                 Text(subtitle.isEmpty ? " " : subtitle)
-                    .font(.custom("BradleyHandITCTT-Bold", fixedSize: 3.4 * u))
+                    .font(.custom("BradleyHandITCTT-Bold", fixedSize: 3.0 * u))
                     .foregroundColor(ink.opacity(0.80))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                    .frame(width: 74 * u, height: 4.4 * u, alignment: .bottomLeading)
-                    .position(x: 52 * u, y: 14.5 * u)
+                    .frame(width: 62 * u, height: 3.6 * u, alignment: .bottomLeading)
+                    .position(x: 54 * u, y: 10.8 * u)
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
@@ -72,13 +79,13 @@ struct CassetteView: View {
         .accessibilityLabel("Cassette: \(title). \(subtitle)")
     }
 
-    private func window(u: CGFloat) -> some View {
+    private func reels(u: CGFloat) -> some View {
         let moving = motion == .playing || motion == .fastForward || motion == .rewind
         // Tape leaves the left reel and winds onto the right one. Pack radius
         // follows the wound area, so it changes fastest near the hub.
         let span = fullRadius * fullRadius - hubRadius * hubRadius
-        let leftRadius = (hubRadius * hubRadius + (1 - progress) * span).squareRoot() + 0.6
-        let rightRadius = (hubRadius * hubRadius + progress * span).squareRoot() + 0.6
+        let leftRadius = (hubRadius * hubRadius + (1 - progress) * span).squareRoot() + 0.4
+        let rightRadius = (hubRadius * hubRadius + progress * span).squareRoot() + 0.4
         let speed: Double = {
             switch motion {
             case .playing: return 47.6          // 4.76 cm per second, the real thing
@@ -92,42 +99,69 @@ struct CassetteView: View {
             let _ = spin.advance(to: context.date, tapeSpeed: speed,
                                  leftRadius: leftRadius, rightRadius: rightRadius)
             ZStack {
-                // Slip sheet behind the reels
-                LinearGradient(colors: [Color(red: 0.16, green: 0.14, blue: 0.13),
-                                        Color(red: 0.08, green: 0.07, blue: 0.07)],
-                               startPoint: .top, endPoint: .bottom)
+                // Tape running from each pack down to its guide roller
+                Path { path in
+                    let leftGuide = CGPoint(x: 8.3, y: 58.3)
+                    let rightGuide = CGPoint(x: 91.7, y: 58.3)
+                    let leftOff = tangent(on: leftHub, radius: CGFloat(leftRadius), from: leftGuide, leftmost: true)
+                    let rightOff = tangent(on: rightHub, radius: CGFloat(rightRadius), from: rightGuide, leftmost: false)
+                    path.move(to: CGPoint(x: leftOff.x * u, y: leftOff.y * u))
+                    path.addLine(to: CGPoint(x: leftGuide.x * u, y: leftGuide.y * u))
+                    path.addLine(to: CGPoint(x: leftGuide.x * u, y: 61.75 * u))
+                    path.move(to: CGPoint(x: rightOff.x * u, y: rightOff.y * u))
+                    path.addLine(to: CGPoint(x: rightGuide.x * u, y: rightGuide.y * u))
+                    path.addLine(to: CGPoint(x: rightGuide.x * u, y: 61.75 * u))
+                }
+                .stroke(oxide, lineWidth: 0.4 * u)
+
                 reel(radius: leftRadius, angle: spin.left, u: u)
-                    .position(x: 11 * u, y: 11 * u)
+                    .position(x: leftHub.x * u, y: leftHub.y * u)
                 reel(radius: rightRadius, angle: spin.right, u: u)
-                    .position(x: 53 * u, y: 11 * u)
+                    .position(x: rightHub.x * u, y: rightHub.y * u)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 2 * u))
+    }
+
+    /// Where a straight run of tape from `point` touches the pack.
+    private func tangent(on center: CGPoint, radius: CGFloat, from point: CGPoint, leftmost: Bool) -> CGPoint {
+        let dx = point.x - center.x
+        let dy = point.y - center.y
+        let distance = (dx * dx + dy * dy).squareRoot()
+        guard distance > radius else { return point }
+        let toward = atan2(dy, dx)
+        let spread = acos(radius / distance)
+        let a = CGPoint(x: center.x + radius * cos(toward + spread), y: center.y + radius * sin(toward + spread))
+        let b = CGPoint(x: center.x + radius * cos(toward - spread), y: center.y + radius * sin(toward - spread))
+        if leftmost { return a.x < b.x ? a : b }
+        return a.x > b.x ? a : b
     }
 
     private func reel(radius: Double, angle: Double, u: CGFloat) -> some View {
         let size = 2 * radius * u
         return ZStack {
-            // Wound tape: dark brown oxide with the soft sheen a tape pack has
-            Circle()
-                .fill(RadialGradient(stops: [
-                    .init(color: Color(red: 0.20, green: 0.12, blue: 0.08), location: 0),
-                    .init(color: Color(red: 0.27, green: 0.17, blue: 0.11), location: 0.55),
-                    .init(color: Color(red: 0.23, green: 0.14, blue: 0.09), location: 0.80),
-                    .init(color: Color(red: 0.15, green: 0.09, blue: 0.06), location: 1)
-                ], center: .center, startRadius: 0, endRadius: radius * u))
-            Circle()
-                .fill(AngularGradient(stops: [
-                    .init(color: .clear, location: 0.00),
-                    .init(color: Color.white.opacity(0.16), location: 0.08),
-                    .init(color: .clear, location: 0.18),
-                    .init(color: .clear, location: 0.50),
-                    .init(color: Color.white.opacity(0.10), location: 0.58),
-                    .init(color: .clear, location: 0.68),
-                    .init(color: .clear, location: 1.00)
-                ], center: .center, angle: .degrees(200)))
-            Circle()
-                .strokeBorder(Color.black.opacity(0.55), lineWidth: 0.25 * u)
+            // Wound tape: near-black oxide with the soft sheen a tape pack
+            // has. It is a ring, because the hub in the middle is clear.
+            ZStack {
+                Circle()
+                    .fill(RadialGradient(stops: [
+                        .init(color: Color(red: 0.12, green: 0.09, blue: 0.07), location: 0),
+                        .init(color: Color(red: 0.19, green: 0.15, blue: 0.12), location: 0.60),
+                        .init(color: Color(red: 0.16, green: 0.12, blue: 0.10), location: 0.85),
+                        .init(color: Color(red: 0.09, green: 0.07, blue: 0.06), location: 1)
+                    ], center: .center, startRadius: 0, endRadius: radius * u))
+                Circle()
+                    .fill(AngularGradient(stops: [
+                        .init(color: .clear, location: 0.00),
+                        .init(color: Color.white.opacity(0.16), location: 0.08),
+                        .init(color: .clear, location: 0.18),
+                        .init(color: .clear, location: 0.50),
+                        .init(color: Color.white.opacity(0.10), location: 0.58),
+                        .init(color: .clear, location: 0.68),
+                        .init(color: .clear, location: 1.00)
+                    ], center: .center, angle: .degrees(200)))
+            }
+            .mask(Circle().strokeBorder(lineWidth: max(0, radius - hubRadius + 0.4) * u))
+            .shadow(color: .black.opacity(0.35), radius: 0.8 * u, y: 0.4 * u)
             Image("ReelHub")
                 .resizable()
                 .interpolation(.high)
@@ -135,6 +169,5 @@ struct CassetteView: View {
                 .rotationEffect(.radians(angle))
         }
         .frame(width: size, height: size)
-        .shadow(color: .black.opacity(0.6), radius: 0.8 * u, y: 0.4 * u)
     }
 }

@@ -9,7 +9,7 @@ const path = require('path');
   const browser = await chromium.launch();
   for (const [layer, w, h, file] of [
     ['front', 1500, 945, 'CassetteFront.imageset/cassette-front.png'],
-    ['hub', 400, 400, 'ReelHub.imageset/reel-hub.png'],
+    ['hub', 480, 480, 'ReelHub.imageset/reel-hub.png'],
   ]) {
     const tab = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
     await tab.goto(page + '?layer=' + layer);
