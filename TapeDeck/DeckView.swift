@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// The closed phone: a tape player with a clear case. The cassette fills the
-/// whole screen, and the buttons and keys are clear plastic floating over it.
+/// The closed phone: the whole screen is the body of a tape player in dark
+/// clear plastic. The cassette sits inside it, seated in a recessed
+/// compartment behind a clear door, with the body wrapping around it.
 ///
 /// Laid out for the iPhone Duo's outer display: 466 x 678 points, with an
 /// 84 point column down one side that iOS reports as a safe area inset. The
@@ -40,10 +41,9 @@ struct DeckView: View {
                    height: geo.size.height + insets.top + insets.bottom)
             .background(
                 ZStack {
-                    // Dark inside of the player, seen through the clear case
-                    RadialGradient(colors: [Color(white: 0.17), Color(white: 0.03)],
-                                   center: .center, startRadius: 20, endRadius: 520)
-                    tape
+                    // The body of the player: dark smoked plastic
+                    LinearGradient(colors: [Color(white: 0.20), Color(white: 0.11), Color(white: 0.07)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
                     clearCase
                 }
             )
@@ -51,44 +51,111 @@ struct DeckView: View {
         }
     }
 
-    // MARK: Tape
+    // MARK: Cassette compartment
 
-    /// The cassette, scaled to fill the screen. It stands on end when the
-    /// screen is taller than wide. It may overflow the edges a little, but
-    /// never so far that the label is lost.
-    private var tape: some View {
+    /// The compartment the cassette sits in: a recessed well, the cassette
+    /// seated in it (on end when the space is taller than wide, head opening
+    /// toward the keys), and the clear door over the top with its hinges.
+    private var compartment: some View {
         GeometryReader { geo in
             let upright = geo.size.height > geo.size.width
-            let long = upright ? geo.size.height : geo.size.width
-            let short = upright ? geo.size.width : geo.size.height
-            let fit = min(long / 100, short / 63)
-            let fill = max(long / 100, short / 63)
-            let scale = min(fill, fit * 1.10)
+            let aspect: CGFloat = upright ? 0.63 : 1 / 0.63
+            let rim: CGFloat = 9
+            let width = max(10, min(geo.size.width - 2 * rim, (geo.size.height - 2 * rim - 8) * aspect))
+            let height = width / aspect
+            let shape = RoundedRectangle(cornerRadius: 16)
             ZStack {
+                // The well, with shadow falling in from its edges
+                shape.fill(LinearGradient(colors: [Color.black, Color(white: 0.06)],
+                                          startPoint: .top, endPoint: .bottom))
                 if model.hasTape {
                     CassetteView(title: model.tapeTitle,
                                  subtitle: model.trackLine,
                                  progress: model.progress,
                                  motion: model.motion)
-                        .frame(width: 100 * scale, height: 63 * scale)
+                        .frame(width: upright ? height : width, height: upright ? width : height)
                         .rotationEffect(.degrees(upright ? -90 : 0))
                         .transition(.move(edge: .top).combined(with: .opacity))
                 } else {
-                    VStack(spacing: 8) {
-                        Image(systemName: "eject.fill").font(.system(size: 30))
-                        Text("NO TAPE").font(.system(size: 16, weight: .bold)).tracking(3)
-                        Text("Tap to choose one").font(.system(size: 12))
-                    }
-                    .foregroundColor(Color.white.opacity(0.5))
+                    emptyWell(upright: upright, length: upright ? height : width)
                 }
+                shape.strokeBorder(Color.black.opacity(0.85), lineWidth: 9).blur(radius: 6)
+
+                // The clear door
+                shape.fill(Color.white.opacity(0.035))
+                shape.fill(LinearGradient(colors: [Color.white.opacity(0.14), Color.white.opacity(0.02), .clear],
+                                          startPoint: .topLeading, endPoint: .center))
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                    .padding(5)
             }
+            .frame(width: width + 2 * rim, height: height + 2 * rim)
+            .clipShape(shape)
+            // Bright moulded edge of the door
+            .overlay(
+                shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.75), Color.white.opacity(0.18),
+                                                           Color.white.opacity(0.45)],
+                                                  startPoint: .topLeading, endPoint: .bottomTrailing),
+                                   lineWidth: 2.5)
+            )
+            // Hinges along the bottom edge
+            .overlay(alignment: .bottom) {
+                HStack(spacing: (width + 2 * rim) * 0.42) {
+                    hinge
+                    hinge
+                }
+                .offset(y: 5)
+            }
+            .shadow(color: .black.opacity(0.6), radius: 8, y: 4)
             .frame(width: geo.size.width, height: geo.size.height)
-            .clipped()
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if !model.hasTape { openShelf() }
+            }
         }
     }
 
-    /// The clear shell over everything: a fixed reflection, the glare that
-    /// follows the phone as it moves, and bright edges where the plastic curves.
+    private var hinge: some View {
+        RoundedRectangle(cornerRadius: 3)
+            .fill(LinearGradient(colors: [Color(white: 0.75), Color(white: 0.35)],
+                                 startPoint: .top, endPoint: .bottom))
+            .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.black.opacity(0.6), lineWidth: 0.75))
+            .frame(width: 36, height: 10)
+            .accessibilityHidden(true)
+    }
+
+    /// The well with nothing in it: the two drive spindles and a prompt.
+    private func emptyWell(upright: Bool, length: CGFloat) -> some View {
+        let u = length / 100
+        let spindle = ZStack {
+            Circle().fill(LinearGradient(colors: [Color(white: 0.55), Color(white: 0.2)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            ForEach(0..<3, id: \.self) { prong in
+                Capsule().fill(Color(white: 0.75))
+                    .frame(width: 1.6 * u, height: 4.4 * u)
+                    .offset(y: -3.4 * u)
+                    .rotationEffect(.degrees(Double(prong) * 120))
+            }
+            Circle().fill(Color(white: 0.12)).frame(width: 2.4 * u, height: 2.4 * u)
+        }
+        .frame(width: 8 * u, height: 8 * u)
+        let layout = upright ? AnyLayout(VStackLayout(spacing: 33 * u)) : AnyLayout(HStackLayout(spacing: 33 * u))
+        return ZStack {
+            layout {
+                spindle
+                spindle
+            }
+            VStack(spacing: 6) {
+                Image(systemName: "eject.fill").font(.system(size: 24))
+                Text("NO TAPE").font(.system(size: 14, weight: .bold)).tracking(3)
+                Text("Tap to choose one").font(.system(size: 11))
+            }
+            .foregroundColor(Color.white.opacity(0.5))
+        }
+    }
+
+    /// The surface of the body: a fixed reflection, the glare that follows the
+    /// phone as it moves, and bright edges where the plastic curves.
     private var clearCase: some View {
         ZStack {
             LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.02), .clear],
@@ -109,8 +176,9 @@ struct DeckView: View {
     // MARK: Face
 
     private var face: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 8) {
+        VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 8) {
+                Screw()
                 Spacer(minLength: 4)
                 Button {
                     Haptics.keyDown()
@@ -129,12 +197,13 @@ struct DeckView: View {
             }
             .buttonStyle(ClearButtonStyle())
 
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if !model.hasTape { openShelf() }
+            compartment
+
+            HStack {
+                Screw()
+                Spacer()
+                Screw()
+            }
         }
     }
 

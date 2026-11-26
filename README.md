@@ -5,7 +5,7 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 ## What it does
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
-* Closed phone (or any ordinary phone screen): a tape player with a dark, clear case. The cassette stands on end and fills the whole screen with its reels spinning. Glare on the case moves only when the phone moves: reflections slide as it tilts left and right, and a hot spot follows both tilts.
+* Closed phone (or any ordinary phone screen): the whole screen is the body of a tape player in dark clear plastic. The cassette sits inside it, on end, seated in a recessed compartment behind a clear hinged door, with its reels spinning. Glare on the body moves only when the phone moves: reflections slide as it tilts left and right, and a hot spot follows both tilts.
 * Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; the five keys sit in that column underneath them. On other phones the keys get their own strip. Volume is on the phone's own buttons.
 * Haptics: a firm tap when a key goes down, a lighter one when it springs back, a heavy thud for the cassette door, and a soft pulse four times a second while the tape winds.
 * The cassette is a clear one. The shell front is see-through artwork (bright moulded edges and ridges, stickers, a stick-on paper label, guide rollers, black screws, reflections). Under it the whole reels, their clear hubs, the tape running down to the rollers and the handwriting on the label are drawn live. The artwork source is `tools/cassette-art.html`; `node tools/render-art.js` re-renders it.
