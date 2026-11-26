@@ -87,6 +87,7 @@ final class PlayerModel: ObservableObject {
     private let haptic = UIImpactFeedbackGenerator(style: .rigid)
     private let lockScreen = LockScreenTape()
     private var pausedSince: Date?
+    private var waitingForLid = false
     private var heldSeek: TapeMotion?
     private var seekTask: Task<Void, Never>?
     private var swapping = false
@@ -159,8 +160,22 @@ final class PlayerModel: ObservableObject {
 
     // MARK: Loading tapes
 
-    /// Ejects whatever is in the deck, drops the new tape in and presses play.
-    func insert(_ tape: Tape) {
+    /// The current track and artist on one line, for labels.
+    var trackLine: String {
+        if trackTitle.isEmpty || trackTitle == tapeTitle { return trackArtist }
+        return trackArtist.isEmpty ? trackTitle : "\(trackTitle) · \(trackArtist)"
+    }
+
+    /// The phone was folded shut. A tape chosen while it was open starts now.
+    func lidClosed() {
+        guard waitingForLid, hasTape, motion != .playing else { return }
+        playKey()
+    }
+
+    /// Ejects whatever is in the deck and drops the new tape in. With
+    /// `autoPlay` it then presses play; without, it waits for the play key or
+    /// for the phone to be closed.
+    func insert(_ tape: Tape, autoPlay: Bool = true) {
         guard !swapping else { return }
         swapping = true
         lastKeyPress = Date()
@@ -188,9 +203,14 @@ final class PlayerModel: ObservableObject {
                 sounds.play(.insert)
                 haptic.impactOccurred()
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { hasTape = true }
-                await pause(seconds: 0.55)
-                pressFeedback()
-                try await player.play()
+                if autoPlay {
+                    await pause(seconds: 0.55)
+                    pressFeedback()
+                    try await player.play()
+                } else {
+                    waitingForLid = true
+                    try await player.prepareToPlay()
+                }
             } catch {
                 errorMessage = "That tape would not play. \(error.localizedDescription)"
             }
@@ -310,6 +330,7 @@ final class PlayerModel: ObservableObject {
         case .paused, .stopped: sounds.setLoop(nil)
         }
         pausedSince = motion == .paused ? Date() : nil
+        if motion == .playing { waitingForLid = false }
         // The tape ran out on its own: the play key pops back up.
         if old == .playing, motion == .stopped || motion == .paused,
            Date().timeIntervalSince(lastKeyPress) > 1.0 {
@@ -376,11 +397,7 @@ final class PlayerModel: ObservableObject {
             return
         }
         sounds.keepAlive = true
-        var line = trackArtist
-        if !trackTitle.isEmpty, trackTitle != tapeTitle {
-            line = trackArtist.isEmpty ? trackTitle : "\(trackTitle) · \(trackArtist)"
-        }
-        lockScreen.sync(title: tapeTitle, subtitle: line, isPlaying: motion == .playing,
+        lockScreen.sync(title: tapeTitle, subtitle: trackLine, isPlaying: motion == .playing,
                         elapsed: elapsed, duration: duration)
     }
 }

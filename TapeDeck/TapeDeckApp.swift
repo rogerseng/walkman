@@ -15,25 +15,32 @@ struct TapeDeckApp: App {
 
 /// Picks the layout from the space the app actually has, so it follows the
 /// phone as it folds and unfolds.
-///  - Narrow (folded, cover screen): the whole screen is the player.
-///  - Wide (unfolded): the player on the left, the tape shelf on the right.
+///  - Closed (cover screen, or any ordinary phone): the outside of the player.
+///  - Open (a large, wide screen): the tape shelf on the left and the chosen
+///    tape on the right. Closing the phone starts it playing.
 struct ContentView: View {
     @EnvironmentObject private var model: PlayerModel
     @State private var showShelf = false
 
     var body: some View {
         GeometryReader { geo in
-            if geo.size.width >= 640 {
-                HStack(spacing: 0) {
-                    DeckView(showShelfButton: false, openShelf: {})
-                        .frame(width: geo.size.width * 0.54)
-                    ShelfView(onPick: {})
-                }
-            } else {
-                DeckView(showShelfButton: true, openShelf: { showShelf = true })
-                    .sheet(isPresented: $showShelf) {
-                        ShelfView(onPick: { showShelf = false })
+            let open = geo.size.width >= 640 && geo.size.height >= 500
+            Group {
+                if open {
+                    HStack(spacing: 0) {
+                        ShelfView(playOnPick: false, onPick: {})
+                            .frame(width: geo.size.width * 0.5)
+                        OpenTrayView()
                     }
+                } else {
+                    DeckView(openShelf: { showShelf = true })
+                        .sheet(isPresented: $showShelf) {
+                            ShelfView(onPick: { showShelf = false })
+                        }
+                }
+            }
+            .onChange(of: open) { wasOpen, isOpen in
+                if wasOpen, !isOpen { model.lidClosed() }
             }
         }
         .alert("Tape trouble", isPresented: errorShown) {

@@ -6,6 +6,8 @@ import UIKit
 /// plus a search of the Apple Music catalogue.
 struct ShelfView: View {
     @EnvironmentObject private var model: PlayerModel
+    /// False on the open phone, where the tape waits for the phone to close.
+    var playOnPick = true
     var onPick: () -> Void
 
     @State private var term = ""
@@ -69,7 +71,7 @@ struct ShelfView: View {
                 }
                 ForEach(tapes) { tape in
                     Button {
-                        model.insert(tape)
+                        model.insert(tape, autoPlay: playOnPick)
                         onPick()
                     } label: {
                         TapeSpine(tape: tape)

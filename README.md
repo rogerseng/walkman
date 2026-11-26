@@ -5,8 +5,8 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 ## What it does
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
-* Folded phone or any narrow screen: the whole screen is the outside of the player. A chrome framed glass door shows the cassette and its spinning reels, with a reflection that slides as you tilt the phone and a glint that sweeps across every few seconds. Below it are a brushed metal panel with the counter, volume, sound and shelf buttons, and the five transport keys.
-* Unfolded or any wide screen: the player on the left and the tape shelf on the right.
+* Closed phone (or any ordinary phone screen): the whole screen is the outside of the player. A chrome framed glass door shows the cassette standing on end with its reels spinning, with a reflection that slides as you tilt the phone and a glint that sweeps across every few seconds. A brushed metal strip down the right edge carries the counter and the five keys. Volume is on the phone's own buttons.
+* Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. Pick a tape, then close the phone to start it playing. The keys are there too, for screens that cannot fold.
 * The reels behave like a real tape. The left pack shrinks and the right one grows as the track plays, and each reel turns at the rate its pack size calls for.
 * Keys: REW and FF skip a track on a tap and wind the tape on a hold. PLAY and PAUSE latch down. STOP stops, and a second press ejects.
 * Lock screen tape: while a tape is in the deck, a Live Activity shows the cassette on the lock screen (and in the Dynamic Island) with previous, play / pause and next keys. The reels step round once a second, because iOS does not allow free running animation there. A tape left paused for ten minutes is taken off the lock screen.
@@ -28,11 +28,12 @@ Music does not play in the Simulator. Use a real device.
 
 | File | What is in it |
 | --- | --- |
-| `TapeDeckApp.swift` | App entry and the folded / unfolded layout switch |
+| `TapeDeckApp.swift` | App entry and the closed / open layout switch |
 | `PlayerModel.swift` | Apple Music access, library, search, playback and key handling |
 | `TapeSounds.swift` | Synthesised sound effects |
 | `CassetteView.swift` | The cassette and its reels |
-| `DeckView.swift` | The player body, keys, counter and volume |
+| `DeckView.swift` | The closed phone: player body, cassette door and key strip |
+| `OpenTrayView.swift` | The open phone's right half, where the chosen tape waits |
 | `GlassShimmer.swift` | The moving reflection on the door glass, brushed metal and screws |
 | `ShelfView.swift` | The tape shelf and search |
 | `LockScreenTape.swift` | Starts and updates the lock screen Live Activity |
