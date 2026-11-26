@@ -4,7 +4,9 @@
                    label strip, rollers, screws and reflections (the plastic itself is see-through)
      ?layer=hub    one clear reel hub -->
 <html><body style="margin:0;background:transparent"><script>
-const layer = new URLSearchParams(location.search).get('layer') || 'front';
+const query = new URLSearchParams(location.search);
+const layer = query.get('layer') || 'front';
+const W = Number(query.get('w')) || 1500; // output width in pixels
 const screw = (x, y, a) => `
   <g transform="translate(${x} ${y})">
     <circle r="1.75" fill="#fff" fill-opacity=".35" stroke="#7b838b" stroke-opacity=".5" stroke-width=".12"/>
@@ -25,7 +27,7 @@ const ring = (x, y, r) => `
   <circle cx="${x}" cy="${y}" r="${r}" fill="#fff" fill-opacity=".22" stroke="#78808a" stroke-opacity=".45" stroke-width=".14"/>
   <circle cx="${x}" cy="${y}" r="${r - .45}" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width=".2"/>`;
 const front = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 63" width="1500" height="945">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 63" width="${W}" height="${W * 0.63}">
 <defs>
   <radialGradient id="blackmetal" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#5a5c60"/><stop offset=".5" stop-color="#1b1c1e"/><stop offset="1" stop-color="#050505"/></radialGradient>
   <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".34"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>

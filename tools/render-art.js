@@ -9,10 +9,12 @@ const path = require('path');
   const browser = await chromium.launch();
   for (const [layer, w, h, file] of [
     ['front', 1500, 945, 'CassetteFront.imageset/cassette-front.png'],
+    // a small copy for the lock screen, where large images are refused
+    ['front', 600, 378, '../../TapeDeckWidgets/Assets.xcassets/CassetteFrontSmall.imageset/cassette-front-small.png'],
     ['hub', 480, 480, 'ReelHub.imageset/reel-hub.png'],
   ]) {
     const tab = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
-    await tab.goto(page + '?layer=' + layer);
+    await tab.goto(page + '?layer=' + layer + '&w=' + w);
     await tab.screenshot({ path: path.join(out, file), omitBackground: true });
     await tab.close();
   }

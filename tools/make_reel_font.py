@@ -4,7 +4,8 @@ Lock screen widgets cannot run animations, but a timer text redraws itself every
 second. In this font each digit is a picture of a cassette hub, and each digit is
 turned 18 degrees further than the one before. A timer shown in this font, cut
 down to its last digit, is therefore a hub that steps round once a second. The
-hub has six teeth, so after ten steps (180 degrees) it lines up with the start.
+hub has six teeth and eight pockets, so after ten steps (180 degrees) it lines
+up with the start. The shape matches the clear hub in tools/cassette-art.html.
 
 Run:  python3 tools/make_reel_font.py
 """
@@ -14,7 +15,8 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 
 EM = 1000
 CENTER = 500
-OUTER, INNER, TOOTH_TIP, TOOTH_HALF_WIDTH = 490, 285, 150, 55
+OUTER, INNER, TOOTH_TIP, TOOTH_HALF_WIDTH = 485, 250, 180, 28
+POCKET_RADIUS, POCKET_LONG, POCKET_SHORT = 372, 70, 44
 STEP_DEGREES = 18
 
 
@@ -45,6 +47,21 @@ def hub(rotation):
     for p in hole[1:]:
         pen.lineTo(p)
     pen.closePath()
+    # Eight oval pockets in the flange, counter clockwise like the hole.
+    for k in range(8):
+        turn = rotation + math.radians(12) + k * math.pi / 4
+        cx, cy = CENTER + POCKET_RADIUS * math.cos(turn), CENTER + POCKET_RADIUS * math.sin(turn)
+        oval = []
+        for i in range(16):
+            a = 2 * math.pi * i / 16
+            # long axis runs around the hub, short axis points at the centre
+            along, across = POCKET_LONG * math.cos(a), POCKET_SHORT * math.sin(a)
+            oval.append((round(cx - along * math.sin(turn) + across * math.cos(turn)),
+                         round(cy + along * math.cos(turn) + across * math.sin(turn))))
+        pen.moveTo(oval[0])
+        for p in oval[1:]:
+            pen.lineTo(p)
+        pen.closePath()
     return pen.glyph()
 
 

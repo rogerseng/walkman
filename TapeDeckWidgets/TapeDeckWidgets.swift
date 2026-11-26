@@ -11,13 +11,10 @@ struct TapeDeckWidgets: WidgetBundle {
 }
 
 private enum Palette {
-    static let body = Color(red: 0.13, green: 0.21, blue: 0.45)
-    static let cream = Color(red: 0.95, green: 0.91, blue: 0.81)
-    static let ink = Color(red: 0.10, green: 0.12, blue: 0.35)
+    static let body = Color(white: 0.07)
+    static let ink = Color(red: 0.07, green: 0.10, blue: 0.33)
     static let orange = Color(red: 0.96, green: 0.48, blue: 0.13)
-    static let tape = Color(red: 0.30, green: 0.18, blue: 0.11)
-    static let dark = Color(red: 0.09, green: 0.07, blue: 0.06)
-    static let hub = Color(white: 0.93)
+    static let oxide = Color(red: 0.24, green: 0.18, blue: 0.14)
 }
 
 struct TapeLiveActivity: Widget {
@@ -30,9 +27,11 @@ struct TapeLiveActivity: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     ReelView(state: context.state, fill: 1 - context.state.progress, size: 46)
+                        .clipShape(Circle())
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     ReelView(state: context.state, fill: context.state.progress, size: 46)
+                        .clipShape(Circle())
                 }
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 1) {
@@ -45,46 +44,34 @@ struct TapeLiveActivity: Widget {
                     TapeKeys(isPlaying: context.state.isPlaying)
                 }
             } compactLeading: {
-                ReelView(state: context.state, fill: 1 - context.state.progress, size: 22)
+                ReelView(state: context.state, fill: 0, size: 24)
             } compactTrailing: {
-                ReelView(state: context.state, fill: context.state.progress, size: 22)
+                ReelView(state: context.state, fill: 0, size: 24)
             } minimal: {
-                ReelView(state: context.state, fill: 0.5, size: 22)
+                ReelView(state: context.state, fill: 0, size: 24)
             }
         }
     }
 }
 
-/// The lock screen banner: a small cassette on the left, track and keys on the right.
+/// The lock screen banner: the clear cassette on the left, track and keys on the right.
 struct LockScreenTapeView: View {
     let state: TapeActivityAttributes.ContentState
 
     var body: some View {
         HStack(spacing: 14) {
-            VStack(spacing: 5) {
-                Text(state.title.isEmpty ? " " : state.title)
-                    .font(.custom("MarkerFelt-Wide", fixedSize: 15))
-                    .foregroundColor(Palette.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                HStack(spacing: 18) {
-                    ReelView(state: state, fill: 1 - state.progress, size: 56)
-                    ReelView(state: state, fill: state.progress, size: 56)
-                }
-                .frame(width: 150, height: 44)
-                .background(Palette.dark)
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-            }
-            .padding(8)
-            .frame(width: 166)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Palette.cream))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.black.opacity(0.5), lineWidth: 1))
+            MiniCassette(state: state, width: 168)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text(state.subtitle.isEmpty ? " " : state.subtitle)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(state.title.isEmpty ? " " : state.title)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                    Text(state.subtitle.isEmpty ? " " : state.subtitle)
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                .lineLimit(1)
                 Group {
                     if state.isPlaying {
                         ProgressView(timerInterval: state.clock, countsDown: false,
@@ -102,23 +89,64 @@ struct LockScreenTapeView: View {
     }
 }
 
-/// One reel: the wound tape, with a hub that steps round once a second.
+/// The clear cassette, small. Same construction as the one in the app: a
+/// faint shell, the two tape packs with their hubs, then the see-through
+/// artwork of the shell front, then the handwriting on the label.
+/// Measurements are in millimetres of a 100 x 63 mm shell.
+struct MiniCassette: View {
+    let state: TapeActivityAttributes.ContentState
+    var width: CGFloat
+
+    var body: some View {
+        let u = width / 100
+        ZStack {
+            RoundedRectangle(cornerRadius: 2.6 * u)
+                .fill(Color.white.opacity(0.14))
+            ZStack {
+                ReelView(state: state, fill: 1 - state.progress, size: 50 * u)
+                    .position(x: 29.5 * u, y: 28.5 * u)
+                ReelView(state: state, fill: state.progress, size: 50 * u)
+                    .position(x: 70.5 * u, y: 28.5 * u)
+            }
+            .frame(width: 100 * u, height: 63 * u)
+            .clipShape(RoundedRectangle(cornerRadius: 2.6 * u))
+
+            Image("CassetteFrontSmall")
+                .resizable()
+                .interpolation(.high)
+
+            Text(state.title.isEmpty ? " " : state.title)
+                .font(.custom("BradleyHandITCTT-Bold", fixedSize: 4.5 * u))
+                .foregroundColor(Palette.ink.opacity(0.92))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(width: 62 * u, height: 5.0 * u, alignment: .bottomLeading)
+                .position(x: 54 * u, y: 6.3 * u)
+        }
+        .frame(width: 100 * u, height: 63 * u)
+        .accessibilityHidden(true)
+    }
+}
+
+/// One reel: a ring of wound tape around a clear hub that steps round once a
+/// second. `size` is the diameter of a full reel; the hub is two fifths of it.
 struct ReelView: View {
     let state: TapeActivityAttributes.ContentState
     /// 0 for an empty reel, 1 for a full one.
     var fill: Double
-    /// Diameter of a full reel.
     var size: CGFloat
 
     var body: some View {
         let hub = size * 0.40
         let full = size / 2
-        let bare = hub / 2 + size * 0.03
+        let bare = hub / 2
         let clamped = CGFloat(min(max(fill, 0), 1))
-        let pack = 2 * (bare * bare + clamped * (full * full - bare * bare)).squareRoot()
+        let radius = (bare * bare + clamped * (full * full - bare * bare)).squareRoot() + size * 0.01
         ZStack {
-            Circle().fill(Palette.tape).frame(width: pack, height: pack)
-            Circle().fill(Palette.dark).frame(width: hub * 0.9, height: hub * 0.9)
+            // Wound tape, as a ring: the hub in the middle is clear
+            Circle()
+                .strokeBorder(Palette.oxide, lineWidth: max(0, radius - bare * 0.96))
+                .frame(width: 2 * radius, height: 2 * radius)
             // The TapeReels font draws every digit as a hub at a different angle,
             // so the last digit of a running timer is a turning hub. Showing just
             // that digit means pinning the text to the right and clipping the rest.
@@ -130,7 +158,7 @@ struct ReelView: View {
                 }
             }
             .font(.custom("TapeReels", fixedSize: hub))
-            .foregroundColor(Palette.hub)
+            .foregroundColor(Color.white.opacity(0.78))
             .multilineTextAlignment(.trailing)
             .lineLimit(1)
             .fixedSize()
@@ -166,10 +194,12 @@ struct TapeKeys: View {
     private func key(_ symbol: String, accent: Bool) -> some View {
         Image(systemName: symbol)
             .font(.system(size: 14, weight: .bold))
-            .foregroundColor(accent ? .white : Color(white: 0.15))
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 30)
-            .background(RoundedRectangle(cornerRadius: 6).fill(accent ? Palette.orange : Color(white: 0.85)))
+            .background(RoundedRectangle(cornerRadius: 6)
+                .fill(accent ? Palette.orange.opacity(0.9) : Color.white.opacity(0.22)))
+            .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.white.opacity(0.3), lineWidth: 0.75))
     }
 }
 

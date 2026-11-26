@@ -12,7 +12,7 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. Pick a tape, then close the phone to start it playing. The keys are there too, for screens that cannot fold.
 * The reels behave like a real tape. The left pack shrinks and the right one grows as the track plays, and each reel turns at the rate its pack size calls for.
 * Keys: REW and FF skip a track on a tap and wind the tape on a hold. PLAY and PAUSE latch down. STOP stops, and a second press ejects.
-* Lock screen tape: while a tape is in the deck, a Live Activity shows the cassette on the lock screen (and in the Dynamic Island) with previous, play / pause and next keys. The reels step round once a second, because iOS does not allow free running animation there. A tape left paused for ten minutes is taken off the lock screen.
+* Lock screen tape: while a tape is in the deck, a Live Activity shows the same clear cassette on the lock screen (and its reels in the Dynamic Island) with previous, play / pause and next keys. The hubs step round once a second, because iOS does not allow free running animation there. A tape left paused for ten minutes is taken off the lock screen.
 * Tape deck sounds: key clunks, door and eject, tape hiss while playing, motor whir while winding. They are generated in code and mix over the music. The speaker button on the deck turns them off. They are not muted by the silent switch, because the app has to hold a playback audio session to stay awake behind the lock screen.
 
 ## Running it on your iPhone
