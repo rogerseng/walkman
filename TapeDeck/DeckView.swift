@@ -1,169 +1,150 @@
 import SwiftUI
 
-/// The closed phone: the outside of a tape player. A glass door on the face
-/// shows the cassette standing on end, and a metal strip down the right edge
-/// carries the keys.
+/// The closed phone: a tape player with a clear case. The cassette fills the
+/// whole screen, and the brand plate, buttons and key strip are clear plastic
+/// floating over it.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
     var openShelf: () -> Void
 
-    private let silver = Color(red: 0.80, green: 0.82, blue: 0.85)
     private let stripWidth: CGFloat = 78
 
     var body: some View {
         GeometryReader { geo in
             let keyHeight = min(64, max(34, (geo.size.height - 130) / 5))
             HStack(spacing: 0) {
-                face.padding(16)
+                face.padding(14)
                 strip(keyHeight: keyHeight).frame(width: stripWidth)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .background(
-                HStack(spacing: 0) {
-                    bodyFinish
-                    BrushedSilver()
-                        .frame(width: stripWidth + geo.safeAreaInsets.trailing)
-                        .overlay(alignment: .leading) {
-                            // Seam where the strip meets the body
-                            LinearGradient(colors: [Color.black.opacity(0.45), .clear],
-                                           startPoint: .leading, endPoint: .trailing)
-                                .frame(width: 5)
-                        }
+                ZStack {
+                    // Inside of the player, seen through the case
+                    RadialGradient(colors: [Color(white: 0.16), Color(white: 0.04)],
+                                   center: .center, startRadius: 20, endRadius: 520)
+                    tape
+                    clearCase
                 }
                 .ignoresSafeArea()
             )
         }
     }
 
-    // MARK: Face
+    // MARK: Tape
 
-    private var bodyFinish: some View {
-        ZStack {
-            LinearGradient(colors: [Color(red: 0.27, green: 0.43, blue: 0.70),
-                                    Color(red: 0.15, green: 0.27, blue: 0.52)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-            LinearGradient(colors: [Color.white.opacity(0.12), .clear, Color.black.opacity(0.18)],
-                           startPoint: .top, endPoint: .bottom)
+    /// The cassette, scaled to fill the screen. It stands on end when the
+    /// screen is taller than wide. It may overflow the edges a little, but
+    /// never so far that the label is lost.
+    private var tape: some View {
+        GeometryReader { geo in
+            let upright = geo.size.height > geo.size.width
+            let long = upright ? geo.size.height : geo.size.width
+            let short = upright ? geo.size.width : geo.size.height
+            let fit = min(long / 100, short / 63)
+            let fill = max(long / 100, short / 63)
+            let scale = min(fill, fit * 1.18)
+            ZStack {
+                if model.hasTape {
+                    CassetteView(title: model.tapeTitle,
+                                 subtitle: model.trackLine,
+                                 progress: model.progress,
+                                 motion: model.motion)
+                        .frame(width: 100 * scale, height: 63 * scale)
+                        .rotationEffect(.degrees(upright ? -90 : 0))
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "eject.fill").font(.system(size: 30))
+                        Text("NO TAPE").font(.system(size: 16, weight: .bold)).tracking(3)
+                        Text("Tap to choose one").font(.system(size: 12))
+                    }
+                    .foregroundColor(Color.white.opacity(0.5))
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .clipped()
         }
     }
 
+    /// The clear shell over everything: a faint tint, a fixed reflection, the
+    /// moving shimmer, and bright edges where the plastic curves.
+    private var clearCase: some View {
+        ZStack {
+            Color.white.opacity(0.04)
+            LinearGradient(colors: [Color.white.opacity(0.16), Color.white.opacity(0.03), .clear],
+                           startPoint: .topLeading, endPoint: .center)
+            GlassShimmer()
+            RoundedRectangle(cornerRadius: 26)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1.5)
+                .padding(9)
+            RoundedRectangle(cornerRadius: 34)
+                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.55), Color.white.opacity(0.10),
+                                                      Color.white.opacity(0.30)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing),
+                              lineWidth: 3)
+        }
+        .allowsHitTesting(false)
+    }
+
+    // MARK: Face
+
     private var face: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("TAPEDECK")
-                        .font(.system(size: 22, weight: .heavy, design: .rounded))
+                        .font(.system(size: 20, weight: .heavy, design: .rounded))
                         .italic()
-                        .foregroundColor(silver)
-                    Text("CASSETTE PLAYER")
-                        .font(.system(size: 7, weight: .semibold))
-                        .tracking(1.5)
-                        .foregroundColor(silver.opacity(0.8))
+                    Text("STEREO CASSETTE PLAYER")
+                        .font(.system(size: 6.5, weight: .semibold))
+                        .tracking(1.2)
+                        .opacity(0.8)
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
+                .foregroundColor(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
+
                 Spacer(minLength: 4)
                 Button {
                     model.soundEffectsOn.toggle()
                 } label: {
                     Image(systemName: model.soundEffectsOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                        .frame(width: 34, height: 28)
                 }
                 .accessibilityLabel(model.soundEffectsOn ? "Tape sound effects on" : "Tape sound effects off")
                 Button(action: openShelf) {
                     Image(systemName: "square.stack.3d.up.fill")
-                        .frame(width: 34, height: 28)
                 }
                 .accessibilityLabel("Tape shelf")
             }
-            .buttonStyle(OrangeButtonStyle())
+            .buttonStyle(ClearButtonStyle())
 
-            Text("STEREO")
-                .font(.system(size: 17, weight: .black))
-                .tracking(3)
-                .foregroundColor(silver)
+            Spacer(minLength: 0)
 
-            door
-
-            HStack(spacing: 8) {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 15, weight: .bold))
-                    .accessibilityHidden(true)
-                Text(model.hasTape ? nowPlaying : "NO TAPE")
+            if model.hasTape {
+                Text(nowPlaying)
                     .font(.system(size: 11, weight: .semibold))
                     .lineLimit(1)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.25), lineWidth: 1))
             }
-            .foregroundColor(silver)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if !model.hasTape { openShelf() }
         }
     }
 
     private var nowPlaying: String {
         let line = model.trackLine
         return line.isEmpty ? model.tapeTitle : line
-    }
-
-    /// The cassette door. It takes whatever room is left and stands the
-    /// cassette on end when that room is taller than it is wide.
-    private var door: some View {
-        GeometryReader { geo in
-            let upright = geo.size.height > geo.size.width
-            let aspect: CGFloat = upright ? 0.66 : 1 / 0.66
-            let width = min(geo.size.width, geo.size.height * aspect)
-            let height = width / aspect
-            ZStack {
-                Color(white: 0.05)
-                if model.hasTape {
-                    CassetteView(title: model.tapeTitle,
-                                 subtitle: model.trackLine,
-                                 progress: model.progress,
-                                 motion: model.motion)
-                        .frame(width: (upright ? height : width) - 22,
-                               height: (upright ? width : height) - 22)
-                        .rotationEffect(.degrees(upright ? -90 : 0))
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                } else {
-                    VStack(spacing: 8) {
-                        Image(systemName: "eject.fill").font(.system(size: 26))
-                        Text("NO TAPE").font(.system(size: 14, weight: .bold)).tracking(3)
-                        Text("Tap to choose one").font(.system(size: 11))
-                    }
-                    .foregroundColor(silver.opacity(0.55))
-                }
-                glass
-            }
-            .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            // Chrome bezel
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(LinearGradient(colors: [Color.white, Color(white: 0.55),
-                                                          Color(white: 0.9), Color(white: 0.45)],
-                                                 startPoint: .topLeading, endPoint: .bottomTrailing),
-                                  lineWidth: 4)
-            )
-            .shadow(color: .black.opacity(0.45), radius: 7, y: 4)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if !model.hasTape { openShelf() }
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-        }
-    }
-
-    /// The door window: smoked glass, a fixed reflection in one corner, a dark
-    /// edge where the glass meets the frame, and the moving shimmer.
-    private var glass: some View {
-        ZStack {
-            Color(red: 0.35, green: 0.45, blue: 0.50).opacity(0.10)
-            LinearGradient(colors: [Color.white.opacity(0.20), Color.white.opacity(0.04), .clear],
-                           startPoint: .topLeading, endPoint: .center)
-            Rectangle()
-                .strokeBorder(Color.black.opacity(0.55), lineWidth: 8)
-                .blur(radius: 6)
-            GlassShimmer()
-        }
-        .clipped()
-        .allowsHitTesting(false)
     }
 
     // MARK: Key strip
@@ -176,7 +157,7 @@ struct DeckView: View {
                     .fill(lampOn ? Color.red : Color(red: 0.3, green: 0.05, blue: 0.05))
                     .frame(width: 9, height: 9)
                     .shadow(color: lampOn ? .red : .clear, radius: 5)
-                Text("BATT").font(.system(size: 6, weight: .bold)).foregroundColor(Color(white: 0.2))
+                Text("BATT").font(.system(size: 6, weight: .bold)).foregroundColor(.white.opacity(0.8))
             }
             .accessibilityHidden(true)
 
@@ -185,7 +166,7 @@ struct DeckView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(RoundedRectangle(cornerRadius: 4).fill(Color.black))
+                .background(RoundedRectangle(cornerRadius: 4).fill(Color.black.opacity(0.7)))
                 .accessibilityLabel("Elapsed \(TransportKeys.clock(model.elapsed))")
 
             Spacer(minLength: 0)
@@ -195,6 +176,16 @@ struct DeckView: View {
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 8)
+        .frame(maxHeight: .infinity)
+        // A frosted clear panel: the tape shows through underneath the keys.
+        .background(
+            ZStack(alignment: .leading) {
+                Rectangle().fill(.ultraThinMaterial)
+                Color.white.opacity(0.05)
+                Color.white.opacity(0.35).frame(width: 1)
+            }
+            .ignoresSafeArea()
+        )
     }
 
     private var lampOn: Bool {
@@ -228,7 +219,7 @@ struct TransportKeys: View {
                     height: keyHeight, onDown: { if model.stopKey() { onEject() } })
         }
         .padding(6)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.07)))
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.28)))
     }
 
     static func clock(_ time: TimeInterval) -> String {
@@ -237,7 +228,7 @@ struct TransportKeys: View {
     }
 }
 
-/// One mechanical key. It reports press and release separately so rewind and
+/// One mechanical key, moulded in clear plastic. It reports press and release separately so rewind and
 /// fast forward can tell a tap from a hold, and stays down while latched.
 struct TapeKey: View {
     var symbol: String
@@ -258,7 +249,7 @@ struct TapeKey: View {
                 Text(label).font(.system(size: 7, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.6)
             }
         }
-        .foregroundColor(accent ? .white : Color(white: 0.15))
+        .foregroundColor(.white)
         .padding(.horizontal, 2)
         .frame(maxWidth: .infinity)
         .frame(height: height)
@@ -266,7 +257,8 @@ struct TapeKey: View {
             RoundedRectangle(cornerRadius: 7)
                 .fill(LinearGradient(colors: keyColors(down: down), startPoint: .top, endPoint: .bottom))
         )
-        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.black.opacity(0.5), lineWidth: 1))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 7))
+        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
         .offset(y: down ? 3 : 0)
         .shadow(color: .black.opacity(down ? 0.1 : 0.5), radius: down ? 1 : 3, y: down ? 1 : 3)
         .animation(.easeOut(duration: 0.08), value: down)
@@ -296,12 +288,25 @@ struct TapeKey: View {
     private func keyColors(down: Bool) -> [Color] {
         if accent {
             return down
-                ? [Color(red: 0.75, green: 0.33, blue: 0.06), Color(red: 0.85, green: 0.40, blue: 0.10)]
-                : [Color(red: 0.98, green: 0.55, blue: 0.18), Color(red: 0.88, green: 0.40, blue: 0.08)]
+                ? [Color(red: 0.80, green: 0.36, blue: 0.08).opacity(0.90), Color(red: 0.90, green: 0.44, blue: 0.12).opacity(0.90)]
+                : [Color(red: 0.99, green: 0.58, blue: 0.20).opacity(0.85), Color(red: 0.92, green: 0.42, blue: 0.08).opacity(0.85)]
         }
         return down
-            ? [Color(white: 0.62), Color(white: 0.72)]
-            : [Color(white: 0.92), Color(white: 0.70)]
+            ? [Color.white.opacity(0.10), Color.white.opacity(0.18)]
+            : [Color.white.opacity(0.36), Color.white.opacity(0.14)]
+    }
+}
+
+/// A small round button in the same clear plastic as the case.
+struct ClearButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 14, weight: .bold))
+            .foregroundColor(.white)
+            .frame(width: 38, height: 38)
+            .background(.ultraThinMaterial, in: Circle())
+            .overlay(Circle().strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+            .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
 
