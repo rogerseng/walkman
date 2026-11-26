@@ -85,6 +85,8 @@ final class PlayerModel: ObservableObject {
     private let player = ApplicationMusicPlayer.shared
     private let sounds = TapeSounds()
     private let haptic = UIImpactFeedbackGenerator(style: .rigid)
+    private let lockScreen = LockScreenTape()
+    private var pausedSince: Date?
     private var heldSeek: TapeMotion?
     private var seekTask: Task<Void, Never>?
     private var swapping = false
@@ -307,6 +309,7 @@ final class PlayerModel: ObservableObject {
         case .fastForward, .rewind: sounds.setLoop(.whir)
         case .paused, .stopped: sounds.setLoop(nil)
         }
+        pausedSince = motion == .paused ? Date() : nil
         // The tape ran out on its own: the play key pops back up.
         if old == .playing, motion == .stopped || motion == .paused,
            Date().timeIntervalSince(lastKeyPress) > 1.0 {
@@ -317,7 +320,11 @@ final class PlayerModel: ObservableObject {
     /// Mirrors the system player's state into published properties.
     private func refresh() {
         guard hasTape, !swapping else {
-            if !hasTape, motion != .stopped { motion = .stopped }
+            if !hasTape {
+                if motion != .stopped { motion = .stopped }
+                sounds.keepAlive = false
+                lockScreen.end()
+            }
             return
         }
 
@@ -353,5 +360,27 @@ final class PlayerModel: ObservableObject {
 
         let time = player.playbackTime
         if time.isFinite, abs(time - elapsed) > 0.05 { elapsed = max(time, 0) }
+
+        syncLockScreen()
+    }
+
+    /// Keeps the lock screen tape current, and keeps the app awake behind the
+    /// lock screen so it can do that. A tape left paused for ten minutes is put
+    /// away so nothing stale is left showing and no battery is wasted.
+    private func syncLockScreen() {
+        let parked = motion == .paused
+            && Date().timeIntervalSince(pausedSince ?? Date()) > 600
+        guard motion != .stopped, !parked else {
+            sounds.keepAlive = false
+            lockScreen.end()
+            return
+        }
+        sounds.keepAlive = true
+        var line = trackArtist
+        if !trackTitle.isEmpty, trackTitle != tapeTitle {
+            line = trackArtist.isEmpty ? trackTitle : "\(trackTitle) · \(trackArtist)"
+        }
+        lockScreen.sync(title: tapeTitle, subtitle: line, isPlaying: motion == .playing,
+                        elapsed: elapsed, duration: duration)
     }
 }

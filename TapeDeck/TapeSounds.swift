@@ -3,13 +3,26 @@ import AVFoundation
 /// Tape deck sound effects, synthesised in code so the app ships no audio files.
 ///
 /// The music itself is played by the system music player, so these sounds use an
-/// ambient audio session that mixes on top of it (and respects the silent switch).
+/// audio session that mixes on top of it. It is a playback session so the app
+/// stays awake behind the lock screen (see `keepAlive`), which also means the
+/// sounds are not muted by the silent switch.
 final class TapeSounds {
     enum Effect { case keyDown, keyUp, eject, insert }
     enum Loop { case hiss, whir }
 
     var enabled = true {
         didSet { applyLoop() }
+    }
+
+    /// While true, something is always playing, silence if need be. iOS suspends
+    /// an app in the background unless it is playing audio, and the app has to
+    /// stay awake to keep the lock screen tape in step with the music.
+    var keepAlive = false {
+        didSet {
+            // Also restart the loop if the engine was stopped under us.
+            if playingLoop != nil, !engine.isRunning { playingLoop = nil }
+            applyLoop()
+        }
     }
 
     private let engine = AVAudioEngine()
@@ -19,6 +32,8 @@ final class TapeSounds {
     private var effects: [Effect: AVAudioPCMBuffer] = [:]
     private var loops: [Loop: AVAudioPCMBuffer] = [:]
     private var currentLoop: Loop?
+    private var playingLoop: AVAudioPCMBuffer?
+    private lazy var silentLoop = buffer(Self.silence(1.0))
     private var configured = false
 
     init() {
@@ -48,20 +63,31 @@ final class TapeSounds {
     }
 
     private func applyLoop() {
-        guard enabled, let loop = currentLoop, let buffer = loops[loop], start() else {
+        var wanted: AVAudioPCMBuffer?
+        var volume: Float = 1
+        if enabled, let loop = currentLoop {
+            wanted = loops[loop]
+            volume = loop == .hiss ? 0.5 : 0.9
+        } else if keepAlive {
+            wanted = silentLoop
+        }
+        guard wanted !== playingLoop else { return }
+        guard let wanted, start() else {
             if engine.isRunning { loopNode.stop() }
+            playingLoop = nil
             return
         }
-        loopNode.volume = loop == .hiss ? 0.5 : 0.9
-        loopNode.scheduleBuffer(buffer, at: nil, options: [.loops, .interrupts], completionHandler: nil)
+        loopNode.volume = volume
+        loopNode.scheduleBuffer(wanted, at: nil, options: [.loops, .interrupts], completionHandler: nil)
         loopNode.play()
+        playingLoop = wanted
     }
 
     /// Starts the engine if needed. Returns false when audio is unavailable.
     private func start() -> Bool {
         if !configured {
             let session = AVAudioSession.sharedInstance()
-            try? session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+            try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try? session.setActive(true)
             configured = true
         }

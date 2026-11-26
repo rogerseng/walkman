@@ -9,14 +9,15 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 * Unfolded or any wide screen: the player on the left and the tape shelf on the right.
 * The reels behave like a real tape. The left pack shrinks and the right one grows as the track plays, and each reel turns at the rate its pack size calls for.
 * Keys: REW and FF skip a track on a tap and wind the tape on a hold. PLAY and PAUSE latch down. STOP stops, and a second press ejects.
-* Tape deck sounds: key clunks, door and eject, tape hiss while playing, motor whir while winding. They are generated in code, mix over the music, and follow the silent switch. The speaker button on the deck turns them off.
+* Lock screen tape: while a tape is in the deck, a Live Activity shows the cassette on the lock screen (and in the Dynamic Island) with previous, play / pause and next keys. The reels step round once a second, because iOS does not allow free running animation there. A tape left paused for ten minutes is taken off the lock screen.
+* Tape deck sounds: key clunks, door and eject, tape hiss while playing, motor whir while winding. They are generated in code and mix over the music. The speaker button on the deck turns them off. They are not muted by the silent switch, because the app has to hold a playback audio session to stay awake behind the lock screen.
 
 ## Running it on your iPhone
 
 You need a Mac with Xcode 16 or later, an Apple Music subscription on the phone, and an Apple Developer Program membership (MusicKit needs it).
 
 1. Open `TapeDeck.xcodeproj` in Xcode.
-2. Select the TapeDeck target, open Signing & Capabilities, and choose your team. Change the bundle identifier if Xcode says it is taken.
+2. Select the TapeDeck target, open Signing & Capabilities, and choose your team. Do the same for the TapeDeckWidgets target. If Xcode says a bundle identifier is taken, change both, keeping the widget one as the app one plus `.widgets`.
 3. Go to developer.apple.com, Certificates, Identifiers & Profiles, Identifiers. Open the identifier for your bundle ID, choose the App Services tab, tick MusicKit, and save.
 4. Plug in your iPhone, choose it as the run destination, and press Run.
 5. On first launch, open the shelf and tap Connect Apple Music.
@@ -33,3 +34,8 @@ Music does not play in the Simulator. Use a real device.
 | `CassetteView.swift` | The cassette and its reels |
 | `DeckView.swift` | The player body, keys, counter and volume |
 | `ShelfView.swift` | The tape shelf and search |
+| `LockScreenTape.swift` | Starts and updates the lock screen Live Activity |
+| `Shared/TapeActivity.swift` | Data and key actions shared by the app and the widget extension |
+| `TapeDeckWidgets/` | The lock screen and Dynamic Island views, and the reel font |
+| `tools/make_reel_font.py` | Regenerates the reel font |
+| `Config/` | Info.plist additions for the two targets |
