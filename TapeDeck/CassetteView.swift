@@ -110,7 +110,7 @@ struct CassetteView: View {
             HStack {
                 Text("A").font(.system(size: 4.2 * u, weight: .black))
                 Spacer()
-                Text("C-90 · NORMAL BIAS").font(.system(size: 2.4 * u, weight: .semibold))
+                Text("C-90").font(.system(size: 2.4 * u, weight: .semibold))
             }
             .foregroundColor(Color(white: 0.2))
             .padding(.horizontal, 3 * u)
