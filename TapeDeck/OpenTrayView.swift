@@ -18,13 +18,14 @@ struct OpenTrayView: View {
     var body: some View {
         VStack(spacing: 16) {
             GeometryReader { geo in
-                let width = min(geo.size.width, geo.size.height * 0.63)
-                let height = width / 0.63
+                // Lying flat in the tray, long side across, as big as fits
+                let width = min(geo.size.width, geo.size.height / 0.63)
+                let height = width * 0.63
                 ZStack {
                     if model.hasTape {
                         DeckCassette()
-                            .frame(width: height, height: width)
-                            .rotationEffect(.degrees(-90))
+                            .frame(width: width, height: height)
+                            // Turning it over swings it round its long edge.
                             .rotation3DEffect(.degrees(model.flipAngle), axis: (x: 1, y: 0, z: 0),
                                               perspective: 0.4)
                             .onTapGesture(count: 2) { model.flipTape() }

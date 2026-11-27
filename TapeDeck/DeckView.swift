@@ -217,7 +217,8 @@ struct DeckView: View {
                 if skin.hasStripes {
                     RetroStripes()
                         .frame(width: size.width, height: 30)
-                        .position(x: size.width / 2, y: min(size.height - 34, window.maxY + 62))
+                        // Low on the case, clear of the song line under the window
+                        .position(x: size.width / 2, y: min(size.height - 22, window.maxY + 92))
                         .allowsHitTesting(false)
                 }
 
