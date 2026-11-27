@@ -48,7 +48,7 @@ struct ContentView: View {
                 if wasOpen, !isOpen { model.lidClosed() }
             }
         }
-        .alert("Tape trouble", isPresented: errorShown) {
+        .alert("TapeDeck", isPresented: errorShown) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(model.errorMessage ?? "")

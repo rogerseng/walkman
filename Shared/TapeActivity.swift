@@ -14,8 +14,13 @@ struct TapeActivityAttributes: ActivityAttributes {
         /// The lock screen runs its own clock between the two.
         var trackStart: Date
         var trackEnd: Date
-        /// 0...1 through the current track at the moment this was sent.
+        /// 0...1 through the current side of the tape when this was sent.
+        /// The reels are drawn from this.
         var progress: Double
+        /// "A" or "B".
+        var side: String
+        /// Red, green and blue of the cover art's colour, if it has one.
+        var tint: [Double]?
     }
 }
 

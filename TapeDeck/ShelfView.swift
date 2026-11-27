@@ -11,6 +11,8 @@ struct ShelfView: View {
     var onPick: () -> Void
 
     @State private var term = ""
+    /// The mixtape being recorded or edited, if any.
+    @State private var editing: Mixtape?
 
     var body: some View {
         NavigationStack {
@@ -46,6 +48,7 @@ struct ShelfView: View {
                 if model.isLoadingLibrary && model.libraryPlaylists.isEmpty && model.libraryAlbums.isEmpty {
                     ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
                 }
+                mixtapes
                 section("Your Playlists", tapes: model.libraryPlaylists, empty: nil)
                 section("Your Albums", tapes: model.libraryAlbums, empty: nil)
             }
@@ -60,6 +63,64 @@ struct ShelfView: View {
             await model.search(term)
         }
         .refreshable { await model.loadLibrary() }
+        .sheet(item: $editing) { mixtape in
+            MixtapeEditor(mixtape: mixtape)
+        }
+    }
+
+    /// Tapes you recorded yourself, with a blank at the top to start a new one.
+    private var mixtapes: some View {
+        Section {
+            Button {
+                editing = Mixtape()
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .bold))
+                        .frame(width: 40, height: 40)
+                    Text("Record a new mixtape")
+                        .font(.system(size: 15, weight: .semibold))
+                    Spacer(minLength: 0)
+                }
+                .foregroundColor(.white.opacity(0.85))
+                .padding(.horizontal, 12)
+                .frame(height: 52)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5)
+                        .strokeBorder(Color.white.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [6, 5]))
+                )
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 12))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+
+            ForEach(model.mixtapes) { mixtape in
+                Button {
+                    model.insert(.mixtape(mixtape), autoPlay: playOnPick)
+                    onPick()
+                } label: {
+                    TapeSpine(tape: .mixtape(mixtape))
+                }
+                .buttonStyle(.plain)
+                .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 12))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .swipeActions {
+                    Button("Delete", role: .destructive) {
+                        model.delete(mixtape)
+                    }
+                    Button("Edit") {
+                        editing = mixtape
+                    }
+                }
+            }
+        } header: {
+            Text("YOUR MIXTAPES")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.5)
+        }
     }
 
     @ViewBuilder
@@ -120,6 +181,11 @@ struct TapeSpine: View {
         return Self.bands[sum % Self.bands.count]
     }
 
+    private var length: String {
+        if case .mixtape(let mixtape) = tape { return "\(mixtape.minutesPerSide * 2)" }
+        return "90"
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             band.frame(width: 8)
@@ -144,7 +210,7 @@ struct TapeSpine: View {
             }
             .lineLimit(1)
             Spacer(minLength: 0)
-            Text("90")
+            Text(length)
                 .font(.system(size: 13, weight: .light))
                 .foregroundColor(Color(white: 0.45))
         }

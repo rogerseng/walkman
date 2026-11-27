@@ -7,6 +7,7 @@ struct OpenTrayView: View {
 
     private var hint: String {
         if !model.hasTape { return "Choose a tape" }
+        if let note = model.endOfSideNote { return note }
         if model.motion == .playing { return model.trackLine.isEmpty ? " " : model.trackLine }
         return "Close the phone, or press PLAY, to start the music"
     }
@@ -18,12 +19,12 @@ struct OpenTrayView: View {
                 let height = width / 0.63
                 ZStack {
                     if model.hasTape {
-                        CassetteView(title: model.tapeTitle,
-                                     subtitle: model.trackLine,
-                                     progress: model.progress,
-                                     motion: model.motion)
+                        DeckCassette()
                             .frame(width: height, height: width)
                             .rotationEffect(.degrees(-90))
+                            .rotation3DEffect(.degrees(model.flipAngle), axis: (x: 1, y: 0, z: 0),
+                                              perspective: 0.4)
+                            .onTapGesture(count: 2) { model.flipTape() }
                             .transition(.opacity)
                     } else {
                         RoundedRectangle(cornerRadius: 14)
@@ -38,6 +39,16 @@ struct OpenTrayView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .foregroundColor(.white.opacity(0.85))
+            if model.hasTape {
+                Button {
+                    model.flipTape()
+                } label: {
+                    Text("Flip to side \(model.sideLetter == "A" ? "B" : "A")")
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(PlainKeyButtonStyle())
+            }
             TransportKeys(vertical: false, ejectRemovesTape: true)
         }
         .padding(20)

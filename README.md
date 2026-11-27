@@ -10,7 +10,10 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 * Haptics: a firm tap when a key goes down, a lighter one when it springs back, a heavy thud for the cassette door, and a soft pulse four times a second while the tape winds.
 * The cassette is a clear one. The shell front is see-through artwork (bright moulded edges and ridges, stickers, a stick-on paper label, guide rollers, black screws, reflections). Under it the whole reels, their clear hubs, the tape running down to the rollers and the handwriting on the label are drawn live. The artwork source is `tools/cassette-art.html`; `node tools/render-art.js` re-renders it.
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. The shelf shows each playlist and album as a cassette spine: an off-white card with the name handwritten on it and a grey band. Pick a tape, then close the phone to start it playing. The keys are there too, for screens that cannot fold.
-* The reels behave like a real tape. The left pack shrinks and the right one grows as the track plays, and each reel turns at the rate its pack size calls for.
+* It behaves like tape. The reels show where you are on the whole side, not in the current song: the left pack shrinks and the right one grows across the side, and each reel turns at the rate its pack size calls for.
+* Two sides. Every album and playlist is split into side A and side B of about equal length. When a side runs out the play key pops up and the music stops. Double-tap the tape to turn it over. Turn it over part way through and, as with a real cassette, you land as far from the end of the other side as you were from the start of this one.
+* Mixtapes. Pick a blank C-60 or C-90, name it, and add songs from Apple Music to each side until the tape is full. A song that is too long for the tape left on a side cannot be added. Mixtapes are kept on the phone.
+* Labels come from the music. An album tape has a printed label with the album's title and artist, in the colours of its cover art, and the clear shell is tinted the same colour. Playlists and mixtapes have a paper label with the name and current track written by hand.
 * Keys: REW and FF skip a track on a tap and wind the tape on a hold. PLAY and PAUSE latch down. STOP stops, and a second press ejects.
 * Lock screen tape: while a tape is in the deck, a Live Activity shows the same clear cassette on the lock screen (and its reels in the Dynamic Island) with previous, play / pause and next keys. The hubs step round once a second, because iOS does not allow free running animation there. A tape left paused for ten minutes is taken off the lock screen.
 * Tape deck sounds: key clunks, door and eject, tape hiss while playing, motor whir while winding. They are generated in code and mix over the music. The speaker button on the deck turns them off. They are not muted by the silent switch, because the app has to hold a playback audio session to stay awake behind the lock screen.
@@ -41,7 +44,9 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | File | What is in it |
 | --- | --- |
 | `TapeDeckApp.swift` | App entry and the closed / open layout switch |
-| `PlayerModel.swift` | Apple Music access, library, search, playback and key handling |
+| `PlayerModel.swift` | Apple Music access, library, search, playback, sides, flipping and key handling |
+| `TapeModels.swift` | Tapes, their two sides, mixtapes and where mixtapes are stored |
+| `MixtapeEditor.swift` | Recording and editing a mixtape |
 | `TapeSounds.swift` | Synthesised sound effects |
 | `CassetteView.swift` | The cassette and its reels |
 | `DeckView.swift` | The closed phone: player body, cassette door and key strip |

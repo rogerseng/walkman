@@ -23,7 +23,8 @@ final class LockScreenTape {
 
     /// Call often. Only talks to the system when something worth showing changed.
     func sync(title: String, subtitle: String, isPlaying: Bool,
-              elapsed: TimeInterval, duration: TimeInterval) {
+              elapsed: TimeInterval, duration: TimeInterval,
+              tapeProgress: Double, side: String, tint: [Double]?) {
         let now = Date()
         // Swiped away on the lock screen: forget it, so a fresh one can start.
         if let activity, activity.activityState == .dismissed || activity.activityState == .ended {
@@ -37,12 +38,13 @@ final class LockScreenTape {
         let start = now.addingTimeInterval(-elapsed)
         // With no known length, let the lock screen clock run for a few hours.
         let end = start.addingTimeInterval(duration > elapsed ? duration : elapsed + 4 * 3600)
-        let progress = duration > 0 ? min(max(elapsed / duration, 0), 1) : 0
         let state = State(title: title, subtitle: subtitle, isPlaying: isPlaying,
-                          trackStart: start, trackEnd: end, progress: progress)
+                          trackStart: start, trackEnd: end, progress: tapeProgress,
+                          side: side, tint: tint)
 
         if let sent, activity != nil {
-            let sameLabel = sent.title == title && sent.subtitle == subtitle && sent.isPlaying == isPlaying
+            let sameLabel = sent.title == title && sent.subtitle == subtitle
+                && sent.isPlaying == isPlaying && sent.side == side
             let age = now.timeIntervalSince(sentAt)
             if sameLabel {
                 // While playing the lock screen keeps time itself. Resend only

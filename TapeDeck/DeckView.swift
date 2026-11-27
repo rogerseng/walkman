@@ -39,8 +39,12 @@ struct DeckView: View {
             HStack(spacing: 0) {
                 if railLeading { keyColumn(insets: insets, rail: true, leading: true) }
                 // The face itself is drawn in the background, full screen.
+                // Double-tap the tape to turn it over.
                 Color.clear
                     .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        model.flipTape()
+                    }
                     .onTapGesture {
                         if !model.hasTape { openShelf() }
                     }
@@ -54,6 +58,18 @@ struct DeckView: View {
                     clearCase
                 }
             )
+            // When the tape runs out, say so under the window.
+            .overlay(alignment: .topLeading) {
+                if let note = model.endOfSideNote {
+                    Text(note)
+                        .font(.system(size: 11, weight: .semibold))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.white.opacity(0.85))
+                        .frame(width: window.width)
+                        .offset(x: window.minX, y: window.maxY + 14)
+                        .allowsHitTesting(false)
+                }
+            }
             // Volume: beside the window and exactly as tall as it is
             .overlay(alignment: .topLeading) {
                 VolumeColumn()
@@ -83,12 +99,13 @@ struct DeckView: View {
             let opening = RoundedRectangle(cornerRadius: 20)
             ZStack {
                 if model.hasTape {
-                    CassetteView(title: model.tapeTitle,
-                                 subtitle: model.trackLine,
-                                 progress: model.progress,
-                                 motion: model.motion)
+                    DeckCassette()
                         .frame(width: 100 * scale, height: 63 * scale)
                         .rotationEffect(.degrees(upright ? -90 : 0))
+                        // Turning the tape over: it swings round its long edge.
+                        .rotation3DEffect(.degrees(model.flipAngle),
+                                          axis: (x: upright ? 1 : 0, y: upright ? 0 : 1, z: 0),
+                                          perspective: 0.4)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 } else {
                     emptyWell(upright: upright, length: 100 * scale)
@@ -247,6 +264,24 @@ struct DeckView: View {
             }
             .frame(width: stripWidth + insets.trailing)
         }
+    }
+}
+
+/// The cassette that is in the deck, drawn from the player's state.
+struct DeckCassette: View {
+    @EnvironmentObject private var model: PlayerModel
+
+    var body: some View {
+        CassetteView(title: model.tapeTitle,
+                     // A printed label carries the album's artist; a handwritten
+                     // one has room for whatever is playing.
+                     subtitle: model.printedLabel ? model.tapeSubtitle : model.trackLine,
+                     progress: model.progress,
+                     motion: model.motion,
+                     side: model.sideLetter,
+                     printed: model.printedLabel,
+                     tint: model.labelColor.map { Color(cgColor: $0) },
+                     printColor: model.printColor.map { Color(cgColor: $0) })
     }
 }
 

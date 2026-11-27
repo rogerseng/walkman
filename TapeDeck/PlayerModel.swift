@@ -3,50 +3,6 @@ import MusicKit
 import SwiftUI
 import UIKit
 
-/// What the tape transport is doing right now.
-enum TapeMotion: Equatable {
-    case stopped, playing, paused, fastForward, rewind
-}
-
-/// Something that can be put in the deck.
-enum Tape: Identifiable {
-    case album(Album)
-    case playlist(Playlist)
-    case song(Song)
-
-    var id: String {
-        switch self {
-        case .album(let a): return "album-\(a.id.rawValue)"
-        case .playlist(let p): return "playlist-\(p.id.rawValue)"
-        case .song(let s): return "song-\(s.id.rawValue)"
-        }
-    }
-
-    var title: String {
-        switch self {
-        case .album(let a): return a.title
-        case .playlist(let p): return p.name
-        case .song(let s): return s.title
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .album(let a): return a.artistName
-        case .playlist(let p): return p.curatorName ?? "Playlist"
-        case .song(let s): return s.artistName
-        }
-    }
-
-    var artwork: Artwork? {
-        switch self {
-        case .album(let a): return a.artwork
-        case .playlist(let p): return p.artwork
-        case .song(let s): return s.artwork
-        }
-    }
-}
-
 @MainActor
 final class PlayerModel: ObservableObject {
     // Access
@@ -57,17 +13,34 @@ final class PlayerModel: ObservableObject {
         didSet { if motion != oldValue { motionChanged(from: oldValue) } }
     }
     @Published private(set) var hasTape = false
-    @Published private(set) var tapeTitle = ""
     @Published private(set) var trackTitle = ""
     @Published private(set) var trackArtist = ""
+    /// Position in, and length of, the current track.
     @Published private(set) var elapsed: TimeInterval = 0
     @Published private(set) var duration: TimeInterval = 0
+
+    // The tape itself
+    @Published private(set) var tapeTitle = ""
+    @Published private(set) var tapeSubtitle = ""
+    @Published private(set) var printedLabel = false
+    @Published private(set) var labelColor: CGColor?
+    @Published private(set) var printColor: CGColor?
+    /// 0 for side A, 1 for side B.
+    @Published private(set) var sideIndex = 0
+    /// How far through the current side the tape is, 0...1. This is what the
+    /// reels show: the whole side, not the current song.
+    @Published private(set) var progress: Double = 0
+    /// The tape has run to the end of this side and stopped itself.
+    @Published private(set) var sideEnded = false
+    /// Turns the cassette over on screen while it is being flipped.
+    @Published private(set) var flipAngle: Double = 0
 
     // Shelf
     @Published private(set) var libraryPlaylists: [Tape] = []
     @Published private(set) var libraryAlbums: [Tape] = []
     @Published private(set) var searchResults: [Tape] = []
     @Published private(set) var isLoadingLibrary = false
+    @Published private(set) var mixtapes: [Mixtape] = MixtapeStore.load()
 
     @Published var errorMessage: String?
     @Published var soundEffectsOn: Bool {
@@ -77,14 +50,29 @@ final class PlayerModel: ObservableObject {
         }
     }
 
-    /// 0 at the start of the current track, 1 at the end.
-    var progress: Double {
-        duration > 0 ? min(max(elapsed / duration, 0), 1) : 0
+    var sideLetter: String { sideIndex == 0 ? "A" : "B" }
+
+    /// The current track and artist on one line, for labels.
+    var trackLine: String {
+        if trackTitle.isEmpty || trackTitle == tapeTitle { return trackArtist }
+        return trackArtist.isEmpty ? trackTitle : "\(trackTitle) · \(trackArtist)"
+    }
+
+    /// What to tell the listener when the tape has run out.
+    var endOfSideNote: String? {
+        guard hasTape, sideEnded else { return nil }
+        let other = 1 - sideIndex
+        if other < sides.count, !sides[other].isBlank {
+            return "End of side \(sideLetter). Double-tap the tape to flip it."
+        }
+        return "End of side \(sideLetter). The other side is blank."
     }
 
     private let player = ApplicationMusicPlayer.shared
     private let sounds = TapeSounds()
     private let lockScreen = LockScreenTape()
+    private var sides: [TapeSide] = []
+    private var trackIndex = 0
     private var pausedSince: Date?
     private var waitingForLid = false
     private var heldSeek: TapeMotion?
@@ -158,13 +146,42 @@ final class PlayerModel: ObservableObject {
         }
     }
 
-    // MARK: Loading tapes
+    // MARK: Mixtapes
 
-    /// The current track and artist on one line, for labels.
-    var trackLine: String {
-        if trackTitle.isEmpty || trackTitle == tapeTitle { return trackArtist }
-        return trackArtist.isEmpty ? trackTitle : "\(trackTitle) · \(trackArtist)"
+    /// Songs from the Apple Music catalogue, for recording onto a mixtape.
+    func searchSongs(_ term: String) async -> [MixSong] {
+        let term = term.trimmingCharacters(in: .whitespaces)
+        guard !term.isEmpty else { return [] }
+        do {
+            var request = MusicCatalogSearchRequest(term: term, types: [Song.self])
+            request.limit = 20
+            let response = try await request.response()
+            return response.songs.map {
+                MixSong(id: $0.id.rawValue, title: $0.title, artist: $0.artistName, duration: $0.duration ?? 0)
+            }
+        } catch {
+            if !Task.isCancelled {
+                errorMessage = "Search failed. \(error.localizedDescription)"
+            }
+            return []
+        }
     }
+
+    func save(_ mixtape: Mixtape) {
+        if let index = mixtapes.firstIndex(where: { $0.id == mixtape.id }) {
+            mixtapes[index] = mixtape
+        } else {
+            mixtapes.insert(mixtape, at: 0)
+        }
+        MixtapeStore.save(mixtapes)
+    }
+
+    func delete(_ mixtape: Mixtape) {
+        mixtapes.removeAll { $0.id == mixtape.id }
+        MixtapeStore.save(mixtapes)
+    }
+
+    // MARK: Loading tapes
 
     /// The phone was folded shut. A tape chosen while it was open starts now.
     func lidClosed() {
@@ -189,17 +206,27 @@ final class PlayerModel: ObservableObject {
                 await pause(seconds: 0.6)
             }
             do {
-                switch tape {
-                case .album(let album): player.queue = [album]
-                case .playlist(let playlist): player.queue = [playlist]
-                case .song(let song): player.queue = [song]
+                let loaded = try await loadSides(of: tape)
+                guard let first = loaded.firstIndex(where: { !$0.isBlank }) else {
+                    errorMessage = "That tape has nothing on it."
+                    return
                 }
+                sides = loaded
+                sideIndex = first
+                sideEnded = false
+                progress = 0
+                trackIndex = 0
                 tapeTitle = tape.title
+                tapeSubtitle = tape.subtitle
+                printedLabel = tape.hasPrintedLabel
+                labelColor = tape.labelColor
+                printColor = tape.printColor
                 trackTitle = ""
                 trackArtist = tape.subtitle
                 elapsed = 0
                 duration = 0
                 lastEntryID = nil
+                setQueue(side: sides[first], startAt: 0)
                 sounds.play(.insert)
                 Haptics.seat()
                 Task {
@@ -221,13 +248,61 @@ final class PlayerModel: ObservableObject {
         }
     }
 
+    /// Works out what is on each side of a tape. Albums and playlists are
+    /// split into two sides of about the same length.
+    private func loadSides(of tape: Tape) async throws -> [TapeSide] {
+        switch tape {
+        case .album(let album):
+            let full = try await album.with([.tracks])
+            return TapeSide.split(Array(full.tracks ?? []))
+        case .playlist(let playlist):
+            let full = try await playlist.with([.tracks])
+            return TapeSide.split(Array(full.tracks ?? []))
+        case .song(let song):
+            return [TapeSide(songs: [song]), TapeSide(songs: [])]
+        case .mixtape(let mixtape):
+            let a = try await songs(for: mixtape.sideA)
+            let b = try await songs(for: mixtape.sideB)
+            return [TapeSide(songs: a), TapeSide(songs: b)]
+        }
+    }
+
+    private func songs(for list: [MixSong]) async throws -> [Song] {
+        guard !list.isEmpty else { return [] }
+        let ids = list.map { MusicItemID($0.id) }
+        let request = MusicCatalogResourceRequest<Song>(matching: \.id, memberOf: ids)
+        let found = try await request.response().items
+        // The catalogue answers in its own order; put them back in ours.
+        return ids.compactMap { id in found.first { $0.id == id } }
+    }
+
+    private func setQueue(side: TapeSide, startAt index: Int) {
+        switch side.items {
+        case .tracks(let tracks):
+            guard tracks.indices.contains(index) else { return }
+            player.queue = ApplicationMusicPlayer.Queue(for: tracks, startingAt: tracks[index])
+        case .songs(let songs):
+            guard songs.indices.contains(index) else { return }
+            player.queue = ApplicationMusicPlayer.Queue(for: songs, startingAt: songs[index])
+        }
+        trackIndex = index
+        lastEntryID = nil
+    }
+
     private func eject() {
         sounds.play(.eject)
         Haptics.door()
         player.stop()
         player.queue = []
         withAnimation(.easeIn(duration: 0.25)) { hasTape = false }
+        sides = []
+        sideIndex = 0
+        sideEnded = false
+        progress = 0
         tapeTitle = ""
+        tapeSubtitle = ""
+        labelColor = nil
+        printColor = nil
         trackTitle = ""
         trackArtist = ""
         elapsed = 0
@@ -235,11 +310,77 @@ final class PlayerModel: ObservableObject {
         lastEntryID = nil
     }
 
+    // MARK: Flipping
+
+    /// Takes the tape out, turns it over and puts it back. As with a real
+    /// cassette, you land as far from the end of the new side as you were
+    /// from the start of the old one. A tape flipped at the very start of a
+    /// side is treated as rewound, so the other side begins at its beginning.
+    func flipTape() {
+        guard hasTape, !swapping, sides.count == 2 else { return }
+        let other = 1 - sideIndex
+        guard !sides[other].isBlank else {
+            pressFeedback()
+            errorMessage = "Side \(other == 0 ? "A" : "B") of this tape is blank."
+            return
+        }
+        let from = sideEnded ? 1 : progress
+        let resume = motion == .playing || sideEnded
+        swapping = true
+        lastKeyPress = Date()
+        Task {
+            defer { swapping = false }
+            sounds.play(.eject)
+            Haptics.door()
+            player.pause()
+            withAnimation(.easeIn(duration: 0.28)) { flipAngle = 90 }
+            await pause(seconds: 0.3)
+
+            let side = sides[other]
+            let position = from < 0.02 ? 0 : (1 - from) * side.duration
+            let spot = side.locate(position)
+            sideIndex = other
+            sideEnded = false
+            progress = side.duration > 0 ? min(1, position / side.duration) : 0
+            setQueue(side: side, startAt: spot.index)
+
+            // Come round from the far edge without animating the jump.
+            var snap = Transaction()
+            snap.disablesAnimations = true
+            withTransaction(snap) { flipAngle = -90 }
+            withAnimation(.easeOut(duration: 0.28)) { flipAngle = 0 }
+            sounds.play(.insert)
+            Haptics.seat()
+            await pause(seconds: 0.3)
+            Haptics.door()
+
+            do {
+                try await player.prepareToPlay()
+                if spot.offset > 0 { player.playbackTime = spot.offset }
+                if resume {
+                    pressFeedback()
+                    try await player.play()
+                }
+            } catch {
+                errorMessage = "The tape would not play. \(error.localizedDescription)"
+            }
+        }
+    }
+
     // MARK: Keys
 
     func playKey() {
         pressFeedback()
         guard hasTape else { return }
+        if sideEnded {
+            // End of the tape: the key will not stay down.
+            Task {
+                await pause(seconds: 0.18)
+                sounds.play(.keyUp)
+                Haptics.keyUp()
+            }
+            return
+        }
         run { try await self.player.play() }
     }
 
@@ -257,7 +398,7 @@ final class PlayerModel: ObservableObject {
         guard hasTape else { return }
         if motion == .playing {
             player.pause()
-        } else if motion == .paused {
+        } else if motion == .paused, !sideEnded {
             run { try await self.player.play() }
         }
     }
@@ -344,12 +485,22 @@ final class PlayerModel: ObservableObject {
         case .paused, .stopped: sounds.setLoop(nil)
         }
         pausedSince = motion == .paused ? Date() : nil
-        if motion == .playing { waitingForLid = false }
-        // The tape ran out on its own: the play key pops back up.
+        if motion == .playing {
+            waitingForLid = false
+            sideEnded = false
+        }
+        // The music stopped on its own: the play key pops back up.
         if old == .playing, motion == .stopped || motion == .paused,
            Date().timeIntervalSince(lastKeyPress) > 1.0 {
             sounds.play(.keyUp)
             Haptics.keyUp()
+            // If that was the last track on this side, the tape has run out.
+            if !swapping, sideIndex < sides.count,
+               trackIndex >= sides[sideIndex].entries.count - 1,
+               duration <= 0 || duration - elapsed < 3 || elapsed < 1.5 {
+                sideEnded = true
+                progress = 1
+            }
         }
     }
 
@@ -380,11 +531,22 @@ final class PlayerModel: ObservableObject {
         }
         if newMotion != motion { motion = newMotion }
 
-        if let entry = player.queue.currentEntry {
+        let time = player.playbackTime
+        if time.isFinite, abs(time - elapsed) > 0.05 { elapsed = max(time, 0) }
+
+        if let entry = player.queue.currentEntry, sideIndex < sides.count {
+            let side = sides[sideIndex]
             if entry.id != lastEntryID {
                 lastEntryID = entry.id
                 trackTitle = entry.title
                 trackArtist = entry.subtitle ?? ""
+                // Find this track on the side, looking forward from the last one first.
+                let titles = side.entries.map(\.title)
+                if let ahead = titles.indices.first(where: { $0 >= trackIndex && titles[$0] == entry.title }) {
+                    trackIndex = ahead
+                } else if let anywhere = titles.firstIndex(of: entry.title) {
+                    trackIndex = anywhere
+                }
             }
             var length: TimeInterval = 0
             if case .song(let song)? = entry.item {
@@ -393,10 +555,14 @@ final class PlayerModel: ObservableObject {
                 length = video.duration ?? 0
             }
             if length != duration { duration = length }
-        }
 
-        let time = player.playbackTime
-        if time.isFinite, abs(time - elapsed) > 0.05 { elapsed = max(time, 0) }
+            // Where the tape is on this side as a whole.
+            if !sideEnded, side.duration > 0 {
+                let position = side.start(of: trackIndex) + elapsed
+                let through = min(max(position / side.duration, 0), 1)
+                if abs(through - progress) > 0.0005 { progress = through }
+            }
+        }
 
         syncLockScreen()
     }
@@ -414,6 +580,7 @@ final class PlayerModel: ObservableObject {
         }
         sounds.keepAlive = true
         lockScreen.sync(title: tapeTitle, subtitle: trackLine, isPlaying: motion == .playing,
-                        elapsed: elapsed, duration: duration)
+                        elapsed: elapsed, duration: duration,
+                        tapeProgress: progress, side: sideLetter, tint: labelColor?.rgb)
     }
 }

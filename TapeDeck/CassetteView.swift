@@ -29,6 +29,15 @@ struct CassetteView: View {
     var subtitle: String
     var progress: Double
     var motion: TapeMotion
+    /// "A" or "B", printed in the ring at the end of the label.
+    var side = "A"
+    /// A shop-bought tape: the label is printed in the cover art's colours.
+    /// Otherwise it is a paper label written on by hand.
+    var printed = false
+    /// The cover art's colour. Tints the clear shell, and fills a printed label.
+    var tint: Color?
+    /// The colour the cover art suggests for lettering on `tint`.
+    var printColor: Color?
 
     @State private var spin = SpinState()
 
@@ -45,7 +54,7 @@ struct CassetteView: View {
             ZStack {
                 // The plastic itself: barely there, with a soft shadow below
                 RoundedRectangle(cornerRadius: 2.6 * u)
-                    .fill(Color.white.opacity(0.16))
+                    .fill((tint ?? .white).opacity(tint == nil ? 0.16 : 0.30))
                     .shadow(color: .black.opacity(0.35), radius: 2.5 * u, y: 1.2 * u)
 
                 reels(u: u)
@@ -56,27 +65,75 @@ struct CassetteView: View {
                     .resizable()
                     .interpolation(.high)
 
-                // Handwriting on the stick-on label
-                Text(title.isEmpty ? " " : title)
-                    .font(.custom("BradleyHandITCTT-Bold", fixedSize: 4.5 * u))
-                    .foregroundColor(ink.opacity(0.92))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .frame(width: 62 * u, height: 5.0 * u, alignment: .bottomLeading)
-                    .position(x: 54 * u, y: 6.3 * u)
-                Text(subtitle.isEmpty ? " " : subtitle)
-                    .font(.custom("BradleyHandITCTT-Bold", fixedSize: 3.0 * u))
-                    .foregroundColor(ink.opacity(0.80))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .frame(width: 62 * u, height: 3.6 * u, alignment: .bottomLeading)
-                    .position(x: 54 * u, y: 10.8 * u)
+                label(u: u)
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .aspectRatio(100.0 / 63.0, contentMode: .fit)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Cassette: \(title). \(subtitle)")
+    }
+
+    /// The lettering on the label strip, which the artwork leaves blank.
+    @ViewBuilder
+    private func label(u: CGFloat) -> some View {
+        let showPrint = printed && tint != nil
+        let lettering = showPrint ? (printColor ?? .white) : Color(white: 0.17)
+        if showPrint, let tint {
+            // Printed label: a block of the album's colour with a light gloss
+            RoundedRectangle(cornerRadius: 0.5 * u)
+                .fill(tint)
+                .overlay(
+                    LinearGradient(colors: [Color.white.opacity(0.22), .clear, Color.black.opacity(0.12)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .clipShape(RoundedRectangle(cornerRadius: 0.5 * u))
+                )
+                .frame(width: 74 * u, height: 10.3 * u)
+                .position(x: 50 * u, y: 8.45 * u)
+        }
+
+        // Side letter in its ring
+        Text(side)
+            .font(.system(size: 3.4 * u, weight: .bold))
+            .foregroundColor(lettering)
+            .frame(width: 4.6 * u, height: 4.6 * u)
+            .overlay(Circle().strokeBorder(lettering, lineWidth: 0.26 * u))
+            .position(x: 22.6 * u, y: 8.4 * u)
+
+        if showPrint {
+            // Album title and artist, set in type
+            Text(title.isEmpty ? " " : title.uppercased())
+                .font(.system(size: 3.9 * u, weight: .heavy))
+                .tracking(0.25 * u)
+                .foregroundColor(lettering)
+                .lineLimit(1)
+                .minimumScaleFactor(0.45)
+                .frame(width: 58 * u, height: 5.0 * u, alignment: .leading)
+                .position(x: 56 * u, y: 6.4 * u)
+            Text(subtitle.isEmpty ? " " : subtitle)
+                .font(.system(size: 2.7 * u, weight: .medium))
+                .foregroundColor(lettering.opacity(0.85))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(width: 58 * u, height: 3.6 * u, alignment: .leading)
+                .position(x: 56 * u, y: 10.7 * u)
+        } else {
+            // Handwriting on the paper label's ruled lines
+            Text(title.isEmpty ? " " : title)
+                .font(.custom("BradleyHandITCTT-Bold", fixedSize: 4.5 * u))
+                .foregroundColor(ink.opacity(0.92))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(width: 58 * u, height: 5.0 * u, alignment: .bottomLeading)
+                .position(x: 56 * u, y: 6.3 * u)
+            Text(subtitle.isEmpty ? " " : subtitle)
+                .font(.custom("BradleyHandITCTT-Bold", fixedSize: 3.0 * u))
+                .foregroundColor(ink.opacity(0.80))
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(width: 58 * u, height: 3.6 * u, alignment: .bottomLeading)
+                .position(x: 56 * u, y: 10.8 * u)
+        }
     }
 
     private func reels(u: CGFloat) -> some View {

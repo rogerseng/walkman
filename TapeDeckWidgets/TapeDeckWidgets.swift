@@ -99,9 +99,10 @@ struct MiniCassette: View {
 
     var body: some View {
         let u = width / 100
+        let tint = state.tintColor
         ZStack {
             RoundedRectangle(cornerRadius: 2.6 * u)
-                .fill(Color.white.opacity(0.14))
+                .fill((tint ?? .white).opacity(tint == nil ? 0.14 : 0.30))
             ZStack {
                 ReelView(state: state, fill: 1 - state.progress, size: 50 * u)
                     .position(x: 29.5 * u, y: 28.5 * u)
@@ -115,13 +116,21 @@ struct MiniCassette: View {
                 .resizable()
                 .interpolation(.high)
 
+            // Side letter
+            Text(state.side)
+                .font(.system(size: 3.4 * u, weight: .bold))
+                .foregroundColor(Color(white: 0.17))
+                .frame(width: 4.6 * u, height: 4.6 * u)
+                .overlay(Circle().strokeBorder(Color(white: 0.17), lineWidth: 0.26 * u))
+                .position(x: 22.6 * u, y: 8.4 * u)
+
             Text(state.title.isEmpty ? " " : state.title)
                 .font(.custom("BradleyHandITCTT-Bold", fixedSize: 4.5 * u))
                 .foregroundColor(Palette.ink.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-                .frame(width: 62 * u, height: 5.0 * u, alignment: .bottomLeading)
-                .position(x: 54 * u, y: 6.3 * u)
+                .frame(width: 58 * u, height: 5.0 * u, alignment: .bottomLeading)
+                .position(x: 56 * u, y: 6.3 * u)
         }
         .frame(width: 100 * u, height: 63 * u)
         .accessibilityHidden(true)
@@ -204,6 +213,11 @@ struct TapeKeys: View {
 }
 
 private extension TapeActivityAttributes.ContentState {
+    var tintColor: Color? {
+        guard let tint, tint.count >= 3 else { return nil }
+        return Color(red: tint[0], green: tint[1], blue: tint[2])
+    }
+
     /// The span the lock screen clock runs over. Never empty or backwards.
     var clock: ClosedRange<Date> {
         trackStart...max(trackEnd, trackStart.addingTimeInterval(1))
