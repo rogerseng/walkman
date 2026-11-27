@@ -261,6 +261,7 @@ struct LibrarySongRow: View {
 
     var body: some View {
         Button {
+            Haptics.detent()
             pick(.song(song))
         } label: {
             HStack(spacing: 12) {
@@ -306,8 +307,15 @@ struct CollectionDetail: View {
     @State private var tracks: [Track] = []
     @State private var loading = true
     @State private var failed = false
+    /// How many of the songs are on side A; the rest are on side B.
+    @State private var sideACount: Int?
+    /// Set when the tape is turned over, until the list has caught up.
+    @State private var followFlip = false
+
+    private var inDeck: Bool { model.currentTape?.id == tape.id }
 
     var body: some View {
+        ScrollViewReader { scroller in
         List {
             VStack(spacing: 10) {
                 Group {
@@ -354,7 +362,12 @@ struct CollectionDetail: View {
                     .listRowBackground(Color.clear)
             }
             ForEach(Array(tracks.enumerated()), id: \.element.id) { number, track in
+                // Where each side of the tape begins
+                if let sideACount, number == 0 || number == sideACount {
+                    sideBreak(number == 0 ? "A" : "B")
+                }
                 Button {
+                    Haptics.detent()
                     pick(tape, startingAt: track.id)
                 } label: {
                     let current = isPlaying(track)
@@ -396,9 +409,27 @@ struct CollectionDetail: View {
                 .accessibilityAddTraits(isPlaying(track) ? .isSelected : [])
                 .listRowBackground(Color.clear)
                 .listRowSeparatorTint(Color.white.opacity(0.1))
+                .id(track.id)
             }
         }
         .shelfList("")
+        // The tape was turned over: go to the side it is now on, and then
+        // to the song once the deck says which one is playing.
+        .onChange(of: model.sideIndex) { _, side in
+            guard inDeck, sideACount != nil else { return }
+            followFlip = true
+            withAnimation(.easeInOut(duration: 0.35)) {
+                scroller.scrollTo("side-\(side == 0 ? "A" : "B")", anchor: .top)
+            }
+        }
+        .onChange(of: model.trackTitle) { _, _ in
+            guard followFlip, inDeck, let playing = tracks.first(where: isPlaying) else { return }
+            followFlip = false
+            withAnimation(.easeInOut(duration: 0.35)) {
+                scroller.scrollTo(playing.id, anchor: .center)
+            }
+        }
+        }
         .task {
             guard tracks.isEmpty else { return }
             do {
@@ -413,8 +444,33 @@ struct CollectionDetail: View {
             } catch {
                 failed = true
             }
+            // The same cut the deck makes when the tape goes in
+            if tracks.count > 1 { sideACount = TapeSide.split(tracks)[0].entries.count }
             loading = false
         }
+    }
+
+    /// A line across the list where a side of the tape begins.
+    private func sideBreak(_ letter: String) -> some View {
+        let playing = inDeck && model.sideLetter == letter
+        return HStack(spacing: 10) {
+            Text(letter)
+                .font(.system(size: 12, weight: .bold))
+                .frame(width: 20, height: 20)
+                .overlay(Circle().strokeBorder(lineWidth: 1.5))
+            Text("SIDE \(letter)")
+                .font(Typeface.display(12))
+                .tracking(1.6)
+            Rectangle().frame(height: 1).opacity(0.35)
+        }
+        .foregroundColor(playing ? theme.accentColor : theme.secondaryColor)
+        .padding(.top, letter == "A" ? 4 : 14)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Side \(letter)")
+        .accessibilityAddTraits(.isHeader)
+        .id("side-\(letter)")
     }
 
     /// The song the deck is on, when this is the tape in it.
