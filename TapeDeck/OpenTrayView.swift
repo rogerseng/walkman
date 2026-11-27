@@ -167,10 +167,12 @@ struct OpenTrayView: View {
                 } label: {
                     Image(systemName: "list.bullet")
                         .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(skin.note)
-                        .frame(width: 46, height: 40)
-                        .background(Color.black.opacity(0.35))
-                        .modifier(Recess(corner: 9, depth: 0.5))
+                        .foregroundColor(Color(white: 0.95))
+                        .frame(width: 48, height: 40)
+                        // A key standing proud of the case, not a hollow in it
+                        .background(LinearGradient(colors: [Color(white: 0.36), Color(white: 0.22)],
+                                                   startPoint: .top, endPoint: .bottom))
+                        .modifier(Raised(corner: 10))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Songs on this tape")

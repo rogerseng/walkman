@@ -48,8 +48,11 @@ struct SettingsView: View {
                     switch model.authStatus {
                     case .authorized:
                         LabeledContent("Apple Music") {
-                            Label("Connected", systemImage: "checkmark.circle.fill")
-                                .foregroundColor(.green)
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Connected")
+                            }
+                            .foregroundColor(.green)
                         }
                         Button("Disconnect Apple Music") {
                             disconnecting = true
