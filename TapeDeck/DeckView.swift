@@ -146,7 +146,7 @@ struct DeckView: View {
                 Wordmark()
                     .foregroundColor(skin.mark)
                     .shadow(color: skin.engravingEdge.opacity(0.6), radius: 0.3, y: skin.engravingEdgeOffset)
-                    .offset(x: plan.contentLeft + 8, y: insets.top + 16)
+                    .offset(x: plan.contentLeft + 8, y: insets.top + 16 + headLift(plan, insets))
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
@@ -178,7 +178,7 @@ struct DeckView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Songs on this tape")
-                    .offset(x: window.maxX - 46, y: insets.top + 6)
+                    .offset(x: window.maxX - 46, y: insets.top + 6 + headLift(plan, insets))
                 }
             }
             // A word in outline lettering above the window, on cases that have one
@@ -210,7 +210,7 @@ struct DeckView: View {
                         .foregroundColor(skin.note)
                         .shadow(color: .black.opacity(skin == .yellow ? 0 : 0.6), radius: 2)
                         .frame(width: window.width)
-                        .offset(x: window.minX, y: window.maxY + (plan.rail ? 14 : 8))
+                        .offset(x: window.minX, y: window.maxY + (plan.rail ? footGap(plan, full) : 8))
                         .allowsHitTesting(false)
                 }
             }
@@ -354,6 +354,21 @@ struct DeckView: View {
         }
     }
 
+    /// On the Duo, how far down the name and the songs key move so they
+    /// sit in the middle of the case above the window.
+    private func headLift(_ plan: Layout, _ insets: EdgeInsets) -> CGFloat {
+        guard plan.rail else { return 0 }
+        return max(0, plan.window.minY / 2 - 29 - insets.top)
+    }
+
+    /// On the Duo, how far under the window the song line starts, so it
+    /// sits in the middle of the case below the window (above the stripes,
+    /// on the case that has them).
+    private func footGap(_ plan: Layout, _ full: CGSize) -> CGFloat {
+        let room = full.height - plan.window.maxY - (skin.hasStripes ? 32 : 0)
+        return max(12, (room - 20) / 2)
+    }
+
     private var underWindowNote: String? {
         // The end of a side has its own card in the window.
         guard model.endOfSideNote == nil else { return nil }
@@ -451,12 +466,16 @@ struct DeckView: View {
         // The window shows the label strip and both reels; the guide
         // rollers and the head opening stay under the casing, by the keys.
         let left = full.width / 2 - 63 * scale / 2
-        let bottom = full.height / 2 + 100 * scale / 2
+        // The window is not in the middle of the cassette, so the cassette
+        // sits a little low: that leaves as much case above the window, for
+        // the name, as below it, for the song.
+        let middle = full.height / 2 + (windowFarEnd - windowLength / 2 - 50) * scale
+        let bottom = middle + 100 * scale / 2
         let window = CGRect(x: left + windowEdgeInset * scale, y: bottom - windowFarEnd * scale,
                             width: windowMinWidth * scale, height: windowLength * scale)
         let panelWidth = max(railWidth, leading ? window.minX - 6 : full.width - window.maxX - 6)
         return Layout(scale: scale, window: window,
-                      cassetteCenter: CGPoint(x: full.width / 2, y: full.height / 2),
+                      cassetteCenter: CGPoint(x: full.width / 2, y: middle),
                       panelTop: full.height, keyHeight: 0,
                       contentLeft: 14 + (leading ? panelWidth : insets.leading),
                       rail: true, railLeading: leading, railWidth: railWidth,
