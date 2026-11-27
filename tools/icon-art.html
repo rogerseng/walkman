@@ -1,32 +1,27 @@
 <body style="margin:0;background:#2a2a2a"><script>
 const q=new URLSearchParams(location.search),pick=q.get('i'),gray=q.get('gray');
 const bg='<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2b2d"/><stop offset="1" stop-color="#121213"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#b)"/>';
-// The app's icon: a cassette in white neon outline in front of a warm
-// setting sun, over a neon grid floor running to the horizon.
-let seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
-const H=716; // the horizon
-const stars=[...Array(34)].map(()=>{const x=rnd()*1024,y=rnd()*380,r=1.5+rnd()*rnd()*4;return `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#fff" opacity="${(.3+rnd()*.6).toFixed(2)}"/>`}).join('');
-const slats=[[500,8],[556,12],[606,16],[652,20],[694,24]].map(([y,h])=>`<rect x="0" y="${y}" width="1024" height="${h}" fill="#000"/>`).join('');
-// Grid: lines fanning out from the vanishing point, and rows that widen
-// toward the viewer
-const fan=[...Array(15)].map((_,i)=>`<line x1="512" y1="${H}" x2="${512+(i-7)*230}" y2="1024"/>`).join('');
-const rows=[0,.05,.12,.22,.36,.56,.82].map(t=>`<line x1="0" y1="${(H+t*(1024-H)).toFixed(0)}" x2="1024" y2="${(H+t*(1024-H)).toFixed(0)}"/>`).join('');
+// The app's icon: a cassette in white neon outline over a striped eighties
+// sun, on a starry night.
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const stars=[...Array(70)].map(()=>{const x=rnd()*1024,y=rnd()*1024,r=1.5+rnd()*rnd()*5;return `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#fff" opacity="${(.35+rnd()*.6).toFixed(2)}"/>`}).join('');
+const spark=(x,y,r)=>`<path d="M${x} ${y-r}Q${x} ${y} ${x+r} ${y}Q${x} ${y} ${x} ${y+r}Q${x} ${y} ${x-r} ${y}Q${x} ${y} ${x} ${y-r}Z" fill="#fff"/>`;
+const sparks=spark(150,170,46)+spark(880,120,30)+spark(900,860,54)+spark(110,900,26);
+const slats=[[452,8],[520,12],[586,16],[650,20],[712,24],[772,28],[830,32]].map(([y,h])=>`<rect x="0" y="${y}" width="1024" height="${h}" fill="#000"/>`).join('');
 const ring=(d,w)=>`<rect x="${132+d}" y="${292+d}" width="${760-2*d}" height="${440-2*d}" rx="${64-d*.7}" fill="none" stroke="#fff" stroke-width="${w}"/>`;
-const reel=x=>[90,56].map(r=>`<circle cx="${x}" cy="560" r="${r}" fill="none" stroke="#fff" stroke-width="13"/>`).join('')+[...Array(6)].map((_,i)=>`<line x1="${x}" y1="${560-56}" x2="${x}" y2="${560-34}" stroke="#fff" stroke-width="13" stroke-linecap="round" transform="rotate(${i*60} ${x} 560)"/>`).join('');
-const sky=`<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12063a"/><stop offset=".45" stop-color="#3a0f73"/><stop offset=".7" stop-color="#b3247f"/></linearGradient>
-<linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe45c"/><stop offset=".45" stop-color="#ff9a3d"/><stop offset=".85" stop-color="#ff3da6"/></linearGradient>
-<linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0a52"/><stop offset="1" stop-color="#0d0428"/></linearGradient>
-<mask id="sl"><rect width="1024" height="${H}" fill="#fff"/>${slats}</mask>
-<filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>
-<filter id="halo" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="40"/></filter></defs>
+const reel=x=>[86,54].map(r=>`<circle cx="${x}" cy="566" r="${r}" fill="none" stroke="#fff" stroke-width="12"/>`).join('')+[...Array(6)].map((_,i)=>`<line x1="${x}" y1="${566-54}" x2="${x}" y2="${566-34}" stroke="#fff" stroke-width="12" stroke-linecap="round" transform="rotate(${i*60} ${x} 566)"/>`).join('');
+const sky=`<defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22083f"/><stop offset=".5" stop-color="#170a45"/><stop offset="1" stop-color="#0a0a33"/></linearGradient>
+<radialGradient id="halo" cx=".5" cy=".5" r=".5"><stop offset=".6" stop-color="#b03cff" stop-opacity=".5"/><stop offset="1" stop-color="#3a6bff" stop-opacity="0"/></radialGradient>
+<linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2fe0d0"/><stop offset=".35" stop-color="#6a4be8"/><stop offset=".68" stop-color="#ff3da6"/><stop offset="1" stop-color="#ffb347"/></linearGradient>
+<linearGradient id="st" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#8a3cff"/><stop offset=".5" stop-color="#ff4fc3"/><stop offset="1" stop-color="#b44dff"/></linearGradient>
+<mask id="sl"><rect width="1024" height="1024" fill="#fff"/>${slats}</mask>
+<filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter></defs>
 <rect width="1024" height="1024" fill="url(#sky)"/>${stars}
-<circle cx="512" cy="470" r="330" fill="#ff5fa8" opacity=".45" filter="url(#halo)"/>
-<circle cx="512" cy="470" r="330" fill="url(#sun)" mask="url(#sl)"/>
-<rect y="${H}" width="1024" height="${1024-H}" fill="url(#floor)"/>
-<g stroke="#39e6ff" stroke-width="5" opacity=".9">${fan}${rows}</g>
-<line x1="0" y1="${H}" x2="1024" y2="${H}" stroke="#ff7ad9" stroke-width="8"/>`;
-const tape=`<g transform="translate(512 432) scale(.86) translate(-512 -512)">${ring(0,15)}${ring(30,11)}<rect x="250" y="352" width="524" height="70" rx="10" fill="none" stroke="#fff" stroke-width="11"/>${reel(360)}${reel(664)}</g>`;
-const A=sky+`<g filter="url(#glow)" opacity=".8">${tape.replaceAll('#fff','#ff3da6')}</g>`+tape;
+${sparks}
+<circle cx="512" cy="512" r="470" fill="url(#halo)"/>
+<circle cx="512" cy="512" r="372" fill="url(#sun)" mask="url(#sl)"/>`;
+const tape=`${ring(0,13)}${ring(26,11)}${ring(52,11)}${reel(352)}${reel(672)}<g fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round"><rect x="250" y="372" width="524" height="64" rx="10"/></g>`;
+const A=sky+`<g filter="url(#glow)" opacity=".75" stroke="#ff4fc3">${tape.replaceAll('#fff','#ff6ad0')}</g>`+tape;
 const B=bg+`<g fill="none" stroke="#f2efe8" stroke-width="44"><circle cx="352" cy="512" r="150"/><circle cx="672" cy="512" r="150"/></g>
 <circle cx="352" cy="512" r="46" fill="#f57a21"/><circle cx="672" cy="512" r="46" fill="#f2efe8"/>`;
 const teeth=[...Array(6)].map((_,i)=>`<rect x="488" y="330" width="48" height="96" rx="10" fill="#f2efe8" transform="rotate(${i*60} 512 512)"/>`).join('');
