@@ -43,12 +43,8 @@ MADE FOR FOLDING PHONES
 • Open, your tape shelf is on one side and the tape on the other. Choose one and close the phone to start it playing.
 • Works on every iPhone, not only folding ones.
 
-TWO PLAYERS IN ONE
-• Tape deck: the cassette and its reels, a fader and a row of keys.
-• MP3 player: a display of menus and a white jog dial. Turn to scroll, press to choose.
-
 MORE
-• Tape deck in retro 80s, black, yellow or blue. MP3 player in retro 80s or black. The colours carry through the whole app.
+• Retro 80s, black, yellow or blue. The colours carry through the whole app.
 • A hands-on tour teaches the keys by having you press them.
 • Open a folding iPhone and the player becomes a tape recorder, with a speaker grille, the tape behind a tinted door, and a row of chunky keys.
 • Your settings sync with iCloud.
@@ -100,7 +96,7 @@ Apple needs real screenshots taken from the running app, at the sizes it lists f
 
 1. The closed tape deck in Retro 80s with an album tape playing.
 2. The tape deck in Black, Yellow and Blue.
-3. The MP3 player with its white dial.
+3. The deck eating a tape.
 4. The open screen with the tape shelf.
 5. The library: playlists, artists, albums and songs.
 6. The open folding phone: the album's songs beside the player.

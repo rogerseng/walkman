@@ -28,7 +28,7 @@
 
 **Background audio.** The app keeps the audio background mode so the tape hiss carries on with the music. Reviewers sometimes question this mode. The review notes explain it. If it is refused, the fallback is to remove the mode, which means no hiss in the background.
 
-**The MP3 player.** It was redesigned so it does not look like an iPod: a jog dial with no buttons on it, separate keys, an amber display, and Casseti's own case colours. That removes the obvious reason for a rejection but does not guarantee approval. Do not call it an iPod, or compare it to one, anywhere in the listing.
+**The MP3 player.** Held back from version 1 to avoid any risk at review. Its code is still in the project behind `Theme.includesMP3`, which is off; turn it on to bring the MP3 themes back in an update.
 
 **Click-wheel skins.** Apple has removed apps whose players looked like the iPod. The two click-wheel skins are Casseti's own drawing and do not use the iPod name or Apple's graphics, but the resemblance is the point of them. They are left out of the build you archive for the App Store automatically, and included when you run the app from Xcode onto your own phone. Before uploading, check the theme list in the archived build shows only the four tape decks (Retro 80s, Black, Yellow, Blue) and the two MP3 players (Retro 80s, Black), with no Click wheel group.
 

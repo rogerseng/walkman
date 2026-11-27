@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://casseti.com/">
 <meta property="og:image" content="https://casseti.com/images/duo-open.webp">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 <div class="stripes thin" aria-hidden="true"></div>
@@ -31,13 +31,14 @@
   <main class="wrap">
     <div>
       <h1>Casseti</h1>
-      <div class="tag">Your music, on tape.</div>
+      <div class="tag">Your music, on tape.
+        <span class="levels" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
       <p class="lead">Casseti turns your albums and playlists into cassettes. Two sides, reels that turn, keys that clunk. When side A runs out, you flip the tape.</p>
       <!-- When the app is live, replace this with Apple's official "Download on the App Store" badge, linked to the app's page. -->
       <span class="button soon">Coming soon to the App Store</span>
       <span class="price"><b>$4.99</b> one time. For iPhone. Needs an Apple Music subscription. Spotify support is coming soon.</span>
     </div>
-    <figure class="shot">
+    <figure class="shot float">
       <img src="images/duo-tape-80s.webp" alt="Casseti on the cover screen of a folding iPhone in its retro 80s colours: a cassette with a marker-pen label behind a glowing window, a volume fader, and a column of keys with play pressed in and lit." width="846" height="1231">
     </figure>
   </main>
@@ -46,22 +47,35 @@
 
 <section>
   <div class="wrap">
-    <h2>It behaves like tape</h2>
-    <p class="intro">Not a picture of a cassette over a normal player. The tape has a length, two sides and an end.</p>
+    <div class="heading">
+      <div>
+        <h2>It behaves like tape</h2>
+        <p class="intro">Not a picture of a cassette over a normal player. The tape has a length, two sides and an end.</p>
+      </div>
+      <svg class="tape-art" viewBox="0 0 200 126" aria-hidden="true">
+        <rect class="shell" x="3" y="3" width="194" height="120" rx="12"/>
+        <rect class="label" x="20" y="14" width="160" height="26" rx="4"/>
+        <path class="rule" d="M30 24h110M30 33h80"/>
+        <rect class="window" x="38" y="50" width="124" height="44" rx="22"/>
+        <g class="spin"><circle class="hub" cx="66" cy="72" r="15"/><path class="spoke" d="M66 59v9M54.7 78.5l7.8-4.5M77.3 78.5l-7.8-4.5"/></g>
+        <g class="spin"><circle class="hub" cx="134" cy="72" r="15"/><path class="spoke" d="M134 59v9M122.7 78.5l7.8-4.5M145.3 78.5l-7.8-4.5"/></g>
+        <path class="foot" d="M52 123l8-18h80l8 18"/>
+      </svg>
+    </div>
     <div class="grid">
-      <div class="card"><h3>Two sides, and you flip it</h3><p>Every album and playlist is split into side A and side B. When a side runs out the play key pops up and the music stops. Double-tap the tape to turn it over.</p></div>
-      <div class="card"><h3>Reels that mean something</h3><p>One reel empties as the other fills, so a glance tells you how much of the side is left. Hold rewind or fast forward and they spin up and wind the tape for real.</p></div>
-      <div class="card"><h3>Keys you can feel</h3><p>Play and stop are a pair: press one in and the other pops out. Every key, the door and the volume fader has its own click under your thumb.</p></div>
-      <div class="card"><h3>The sound of a deck</h3><p>Key clunks, the door, soft tape hiss, and the motor running down when you press stop. Turn any of it off if you prefer quiet.</p></div>
-      <div class="card"><h3>Feel the beat</h3><p>Switch on Tap along and the tape deck gives a light tap in your hand on every beat while a tape plays. You choose how strong.</p></div>
-      <div class="card"><h3>Labels in marker pen</h3><p>Every tape is labelled by hand in marker, and albums wear a label in the colours of their cover art.</p></div>
+      <div class="card reveal"><div class="ico ico-flip" aria-hidden="true"><span>A</span><span>B</span></div><h3>Two sides, and you flip it</h3><p>Every album and playlist is split into side A and side B. When a side runs out the play key pops up and the music stops. Double-tap the tape to turn it over.</p></div>
+      <div class="card reveal"><svg class="ico" viewBox="0 0 56 40" aria-hidden="true"><g class="spin"><circle cx="14" cy="20" r="11"/><path d="M14 11v6M6.2 24.5l5.2-3M21.8 24.5l-5.2-3"/></g><g class="spin"><circle cx="42" cy="20" r="11"/><path d="M42 11v6M34.2 24.5l5.2-3M49.8 24.5l-5.2-3"/></g></svg><h3>Reels that mean something</h3><p>One reel empties as the other fills, so a glance tells you how much of the side is left. Hold rewind or fast forward and they spin up and wind the tape for real.</p></div>
+      <div class="card reveal"><svg class="ico" viewBox="0 0 56 40" aria-hidden="true"><rect class="base" x="4" y="26" width="48" height="9" rx="3"/><g class="press"><rect x="8" y="9" width="18" height="17" rx="4"/><path d="M14.5 13.5v8l7-4z" class="fill"/></g><g class="press late"><rect x="30" y="9" width="18" height="17" rx="4"/><rect x="35.5" y="14" width="7" height="7" rx="1" class="fill"/></g></svg><h3>Keys you can feel</h3><p>Play and stop are a pair: press one in and the other pops out. Every key, the door and the volume fader has its own click under your thumb.</p></div>
+      <div class="card reveal"><svg class="ico bars" viewBox="0 0 56 40" aria-hidden="true"><rect x="6" y="6" width="6" height="28" rx="2"/><rect x="16" y="6" width="6" height="28" rx="2"/><rect x="26" y="6" width="6" height="28" rx="2"/><rect x="36" y="6" width="6" height="28" rx="2"/><rect x="46" y="6" width="6" height="28" rx="2"/></svg><h3>The sound of a deck</h3><p>Key clunks, the door, soft tape hiss, and the motor running down when you press stop. Turn any of it off if you prefer quiet.</p></div>
+      <div class="card reveal"><svg class="ico" viewBox="0 0 56 40" aria-hidden="true"><circle class="ring" cx="28" cy="20" r="9"/><circle class="ring late" cx="28" cy="20" r="9"/><circle class="dot" cx="28" cy="20" r="6"/></svg><h3>Feel the beat</h3><p>Switch on Tap along and the tape deck gives a light tap in your hand on every beat while a tape plays. You choose how strong.</p></div>
+      <div class="card reveal"><svg class="ico" viewBox="0 0 56 40" aria-hidden="true"><rect x="3" y="7" width="50" height="26" rx="4"/><path class="scribble" d="M10 22c4-9 6 7 10-1s5 6 9 0 5 5 8 0 5-4 9-1"/></svg><h3>Labels in marker pen</h3><p>Every tape is labelled by hand in marker, and albums wear a label in the colours of their cover art.</p></div>
     </div>
   </div>
 </section>
 
 <section class="alt">
   <div class="wrap pair">
-    <figure class="shot">
+    <figure class="shot reveal">
       <img src="images/duo-eaten.webp" alt="The tape deck with brown tape spilled in a tangle across the cassette, and a card reading The deck ate your tape, with a key to wind it back in." width="1100" height="1564" loading="lazy">
     </figure>
     <div>
@@ -85,7 +99,7 @@
       </ul>
       <p>It works on every other iPhone too, where the player fills the screen and the library opens from the music key.</p>
     </div>
-    <figure class="shot">
+    <figure class="shot reveal">
       <img src="images/duo-upright.webp" alt="Casseti on an open folding iPhone held upright: a tape recorder with a speaker grille across the top, a cassette behind a tinted door, and six keys along the foot labelled play, stop, rewind, fast forward, music and settings." width="1100" height="1564" loading="lazy">
     </figure>
   </div>
@@ -93,7 +107,7 @@
 
 <section class="alt">
   <div class="wrap">
-    <figure class="shot wide">
+    <figure class="shot wide reveal">
       <img src="images/duo-open.webp" alt="Casseti on an open folding iPhone held sideways: the music library on the left, and on the right the cassette behind its door, a timeline, a speaker grille and a column of keys." width="1571" height="1106" loading="lazy">
       <figcaption>Open and sideways: your library on the left, the player on the right.</figcaption>
     </figure>
@@ -102,19 +116,13 @@
 
 <section>
   <div class="wrap">
-    <h2>Pick your player. Pick your colour.</h2>
-    <p class="intro">A tape deck in retro 80s, black, yellow or blue, or an MP3 player in retro 80s or black. They all play the same tapes, and the rest of the app takes on the colour you pick.</p>
-    <h3 class="row-title">Tape deck</h3>
+    <h2>Pick your colour</h2>
+    <p class="intro">Retro 80s, black, yellow or blue. The rest of the app takes on the colour you pick.</p>
     <div class="shots">
-      <figure class="shot"><img src="images/duo-tape-80s.webp" alt="The tape deck in retro 80s purple and pink, with a band of stripes at its foot." width="846" height="1231" loading="lazy"><figcaption>Retro 80s</figcaption></figure>
-      <figure class="shot"><img src="images/duo-tape-black.webp" alt="The tape deck in black smoked plastic with an orange play key." width="846" height="1231" loading="lazy"><figcaption>Black</figcaption></figure>
-      <figure class="shot"><img src="images/duo-tape-yellow.webp" alt="The tape deck in yellow." width="846" height="1231" loading="lazy"><figcaption>Yellow</figcaption></figure>
-      <figure class="shot"><img src="images/duo-tape-blue.webp" alt="The tape deck in blue with a silver side and a red play key." width="846" height="1231" loading="lazy"><figcaption>Blue</figcaption></figure>
-    </div>
-    <h3 class="row-title">MP3 player</h3>
-    <div class="shots">
-      <figure class="shot"><img src="images/duo-mp3-80s.webp" alt="The MP3 player in retro 80s purple: a menu in cyan with a pink highlight above a white dial." width="846" height="1231" loading="lazy"><figcaption>Retro 80s</figcaption></figure>
-      <figure class="shot"><img src="images/duo-mp3-black.webp" alt="The MP3 player in black: a menu in amber above a white dial." width="846" height="1231" loading="lazy"><figcaption>Black</figcaption></figure>
+      <figure class="shot reveal"><img src="images/duo-tape-80s.webp" alt="The tape deck in retro 80s purple and pink, with a band of stripes at its foot." width="846" height="1231" loading="lazy"><figcaption>Retro 80s</figcaption></figure>
+      <figure class="shot reveal"><img src="images/duo-tape-black.webp" alt="The tape deck in black smoked plastic with an orange play key." width="846" height="1231" loading="lazy"><figcaption>Black</figcaption></figure>
+      <figure class="shot reveal"><img src="images/duo-tape-yellow.webp" alt="The tape deck in yellow." width="846" height="1231" loading="lazy"><figcaption>Yellow</figcaption></figure>
+      <figure class="shot reveal"><img src="images/duo-tape-blue.webp" alt="The tape deck in blue with a silver side and a red play key." width="846" height="1231" loading="lazy"><figcaption>Blue</figcaption></figure>
     </div>
   </div>
 </section>
@@ -133,15 +141,20 @@
 <div class="stripes" aria-hidden="true"></div>
 <footer class="site">
   <div class="wrap">
-    <span class="name">Casseti</span>
-    <a href="/">Home</a>
-    <a href="support.html">Support</a>
-    <a href="privacy.html">Privacy policy</a>
-    <a href="terms.html">Terms</a>
-    <a href="press.html">Press</a>
-    <a href="mailto:hello@casseti.com">hello@casseti.com</a>
+    <div class="credit">
+      <span class="name"><img src="images/icon.png" alt="">Casseti</span>
+      <p>Casseti is a product of Roger Seng Studios.<br>Made by Roger Seng.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="support.html">Support</a>
+      <a href="privacy.html">Privacy policy</a>
+      <a href="terms.html">Terms of use</a>
+      <a href="press.html">Press</a>
+    </nav>
     <p class="legal">Casseti plays music from Apple Music and needs an Apple Music subscription. Spotify support is coming soon. Apple, Apple Music, iPhone and App Store are trademarks of Apple Inc. Spotify is a trademark of Spotify AB. Casseti is not made by or affiliated with Apple or Spotify.</p>
   </div>
 </footer>
+<script src="site.js?v=3" defer></script>
 </body>
 </html>

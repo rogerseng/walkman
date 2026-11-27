@@ -24,8 +24,8 @@ shot() {
 shot iphone/1-on-tape.png      1320 2868 "Your music, on tape" "Albums and playlists become cassettes with two sides." ip-tape-80s.png
 shot iphone/2-feel-it.png      1320 2868 "Keys that clunk. Reels that turn." "Every key, the door and the fader click under your thumb." ip-tape-black.png "" "#3a3a3d,#0d0d0f"
 shot iphone/3-eats-tape.png    1320 2868 "Sometimes the deck eats your tape" "Lean on a reel too long. Then wind it back in." ip-eaten.png
-shot iphone/4-colours.png      1320 2868 "Pick your colour" "Retro 80s, black, yellow or blue." ip-tape-yellow.png,ip-tape-blue.png 0.9 "#2a4f8f,#101a33"
-shot iphone/5-mp3.png          1320 2868 "Or make it an MP3 player" "A display of menus and a dial that turns." ip-mp3-80s.png
+shot iphone/4-colours.png      1320 2868 "Pick your colour" "Retro 80s, black, yellow or blue." ip-tape-yellow.png,ip-tape-black.png 0.9 "#8a6a12,#2a1f05"
+shot iphone/5-flip.png         1320 2868 "Two sides. You flip it." "When side A runs out, turn the tape over." ip-tape-blue.png "" "#2a4f8f,#101a33"
 # Folding iPhone, cover screen: 1398 x 2034
 shot duo/1-cover.png           1398 2034 "The whole cover is a tape deck" "Made for the folding iPhone." duo-closed.png 0.66
 shot duo/2-colours.png         1398 2034 "Pick your colour" "Retro 80s, black, yellow or blue." duo-yellow.png,duo-blue.png 0.9 "#2a4f8f,#101a33"
