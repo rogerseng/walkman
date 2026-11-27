@@ -10,6 +10,9 @@ enum Skin: String, CaseIterable, Identifiable {
     case yellow
     /// Eighties neon: deep purple with hot pink and cyan, and a band of stripes.
     case neon
+    /// Cassette player in blue painted metal with a silver side, like the
+    /// first pocket stereos of 1979.
+    case blue
     /// Click-wheel player in black.
     case wheelBlack
     /// Click-wheel player in silver with a white wheel.
@@ -48,6 +51,7 @@ enum Skin: String, CaseIterable, Identifiable {
         case .smoke: return "Black cassette player"
         case .yellow: return "Yellow cassette player"
         case .neon: return "Retro 80s cassette player"
+        case .blue: return "Blue cassette player"
         case .wheelBlack: return "Black click wheel"
         case .wheelSilver: return "Silver click wheel"
         }
@@ -58,6 +62,10 @@ enum Skin: String, CaseIterable, Identifiable {
 
     private var isPale: Bool { self == .yellow || self == .wheelSilver }
 
+    /// The blue player's case is dark but its side panel is pale silver, so
+    /// what sits on the panel is treated as on a pale case.
+    private var hasPalePanel: Bool { isPale || self == .blue }
+
     /// The casing over the tape, top left to bottom right. Smoke lets the
     /// tape show through dimly; yellow is very nearly solid.
     var casing: [Color] {
@@ -65,6 +73,11 @@ enum Skin: String, CaseIterable, Identifiable {
             return [Color(red: 1.00, green: 0.85, blue: 0.20).opacity(0.96),
                     Color(red: 0.98, green: 0.77, blue: 0.09).opacity(0.96),
                     Color(red: 0.91, green: 0.68, blue: 0.04).opacity(0.96)]
+        }
+        if self == .blue {
+            return [Color(red: 0.33, green: 0.47, blue: 0.68).opacity(0.97),
+                    Color(red: 0.24, green: 0.37, blue: 0.58).opacity(0.97),
+                    Color(red: 0.17, green: 0.28, blue: 0.47).opacity(0.97)]
         }
         if self == .neon {
             return [Color(red: 0.38, green: 0.10, blue: 0.58).opacity(0.93),
@@ -80,6 +93,9 @@ enum Skin: String, CaseIterable, Identifiable {
         if self == .yellow {
             return [Color(red: 0.99, green: 0.81, blue: 0.14), Color(red: 0.95, green: 0.73, blue: 0.07),
                     Color(red: 0.87, green: 0.64, blue: 0.03)]
+        }
+        if self == .blue {
+            return [Color(white: 0.86), Color(white: 0.76), Color(white: 0.64)]
         }
         if self == .neon {
             return [Color(red: 0.22, green: 0.08, blue: 0.42), Color(red: 0.14, green: 0.04, blue: 0.31),
@@ -127,20 +143,21 @@ enum Skin: String, CaseIterable, Identifiable {
     /// or shadow that makes them read as cut.
     var engraving: Color {
         if self == .neon { return Self.cyan.opacity(0.85) }
-        return isPale ? Color.black.opacity(0.60) : Color.white.opacity(0.55)
+        return hasPalePanel ? Color.black.opacity(0.60) : Color.white.opacity(0.55)
     }
 
     var engravingEdge: Color {
-        isPale ? Color.white.opacity(0.45) : Color.black.opacity(0.8)
+        hasPalePanel ? Color.white.opacity(0.45) : Color.black.opacity(0.8)
     }
 
     /// Which way the engraving's edge falls: shadow above on dark plastic,
     /// light below on pale.
-    var engravingEdgeOffset: CGFloat { isPale ? 0.7 : -0.7 }
+    var engravingEdgeOffset: CGFloat { hasPalePanel ? 0.7 : -0.7 }
 
     /// The faint Cassety name on the case.
     var mark: Color {
         if self == .neon { return Self.hotPink.opacity(0.85) }
+        if self == .blue { return Color.white.opacity(0.55) }
         return isPale ? Color.black.opacity(0.20) : Color.white.opacity(0.22)
     }
 
@@ -151,7 +168,10 @@ enum Skin: String, CaseIterable, Identifiable {
 
     /// The clock and status icons at the top of the Duo's rail are drawn in
     /// white, so a pale case needs a dark plate behind them.
-    var needsStatusPlate: Bool { isPale }
+    var needsStatusPlate: Bool { hasPalePanel }
+
+    /// A word in outline lettering above the tape window, if the case has one.
+    var caseWord: String? { self == .blue ? "STEREO" : nil }
 
     /// The body of a click-wheel player, top to bottom.
     var wheelBody: [Color] {
@@ -184,6 +204,7 @@ enum Skin: String, CaseIterable, Identifiable {
         case .smoke: return Color(white: 0.14)
         case .yellow: return Color(red: 0.98, green: 0.77, blue: 0.09)
         case .neon: return Color(red: 0.86, green: 0.16, blue: 0.62)
+        case .blue: return Color(red: 0.24, green: 0.37, blue: 0.58)
         case .wheelBlack: return Color(white: 0.04)
         case .wheelSilver: return Color(white: 0.80)
         }

@@ -18,6 +18,7 @@ struct Theme: Identifiable, Equatable {
             Theme(id: "tape-neon", name: "Tape player", detail: "Retro 80s", player: "tape", skin: .neon),
             Theme(id: "tape-smoke", name: "Tape player", detail: "Black", player: "tape", skin: .smoke),
             Theme(id: "tape-yellow", name: "Tape player", detail: "Yellow", player: "tape", skin: .yellow),
+            Theme(id: "tape-blue", name: "Tape player", detail: "Blue", player: "tape", skin: .blue),
             Theme(id: "mp3-neon", name: "MP3 player", detail: "Retro 80s", player: "mp3", skin: .neon),
             Theme(id: "mp3-smoke", name: "MP3 player", detail: "Black", player: "mp3", skin: .smoke)
         ]

@@ -49,7 +49,7 @@ TWO PLAYERS IN ONE
 
 MORE
 • The tape on your Lock Screen, with keys.
-• Tape player in retro 80s, black or yellow. MP3 player in retro 80s or black.
+• Tape player in retro 80s, black, yellow or blue. MP3 player in retro 80s or black.
 • Your mixtapes and settings sync with iCloud, and can be saved to a backup file.
 
 Cassety plays music from Apple Music. An Apple Music subscription is required.
@@ -79,7 +79,7 @@ Answer the questionnaire honestly. Cassety has no content of its own, but it pla
 Apple needs real screenshots taken from the running app, at the sizes it lists for iPhone. The pictures in `docs/` are mock-ups made while the app was being designed. They are not screenshots and must not be uploaded as if they were. Take new ones in Xcode's simulator or on your phone once the app runs:
 
 1. The closed tape player in Retro 80s with an album tape playing.
-2. The tape player in Black, and in Yellow.
+2. The tape player in Black, Yellow and Blue.
 3. The MP3 player with its white dial.
 4. The open screen with the tape shelf.
 5. Recording a mixtape.

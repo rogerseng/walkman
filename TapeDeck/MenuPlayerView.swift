@@ -51,7 +51,7 @@ struct MenuPlayerView: View {
     private var skin: Skin {
         let stored = Skin(rawValue: skinName) ?? Skin.standard
         // The MP3 player comes in Retro 80s and Black only.
-        if jog { return stored.isWheel || stored == .yellow ? Skin.standard : stored }
+        if jog { return stored == .neon || stored == .smoke ? stored : Skin.standard }
         return stored.isWheel ? stored : .wheelBlack
     }
 

@@ -88,7 +88,8 @@ p.intro { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .pair h2 + p { color: var(--muted); }
 .pair h2:not(:first-child) { margin-top: 34px; }
 
-.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 26px; justify-items: center; }
+.shots { display: flex; flex-wrap: wrap; gap: 30px 14px; }
+.shots .shot { width: calc(25% - 11px); min-width: 200px; }
 .row-title { margin: 30px 0 10px; font: 400 22px/1.2 "Righteous", sans-serif; color: var(--orange); }
 
 /* Text pages: plain and easy to read, on one flat sheet */

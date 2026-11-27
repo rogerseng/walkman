@@ -94,6 +94,16 @@ struct DeckView: View {
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
+            // A word in outline lettering above the window, on cases that have one
+            .overlay(alignment: .topLeading) {
+                if let word = skin.caseWord {
+                    OutlinedWord(text: word, fill: skin.casing[1].opacity(1))
+                        .frame(width: window.width)
+                        .offset(x: window.minX, y: window.minY - 34)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
             // Under the window: the song that is playing on an album tape
             // (its printed label has no room for it), or word that the tape
             // has run out.
@@ -717,5 +727,30 @@ struct PlainKeyButtonStyle: ButtonStyle {
             )
             .offset(x: down ? 4 : 0, y: down ? 4 : 0)
             .animation(.easeOut(duration: 0.08), value: down)
+    }
+}
+
+/// Lettering drawn as a white outline, as if printed on painted metal. The
+/// outline is the word in white nudged each way, with the word in the case
+/// colour laid over the middle.
+struct OutlinedWord: View {
+    let text: String
+    let fill: Color
+
+    private var word: some View {
+        Text(text)
+            .font(.system(size: 21, weight: .heavy))
+            .tracking(1.5)
+    }
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<8, id: \.self) { step in
+                let angle = Double(step) * .pi / 4
+                word.foregroundColor(.white.opacity(0.9))
+                    .offset(x: CGFloat(cos(angle)) * 1.1, y: CGFloat(sin(angle)) * 1.1)
+            }
+            word.foregroundColor(fill)
+        }
     }
 }

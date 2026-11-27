@@ -30,6 +30,7 @@ A theme is what the closed phone looks like: which player it is and what colour 
 | --- | --- |
 | Tape player, Black | The cassette and its reels behind a window in dark smoked plastic, with the volume fader and keys beside it. |
 | Tape player, Yellow | The same in bright yellow with dark engraved lettering. |
+| Tape player, Blue | Blue painted metal with a silver side for the keys, an orange play key and STEREO in outline lettering, after the first pocket stereos of 1979. |
 | Tape player, Retro 80s | Eighties neon: deep purple, a glowing pink and cyan window, a hot pink play key and a band of stripes. |
 | MP3 player, Black | A display of menus and a white jog dial, in dark plastic. |
 | MP3 player, Retro 80s | The same in purple, with cyan lettering on the display and a pink highlight. |
