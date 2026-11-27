@@ -167,11 +167,17 @@ struct OpenTrayView: View {
                 } label: {
                     Image(systemName: "list.bullet")
                         .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(Color(white: 0.95))
+                        .foregroundColor(skin.note)
                         .frame(width: 48, height: 40)
-                        // A key standing proud of the case, not a hollow in it
-                        .background(LinearGradient(colors: [Color(white: 0.36), Color(white: 0.22)],
-                                                   startPoint: .top, endPoint: .bottom))
+                        // Moulded in the case's own plastic and standing a
+                        // little proud of it, not a key of another colour
+                        .background(
+                            ZStack {
+                                LinearGradient(colors: bodyColors, startPoint: .top, endPoint: .bottom)
+                                Color.white.opacity(0.06)
+                                PlasticGrain(strength: 0.5)
+                            }
+                        )
                         .modifier(Raised(corner: 10))
                 }
                 .buttonStyle(.plain)
