@@ -11,6 +11,8 @@ const path = require('path');
     ['front', 1500, 945, 'CassetteFront.imageset/cassette-front.png'],
     // a small copy for the lock screen, where large images are refused
     ['front', 600, 378, '../../TapeDeckWidgets/Assets.xcassets/CassetteFrontSmall.imageset/cassette-front-small.png'],
+    ['back', 1500, 945, 'CassetteBack.imageset/cassette-back.png'],
+    ['pack', 900, 900, 'TapePack.imageset/tape-pack.png'],
     ['hub', 480, 480, 'ReelHub.imageset/reel-hub.png'],
     ['grain', 384, 384, 'Grain.imageset/grain.png'],
   ]) {

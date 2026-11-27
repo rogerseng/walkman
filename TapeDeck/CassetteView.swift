@@ -18,10 +18,13 @@ private final class SpinState {
     }
 }
 
-/// A clear compact cassette. The front of the shell (edges, ridges, stickers,
-/// label strip, rollers, screws, reflections) is see-through artwork from
-/// tools/cassette-art.html. Underneath it the reels, the tape running down to
-/// the rollers, and the handwriting on the label are drawn live. All
+/// A clear compact cassette, built in layers from artwork made by
+/// tools/cassette-art.html. At the back is the inside of the shell (slip
+/// sheet, reel wells, shield, pad spring). On that sit the live parts: the
+/// reels of wound tape, the tape running down to the rollers, and the hubs.
+/// Over them goes the see-through front of the shell (edges, ridges, stickers,
+/// label strip, rollers, screws, scratches, reflections), and last the
+/// lettering on the label. All
 /// measurements are in millimetres of a real 100 x 63 mm shell and scaled to
 /// whatever size the view is given.
 struct CassetteView: View {
@@ -56,6 +59,11 @@ struct CassetteView: View {
                 RoundedRectangle(cornerRadius: 2.6 * u)
                     .fill((tint ?? .white).opacity(tint == nil ? 0.16 : 0.30))
                     .shadow(color: .black.opacity(0.35), radius: 2.5 * u, y: 1.2 * u)
+
+                // Inside the shell: slip sheet, reel wells, shield and pad spring
+                Image("CassetteBack")
+                    .resizable()
+                    .interpolation(.high)
 
                 reels(u: u)
                     .frame(width: geo.size.width, height: geo.size.height)
@@ -195,30 +203,25 @@ struct CassetteView: View {
 
     private func reel(radius: Double, angle: Double, u: CGFloat) -> some View {
         let size = 2 * radius * u
+        let full = 2 * fullRadius * u
         return ZStack {
-            // Wound tape: near-black oxide with the soft sheen a tape pack
-            // has. It is a ring, because the hub in the middle is clear.
-            ZStack {
-                Circle()
-                    .fill(RadialGradient(stops: [
-                        .init(color: Color(red: 0.12, green: 0.09, blue: 0.07), location: 0),
-                        .init(color: Color(red: 0.19, green: 0.15, blue: 0.12), location: 0.60),
-                        .init(color: Color(red: 0.16, green: 0.12, blue: 0.10), location: 0.85),
-                        .init(color: Color(red: 0.09, green: 0.07, blue: 0.06), location: 1)
-                    ], center: .center, startRadius: 0, endRadius: radius * u))
-                Circle()
-                    .fill(AngularGradient(stops: [
-                        .init(color: .clear, location: 0.00),
-                        .init(color: Color.white.opacity(0.16), location: 0.08),
-                        .init(color: .clear, location: 0.18),
-                        .init(color: .clear, location: 0.50),
-                        .init(color: Color.white.opacity(0.10), location: 0.58),
-                        .init(color: .clear, location: 0.68),
-                        .init(color: .clear, location: 1.00)
-                    ], center: .center, angle: .degrees(200)))
-            }
-            .mask(Circle().strokeBorder(lineWidth: max(0, radius - hubRadius + 0.4) * u))
-            .shadow(color: .black.opacity(0.35), radius: 0.8 * u, y: 0.4 * u)
+            // Wound tape. The artwork is a whole reel, turn upon turn; the
+            // ring cut from it is as wide as the tape wound on so far. The
+            // middle is left open because the hub is clear.
+            Image("TapePack")
+                .resizable()
+                .interpolation(.high)
+                .frame(width: full, height: full)
+                .mask(
+                    Circle()
+                        .strokeBorder(lineWidth: max(0, radius - hubRadius + 0.4) * u)
+                        .frame(width: size, height: size)
+                )
+                .shadow(color: .black.opacity(0.45), radius: 1.0 * u, y: 0.5 * u)
+            // The outermost turn catches the light
+            Circle()
+                .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.18 * u)
+                .frame(width: size, height: size)
             Image("ReelHub")
                 .resizable()
                 .interpolation(.high)
