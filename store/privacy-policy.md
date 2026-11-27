@@ -1,6 +1,8 @@
 # Cassety privacy policy
 
-Last updated: fill in the date you publish this.
+Last updated: November 27, 2026
+
+The published copy is `website/privacy.html`. Keep the two the same.
 
 Cassety is a music player. This page says what it does with your information. The short version: the people who make Cassety do not collect anything.
 
@@ -30,4 +32,4 @@ If this policy changes, the new version will be posted on this page with a new d
 
 ## Contact
 
-Fill in an email address where people can reach you.
+Questions about privacy: support@cassety.com

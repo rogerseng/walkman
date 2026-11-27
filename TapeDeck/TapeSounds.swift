@@ -72,6 +72,16 @@ final class TapeSounds {
         centre.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in
             _ = self?.start()
         }
+        centre.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+            let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            if raw == AVAudioSession.InterruptionType.ended.rawValue { self?.recover() }
+        }
+        centre.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+            self?.recover()
+        }
+        centre.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.recover()
+        }
         loops[.hiss] = buffer(Self.hiss())
         loops[.whir] = buffer(Self.whir())
         loops[.reverse] = buffer(Self.reverse())
@@ -85,10 +95,28 @@ final class TapeSounds {
     }
 
     func play(_ effect: Effect) {
-        guard enabled, let buffer = effects[effect], start() else { return }
+        // A clunk is not worth waking the engine for behind the lock screen,
+        // where it would then sit running with nothing to play.
+        guard enabled, let buffer = effects[effect], !idleInBackground, start() else { return }
         // The player node is left running, so a sound only has to be queued.
         fxNode.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
         if !fxNode.isPlaying { fxNode.play() }
+    }
+
+    /// In the background with no loop playing.
+    private var idleInBackground: Bool {
+        playingLoop == nil && UIApplication.shared.applicationState == .background
+    }
+
+    /// After a phone call, a route change or the audio system restarting,
+    /// the engine has stopped under us. Forget what was playing and set the
+    /// wanted loop going again.
+    private func recover() {
+        playingLoop = nil
+        configured = false
+        if UIApplication.shared.applicationState != .background || currentLoop != nil {
+            applyLoop()
+        }
     }
 
     func setLoop(_ loop: Loop?) {
@@ -113,6 +141,9 @@ final class TapeSounds {
         guard let wanted, start() else {
             if engine.isRunning { loopNode.stop() }
             playingLoop = nil
+            // Nothing audible left to play: do not keep the engine turning
+            // over in the background making silence.
+            if idleInBackground { engine.pause() }
             return
         }
         loopNode.volume = volume

@@ -16,17 +16,17 @@ struct Theme: Identifiable, Equatable {
     /// only in builds run from Xcode (see `Skin.includesClickWheel`).
     static var offered: [Theme] {
         var list = [
-            Theme(id: "tape-neon", name: "Tape player", detail: "Retro 80s", player: "tape", skin: .neon),
-            Theme(id: "tape-smoke", name: "Tape player", detail: "Black", player: "tape", skin: .smoke),
-            Theme(id: "tape-yellow", name: "Tape player", detail: "Yellow", player: "tape", skin: .yellow),
-            Theme(id: "tape-blue", name: "Tape player", detail: "Blue", player: "tape", skin: .blue),
+            Theme(id: "tape-neon", name: "Tape deck", detail: "Retro 80s", player: "tape", skin: .neon),
+            Theme(id: "tape-smoke", name: "Tape deck", detail: "Black", player: "tape", skin: .smoke),
+            Theme(id: "tape-yellow", name: "Tape deck", detail: "Yellow", player: "tape", skin: .yellow),
+            Theme(id: "tape-blue", name: "Tape deck", detail: "Blue", player: "tape", skin: .blue),
             Theme(id: "mp3-neon", name: "MP3 player", detail: "Retro 80s", player: "mp3", skin: .neon),
             Theme(id: "mp3-smoke", name: "MP3 player", detail: "Black", player: "mp3", skin: .smoke)
         ]
         if Skin.includesClickWheel {
-            list.append(Theme(id: "wheel-black", name: "Click wheel", detail: "Black",
+            list.append(Theme(id: "wheel-black", name: Skin.wheelWord.capitalized, detail: "Black",
                               player: "mp3", skin: .wheelBlack))
-            list.append(Theme(id: "wheel-silver", name: "Click wheel", detail: "Silver",
+            list.append(Theme(id: "wheel-silver", name: Skin.wheelWord.capitalized, detail: "Silver",
                               player: "mp3", skin: .wheelSilver))
         }
         return list
@@ -54,11 +54,17 @@ struct Theme: Identifiable, Equatable {
 
 /// The kinds of player, for grouping the themes.
 enum PlayerKind: String, CaseIterable, Identifiable {
-    case tape = "Tape deck"
-    case mp3 = "MP3 player"
-    case wheel = "Click wheel"
+    case tape, mp3, wheel
 
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .tape: return "Tape deck"
+        case .mp3: return "MP3 player"
+        case .wheel: return Skin.wheelWord.capitalized
+        }
+    }
 
     func includes(_ theme: Theme) -> Bool {
         switch self {

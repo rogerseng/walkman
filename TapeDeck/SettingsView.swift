@@ -7,7 +7,6 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @EnvironmentObject private var model: PlayerModel
     @EnvironmentObject private var tour: Tour
-    @AppStorage(Prefs.player) private var player = "tape"
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage(Prefs.hiss) private var hissOn = true
@@ -43,7 +42,7 @@ struct SettingsView: View {
                     Section {
                         ThemePicker(kind: kind)
                     } header: {
-                        Text(kind.rawValue)
+                        Text(kind.title)
                     } footer: {
                         if kind == PlayerKind.offered.last {
                             Text("The tape deck shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes, and the colours carry over to the shelf, the open phone and the lock screen.")
@@ -62,7 +61,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Toggle("Play when the phone is closed", isOn: $playOnCloseOn)
+                    Toggle("Play when a folding phone is closed", isOn: $playOnCloseOn)
                     Toggle("Flip at the end of a side", isOn: $autoFlipOn)
                     Toggle("Tape runs up to speed and down to a stop", isOn: $tapeRampOn)
                 } header: {
@@ -118,12 +117,15 @@ struct SettingsView: View {
                     Label("Play and stop are a pair. Press one in and the other pops out.", systemImage: "play.fill")
                     Label("Tap fast forward or rewind to skip a song. Hold to wind the tape.", systemImage: "forward.fill")
                     Label("Double-tap the tape to turn it over.", systemImage: "arrow.triangle.2.circlepath")
-                    Label("Open the phone to choose a tape, then close it to start playing.", systemImage: "rectangle.portrait.on.rectangle.portrait")
-                    Button("Take the hands-on tour") {
-                        // The tour is done on the tape deck itself.
-                        player = "tape"
-                        dismiss()
-                        tour.start(hasTape: model.hasTape)
+                    Label("The music key opens your shelf. On a folding phone, open it to choose a tape and close it to start playing.", systemImage: "music.note")
+                    Label("On the MP3 player, turn the dial to scroll and press it to choose. The top key goes back, or opens Settings from the first menu.", systemImage: "dial.medium")
+                    // The tour is done on the tape deck, so it is offered
+                    // only while the deck is the player showing.
+                    if tour.deckShowing {
+                        Button("Take the hands-on tour") {
+                            dismiss()
+                            tour.start(hasTape: model.hasTape)
+                        }
                     }
                     Button("Show the introduction again") {
                         dismiss()
@@ -161,6 +163,8 @@ struct SettingsView: View {
             .fileImporter(isPresented: $choosingBackup, allowedContentTypes: [.json]) { result in
                 restore(result)
             }
+            .scrollContentBackground(.hidden)
+            .background(ShelfBackground())
             .alert("Backup", isPresented: backupNoteShown) {
                 Button("OK", role: .cancel) {}
             } message: {

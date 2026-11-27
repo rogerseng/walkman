@@ -22,6 +22,7 @@ struct MenuPlayerView: View {
     @StateObject private var volume = SystemVolume()
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     @State private var showSettings = false
+    @State private var showShelf = false
 
     // Where you are in the menus: each level and the row chosen on it.
     @State private var stack: [Screen] = [.root]
@@ -78,6 +79,7 @@ struct MenuPlayerView: View {
             case open(Screen)
             case play(Tape)
             case flip
+            case shelf
             case settings
             case connect
             case nothing
@@ -117,7 +119,8 @@ struct MenuPlayerView: View {
                            barBottom: Color(red: 0.09, green: 0.03, blue: 0.20), barInk: Skin.hotPink,
                            litTop: Color(red: 1.0, green: 0.40, blue: 0.74),
                            litBottom: Color(red: 0.92, green: 0.14, blue: 0.54),
-                           litInk: .white, track: Skin.cyan.opacity(0.22), glow: Skin.cyan.opacity(0.55))
+                           litInk: Color(red: 0.10, green: 0.02, blue: 0.13),
+                           track: Skin.cyan.opacity(0.22), glow: Skin.cyan.opacity(0.55))
         }
         if jog {
             // Amber on black, like the display of an old hi-fi
@@ -153,6 +156,14 @@ struct MenuPlayerView: View {
         )
         .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
+        }
+        .fullScreenCover(isPresented: $showShelf) {
+            ShelfView(onPick: {
+                showShelf = false
+                stack = [.root, .nowPlaying]
+                chosen = [0, 0]
+                tops = [0, 0]
+            }, onClose: { showShelf = false })
         }
     }
 
@@ -343,10 +354,14 @@ struct MenuPlayerView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Jog dial")
         .accessibilityHint("Swipe up or down to scroll. Double tap to select.")
+        .accessibilityValue(dialValue)
         .accessibilityAdjustableAction { direction in
+            // In a menu, up the list is "increment". While a song shows the
+            // dial is the volume, where increment must mean louder.
+            let up = current == .nowPlaying ? 1 : -1
             switch direction {
-            case .increment: scroll(by: -1)
-            case .decrement: scroll(by: 1)
+            case .increment: scroll(by: up)
+            case .decrement: scroll(by: -up)
             @unknown default: break
             }
         }
@@ -463,12 +478,16 @@ struct MenuPlayerView: View {
                 .onEnded { _ in turnReleased() }
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Click wheel")
+        .accessibilityLabel(Skin.wheelWord.capitalized)
         .accessibilityHint("Swipe up or down to scroll. Double tap to select.")
+        .accessibilityValue(dialValue)
         .accessibilityAdjustableAction { direction in
+            // In a menu, up the list is "increment". While a song shows the
+            // dial is the volume, where increment must mean louder.
+            let up = current == .nowPlaying ? 1 : -1
             switch direction {
-            case .increment: scroll(by: -1)
-            case .decrement: scroll(by: 1)
+            case .increment: scroll(by: up)
+            case .decrement: scroll(by: -up)
             @unknown default: break
             }
         }
@@ -479,13 +498,25 @@ struct MenuPlayerView: View {
 
     // MARK: Menus
 
+    /// What VoiceOver says the dial is on: the highlighted row, or the volume.
+    private var dialValue: String {
+        if current == .nowPlaying { return "Volume \(Int((volume.level * 100).rounded())) percent" }
+        let list = rows(for: current)
+        guard level < chosen.count, list.indices.contains(chosen[level]) else { return "" }
+        let row = list[chosen[level]]
+        return row.detail.isEmpty ? row.title : "\(row.title), \(row.detail)"
+    }
+
     private var current: Screen { stack.last ?? .root }
     private var level: Int { stack.count - 1 }
 
     private func rows(for screen: Screen) -> [Row] {
         switch screen {
         case .root:
-            var list = [Row(id: "music", title: "Music", action: .open(.music))]
+            var list = [Row(id: "music", title: "Music", action: .open(.music)),
+                        // Everything the tape deck's shelf has: search,
+                        // artists, songs, and recording mixtapes
+                        Row(id: "shelf", title: "Browse and Search", action: .shelf)]
             if model.hasTape {
                 list.append(Row(id: "now", title: "Now Playing", action: .open(.nowPlaying)))
                 list.append(Row(id: "flip", title: "Flip Tape",
@@ -513,7 +544,8 @@ struct MenuPlayerView: View {
 
     private func tapeRows(_ tapes: [Tape]) -> [Row] {
         if tapes.isEmpty {
-            return [Row(id: "empty", title: "Nothing here yet", action: .nothing)]
+            return [Row(id: "empty", title: model.isLoadingLibrary ? "Loading…" : "Nothing here yet",
+                        action: .nothing)]
         }
         return tapes.map { Row(id: $0.id, title: $0.title, detail: $0.subtitle, action: .play($0)) }
     }
@@ -560,6 +592,8 @@ struct MenuPlayerView: View {
             open(.nowPlaying)
         case .flip:
             model.flipTape()
+        case .shelf:
+            showShelf = true
         case .settings:
             showSettings = true
         case .connect:
@@ -709,10 +743,10 @@ struct MenuPlayerView: View {
                             .font(.system(size: 12, weight: .semibold))
                             .lineLimit(1)
                         Text(model.tapeTitle)
-                            .font(Typeface.marker(13))
+                            .font(Typeface.markerFixed(13))
                             .lineLimit(1)
                             .opacity(0.7)
-                        Text(model.sideEnded ? "End of side \(model.sideLetter)" : "Side \(model.sideLetter)")
+                        Text(model.sideEnded ? "End of side \(model.sideLetter). Flip Tape is in the menu." : "Side \(model.sideLetter)")
                             .font(.system(size: 11, weight: .semibold))
                             .opacity(0.7)
                     }

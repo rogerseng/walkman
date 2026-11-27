@@ -5,7 +5,6 @@ import SwiftUI
 /// closed phone, for screens that cannot fold.
 struct OpenTrayView: View {
     @EnvironmentObject private var model: PlayerModel
-    @State private var showSettings = false
     @Environment(\.playerTheme) private var theme
     @AppStorage(Prefs.player) private var player = "tape"
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
@@ -55,10 +54,11 @@ struct OpenTrayView: View {
                 .buttonStyle(PlainKeyButtonStyle())
             }
             // The same keys as the closed phone, laid in a row: play, stop,
-            // fast forward, rewind, eject and settings.
+            // fast forward, rewind and eject. Settings is on the shelf
+            // beside this, which leaves the keys room to be a proper size.
             TransportKeys(vertical: false, keyHeight: 82, bare: true, big: true, spacing: 12,
-                          ejectRemovesTape: true, onSettings: { showSettings = true })
-                .frame(maxWidth: 6 * 66 + 5 * 12)
+                          ejectRemovesTape: true)
+                .frame(maxWidth: 5 * 66 + 4 * 12)
         }
         .padding(20)
         .background(
@@ -66,9 +66,6 @@ struct OpenTrayView: View {
             LinearGradient(colors: theme.duskColors, startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
         )
-        .fullScreenCover(isPresented: $showSettings) {
-            SettingsView()
-        }
     }
 }
 

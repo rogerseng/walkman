@@ -11,7 +11,7 @@ Paste these into App Store Connect. Character limits are Apple's.
 | Primary category | Music |
 | Secondary category | Entertainment |
 | Price | $4.99 (USD), one-time purchase |
-| Copyright | 2026 followed by your name or company |
+| Copyright | 2026 ROGER SENG STUDIOS LLC |
 
 The subtitle avoids the words "Apple Music" on purpose. Apple asks developers not to put its trademarks in an app's name or subtitle. The description may say the app works with Apple Music.
 
@@ -23,19 +23,20 @@ Your albums and playlists, on tape. Two sides, real reels, keys that clunk. Flip
 
 Cassety turns your music into cassettes.
 
-Pick an album or a playlist and it becomes a tape with two sides. Drop it in, press play, and watch the reels turn. When side A runs out the play key pops up and the music stops. Flip the tape to carry on.
+Browse your library by playlist, artist, album or song, or search all of Apple Music. Whatever you pick becomes a tape with two sides. Drop it in, press play, and watch the reels turn. When side A runs out the play key pops up and the music stops. Flip the tape to carry on.
 
 A REAL DECK
 • Play and stop are a pair of keys. Press one in and the other pops out.
 • Tap fast forward or rewind to skip a song. Hold to wind the tape, reels spinning, until you let go.
 • The reels show how much of the side is left, not just the current song.
 • A volume fader with level lights, right on the player.
+• The tape runs up to speed when you press play and slows to a stop when you press stop.
 • Key clunks, the door, tape hiss and the whir of the motor. Turn them off if you prefer quiet.
 • Haptics for every key, the door and the fader.
 
 YOUR TAPES
-• Albums wear a printed label in the colours of their cover art.
-• Playlists get a handwritten label.
+• Every tape is labelled in marker pen. Albums wear a label in the colours of their cover art.
+• Open an album or playlist to see its songs, and start the tape at any one of them.
 • Record your own mixtapes. Pick a C-60 or a C-90, add songs to each side, and stop when the tape is full.
 
 MADE FOR FOLDING PHONES
@@ -44,21 +45,22 @@ MADE FOR FOLDING PHONES
 • Works on every iPhone, not only folding ones.
 
 TWO PLAYERS IN ONE
-• Tape player: the cassette and its reels, a fader and a row of keys.
+• Tape deck: the cassette and its reels, a fader and a row of keys.
 • MP3 player: a display of menus and a white jog dial. Turn to scroll, press to choose.
 
 MORE
 • The tape on your Lock Screen, with keys.
-• Tape player in retro 80s, black, yellow or blue. MP3 player in retro 80s or black.
+• Tape deck in retro 80s, black, yellow or blue. MP3 player in retro 80s or black. The colours carry through the whole app and the Lock Screen.
+• A hands-on tour teaches the keys by having you press them.
 • Your mixtapes and settings sync with iCloud, and can be saved to a backup file.
 
 Cassety plays music from Apple Music. An Apple Music subscription is required.
 
 ## Keywords (100)
 
-cassette,tape,deck,mixtape,retro,player,walkman,vintage,80s,music,album,reels,analog,hifi
+cassette,mixtape,retro,player,vintage,80s,album,reels,analog,hifi,boombox,nostalgia,lofi,stereo
 
-Check "walkman" before submitting. It is a Sony trademark, and Apple sometimes rejects keywords that are other companies' marks. Dropping it is the safe choice.
+No other company's names are in the keywords. Words already in the name and subtitle (tape, deck, music) are left out because Apple indexes those anyway.
 
 ## URLs you must supply
 
@@ -72,18 +74,38 @@ These pages are in the `website` folder and need putting online first. See `webs
 
 ## Age rating
 
-Answer the questionnaire honestly. Cassety has no content of its own, but it plays whatever is in the buyer's Apple Music, which can include explicit songs. Where the questionnaire asks about mature or explicit content the app can show or play, say so, and note that the phone's own content restrictions apply.
+Cassety has no content of its own, but it plays whatever is in the buyer's Apple Music, which can include explicit songs. Suggested answers:
+
+| Question | Answer |
+| --- | --- |
+| Violence, sexual content, nudity, horror, gambling, contests, drugs, medical | None for every one |
+| Profanity or crude humour | Infrequent or mild (songs can contain it) |
+| Mature or suggestive themes | Infrequent or mild (songs can contain it) |
+| Unrestricted web access | No |
+| User-generated content, messaging, chat | No |
+| Advertising | No |
+
+The phone's own content restrictions for explicit music still apply inside Cassety.
+
+## Content rights
+
+App Store Connect asks whether the app contains or accesses third-party content. Answer yes, and that you have the rights: the music is played through Apple's MusicKit with the listener's own Apple Music subscription.
+
+## Device support
+
+iPhone only. The project is set to iPhone, so App Store Connect asks only for iPhone screenshots.
 
 ## Screenshots
 
 Apple needs real screenshots taken from the running app, at the sizes it lists for iPhone. The pictures in `docs/` are mock-ups made while the app was being designed. They are not screenshots and must not be uploaded as if they were. Take new ones in Xcode's simulator or on your phone once the app runs:
 
-1. The closed tape player in Retro 80s with an album tape playing.
-2. The tape player in Black, Yellow and Blue.
+1. The closed tape deck in Retro 80s with an album tape playing.
+2. The tape deck in Black, Yellow and Blue.
 3. The MP3 player with its white dial.
 4. The open screen with the tape shelf.
-5. Recording a mixtape.
-6. The Lock Screen tape.
+5. The library: playlists, artists, albums and songs.
+6. Recording a mixtape.
+7. The Lock Screen tape.
 
 ## App privacy answers ("nutrition label")
 

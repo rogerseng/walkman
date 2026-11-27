@@ -144,7 +144,7 @@ struct CategoryRow: View {
                     .font(Typeface.display(19))
                     .foregroundColor(.white)
             }
-            .frame(height: 40)
+            .frame(minHeight: 40)
         }
         .listRowBackground(Color.clear)
         .listRowSeparatorTint(Color.white.opacity(0.12))
@@ -304,6 +304,7 @@ struct CollectionDetail: View {
     @Environment(\.pickTape) private var pick
     @State private var tracks: [Track] = []
     @State private var loading = true
+    @State private var failed = false
 
     var body: some View {
         List {
@@ -333,7 +334,6 @@ struct CollectionDetail: View {
                     pick(tape)
                 } label: {
                     Label("Put in the deck", systemImage: "play.fill")
-                        .font(.system(size: 15, weight: .bold))
                         .padding(.horizontal, 22)
                         .padding(.vertical, 10)
                 }
@@ -347,6 +347,10 @@ struct CollectionDetail: View {
 
             if loading {
                 ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
+            } else if failed {
+                Text("The songs could not be loaded. Check your connection and try again.")
+                    .foregroundColor(.secondary)
+                    .listRowBackground(Color.clear)
             }
             ForEach(Array(tracks.enumerated()), id: \.element.id) { number, track in
                 Button {
@@ -389,13 +393,15 @@ struct CollectionDetail: View {
             do {
                 switch tape {
                 case .album(let album):
-                    tracks = Array(try await album.with([.tracks]).tracks ?? [])
+                    tracks = try await PlayerModel.everything(in: album.with([.tracks]).tracks)
                 case .playlist(let playlist):
-                    tracks = Array(try await playlist.with([.tracks]).tracks ?? [])
+                    tracks = try await PlayerModel.everything(in: playlist.with([.tracks]).tracks)
                 default:
                     break
                 }
-            } catch {}
+            } catch {
+                failed = true
+            }
             loading = false
         }
     }
@@ -413,13 +419,14 @@ struct ArtistDetail: View {
     let source: MusicPropertySource
     @State private var albums: [Album] = []
     @State private var loading = true
+    @State private var failed = false
 
     var body: some View {
         List {
             if loading {
                 ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
             } else if albums.isEmpty {
-                Text("No albums found.").foregroundColor(.secondary).listRowBackground(Color.clear)
+                Text(failed ? "The albums could not be loaded. Check your connection and try again." : "No albums found.").foregroundColor(.secondary).listRowBackground(Color.clear)
             }
             if !albums.isEmpty {
                 Section {
@@ -439,7 +446,9 @@ struct ArtistDetail: View {
                 albums = Array(full.albums ?? []).sorted {
                     ($0.releaseDate ?? .distantPast) > ($1.releaseDate ?? .distantPast)
                 }
-            } catch {}
+            } catch {
+                failed = true
+            }
             loading = false
         }
     }

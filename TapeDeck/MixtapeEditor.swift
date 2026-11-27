@@ -73,6 +73,9 @@ struct MixtapeEditor: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(ShelfBackground())
+            .errorAlert(model)
             .navigationTitle(mixtape.name.isEmpty ? "New Mixtape" : mixtape.name)
             // A title on its own line, under the bar, so its keys never crowd it
             .navigationBarTitleDisplayMode(.large)

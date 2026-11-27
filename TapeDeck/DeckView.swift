@@ -62,6 +62,17 @@ struct DeckView: View {
                     .onTapGesture {
                         if !model.hasTape { openShelf() }
                     }
+                    // For VoiceOver, which cannot double-tap the tape itself
+                    .accessibilityElement()
+                    .accessibilityLabel(model.hasTape
+                                        ? "\(model.tapeTitle), side \(model.sideLetter)"
+                                        : "No tape")
+                    .accessibilityHint(model.hasTape ? "" : "Opens the tape shelf")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction {
+                        if !model.hasTape { openShelf() }
+                    }
+                    .accessibilityAction(named: "Turn the tape over") { model.flipTape() }
                 if !railLeading { keyColumn(insets: insets, rail: rail, leading: false) }
             }
             .frame(width: full.width, height: full.height)
@@ -130,7 +141,10 @@ struct DeckView: View {
             }
             // Volume: on the solid panel, level with the window and as tall as it
             .overlay(alignment: .topLeading) {
-                let faderX = railLeading ? panelWidth - 70 : full.width - panelWidth + 22
+                // Never under the keys, however narrow the phone
+                let keysLeft = full.width - column
+                let faderX = railLeading ? panelWidth - 70
+                    : min(full.width - panelWidth + 22, keysLeft - 48 - 4)
                 VolumeFader(volume: volume, playing: model.motion == .playing,
                             engraving: skin.engraving, engravingEdge: skin.engravingEdge,
                             engravingEdgeOffset: skin.engravingEdgeOffset)
@@ -166,22 +180,16 @@ struct DeckView: View {
         .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
         }
-        // The tour moves on when the listener has done what it asked
-        .onChange(of: model.hasTape) { _, has in
-            if has { tour.completed(.chooseTape) }
-        }
-        .onChange(of: model.motion) { old, new in
-            if new == .playing { tour.completed(.play) }
-            if old == .playing, new == .paused || new == .stopped { tour.completed(.stop) }
-            if old == .rewind || old == .fastForward, new != .rewind, new != .fastForward {
-                tour.completed(.wind)
+        // The tour moves on when the listener has really done what it asked
+        .onReceive(model.events) { event in
+            switch event {
+            case .inserted: tour.completed(.chooseTape)
+            case .played: tour.completed(.play)
+            case .stopped: tour.completed(.stop)
+            case .skipped: tour.completed(.skip)
+            case .wound: tour.completed(.wind)
+            case .flipped: tour.completed(.flip)
             }
-        }
-        .onChange(of: model.trackTitle) { _, _ in
-            if model.motion != .rewind, model.motion != .fastForward { tour.completed(.skip) }
-        }
-        .onChange(of: model.sideLetter) { _, _ in
-            tour.completed(.flip)
         }
         // A step that is already done when it comes up is passed over: a tape
         // picked from the shelf starts playing by itself, so play is done.
@@ -676,8 +684,8 @@ struct TapeKey: View {
                 }
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(label)
-        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(spokenLabel)
+        .accessibilityAddTraits(latched ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction {
             onDown()
             onUp()
@@ -688,6 +696,15 @@ struct TapeKey: View {
         if accent { return skin.accentWall }
         if dark { return [Color(white: 0.05), Color(white: 0.02)] }
         return [Color(white: 0.17), Color(white: 0.09)]
+    }
+
+    /// The short legends on the keys, said in full.
+    private var spokenLabel: String {
+        switch label {
+        case "FF": return "Fast forward"
+        case "REW": return "Rewind"
+        default: return label.count > 1 && label == label.uppercased() ? label.capitalized : label
+        }
     }
 
     /// The glow of the lamp behind the play key while it is in.

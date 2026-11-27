@@ -56,10 +56,16 @@ final class Tour: ObservableObject {
     }
 
     @Published private(set) var step: Step?
+    /// Whether the tape deck is on screen, which is where the tour happens.
+    /// Kept up to date by the app's top view.
+    @Published var deckShowing = false {
+        didSet { if !deckShowing { step = nil } }
+    }
 
     var isActive: Bool { step != nil }
 
     func start(hasTape: Bool) {
+        guard deckShowing else { return }
         step = hasTape ? .play : .chooseTape
     }
 
@@ -96,6 +102,7 @@ extension EnvironmentValues {
 struct TourPulse: View {
     var corner: CGFloat
     @Environment(\.playerTheme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var bright = false
 
     var body: some View {
@@ -106,7 +113,12 @@ struct TourPulse: View {
             .padding(-6)
             .allowsHitTesting(false)
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) { bright = true }
+                // With Reduce Motion the ring is simply lit, not breathing.
+                if reduceMotion {
+                    bright = true
+                } else {
+                    withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) { bright = true }
+                }
             }
     }
 }
@@ -143,8 +155,10 @@ struct TourCard: View {
                     if step == .finished {
                         Button("Done") { tour.end() }
                             .buttonStyle(PlainKeyButtonStyle())
-                    } else if step == .flip || step == .skip {
-                        // A tape with one side, or a single, cannot do these.
+                    } else {
+                        // A single cannot be skipped or flipped, and some
+                        // steps cannot be done with VoiceOver, so every
+                        // step can be passed over.
                         Button("Skip this step") { tour.skipStep() }
                             .font(Typeface.display(13))
                             .foregroundColor(theme.accentColor)

@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import MusicKit
 import SwiftUI
@@ -85,10 +86,23 @@ final class PlayerModel: ObservableObject {
     /// What a key just asked for, shown at once while the system player
     /// catches up, so the key latches the moment it is pressed.
     private var promised: (motion: TapeMotion, since: Date)?
-    /// The motor running the tape up to speed or down to a stop.
+    /// The motor running the tape up to speed or down to a stop. Each run
+    /// has a number, so one that was replaced cannot clear its successor.
     private var rampTask: Task<Void, Never>?
-    /// True while the motor is changing speed, so nothing else resets it.
-    private var ramping = false
+    private var rampNumber = 0
+    private var ramping: Bool { rampTask != nil }
+    /// The work of picking the music up after a wind, and whether it is
+    /// going to start the music again.
+    private var finishTask: Task<Void, Never>?
+    private var resumePending = false
+    /// A key's promise ran out without the player agreeing, so the change
+    /// of motion that follows is not the music stopping by itself.
+    private var promiseLapsed = false
+    private var wasReallyPlaying = false
+
+    /// Things the listener did on the deck, as they happen. The tour listens.
+    enum DeckEvent { case inserted, played, stopped, skipped, wound, flipped }
+    let events = PassthroughSubject<DeckEvent, Never>()
     private var seekTask: Task<Void, Never>?
     /// Winding the tape by hand: where it has got to on the side, and
     /// whether to carry on playing when the key is let go.
@@ -287,6 +301,7 @@ final class PlayerModel: ObservableObject {
         guard !swapping else { return }
         swapping = true
         lastKeyPress = Date()
+        resetTransport()
         Task {
             defer { swapping = false }
             if hasTape {
@@ -337,6 +352,7 @@ final class PlayerModel: ObservableObject {
                     Haptics.door()
                 }
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { hasTape = true }
+                events.send(.inserted)
                 if autoPlay {
                     await pause(seconds: 0.55)
                     pressFeedback()
@@ -346,7 +362,7 @@ final class PlayerModel: ObservableObject {
                     try await player.prepareToPlay()
                 }
             } catch {
-                errorMessage = "That tape would not play. \(error.localizedDescription)"
+                errorMessage = await explain(error, doing: "That tape would not play.")
             }
         }
     }
@@ -357,10 +373,10 @@ final class PlayerModel: ObservableObject {
         switch tape {
         case .album(let album):
             let full = try await album.with([.tracks])
-            return TapeSide.split(Array(full.tracks ?? []))
+            return TapeSide.split(try await Self.everything(in: full.tracks))
         case .playlist(let playlist):
             let full = try await playlist.with([.tracks])
-            return TapeSide.split(Array(full.tracks ?? []))
+            return TapeSide.split(try await Self.everything(in: full.tracks))
         case .song(let song):
             return [TapeSide(songs: [song]), TapeSide(songs: [])]
         case .mixtape(let mixtape):
@@ -368,6 +384,18 @@ final class PlayerModel: ObservableObject {
             let b = try await songs(for: mixtape.sideB)
             return [TapeSide(songs: a), TapeSide(songs: b)]
         }
+    }
+
+    /// Every track of an album or playlist. Long ones arrive a batch at a
+    /// time, and a tape needs them all.
+    static func everything(in tracks: MusicItemCollection<Track>?) async throws -> [Track] {
+        guard var batch = tracks else { return [] }
+        var all = Array(batch)
+        while batch.hasNextBatch, all.count < 2000, let next = try await batch.nextBatch() {
+            all += Array(next)
+            batch = next
+        }
+        return all
     }
 
     private func songs(for list: [MixSong]) async throws -> [Song] {
@@ -392,7 +420,23 @@ final class PlayerModel: ObservableObject {
         lastEntryID = nil
     }
 
+    /// Lets go of everything in progress on the transport: a wind, a run-up
+    /// or run-down, a promise. Called whenever the tape itself changes.
+    private func resetTransport() {
+        seekTask?.cancel()
+        seekTask = nil
+        finishTask?.cancel()
+        finishTask = nil
+        resumePending = false
+        winding = false
+        heldSeek = nil
+        keyWound = false
+        promised = nil
+        cancelRamp()
+    }
+
     private func eject() {
+        resetTransport()
         sounds.play(.eject)
         Haptics.door()
         player.stop()
@@ -432,6 +476,7 @@ final class PlayerModel: ObservableObject {
         let resume = motion == .playing || sideEnded
         swapping = true
         lastKeyPress = Date()
+        resetTransport()
         Task {
             defer { swapping = false }
             sounds.play(.eject)
@@ -440,6 +485,11 @@ final class PlayerModel: ObservableObject {
             withAnimation(.easeIn(duration: 0.28)) { flipAngle = 90 }
             await pause(seconds: 0.3)
 
+            // The tape may have been taken out while it was turning.
+            guard hasTape, other < sides.count else {
+                flipAngle = 0
+                return
+            }
             let side = sides[other]
             let position = from < 0.02 ? 0 : (1 - from) * side.duration
             let spot = side.locate(position)
@@ -455,8 +505,10 @@ final class PlayerModel: ObservableObject {
             withAnimation(.easeOut(duration: 0.28)) { flipAngle = 0 }
             sounds.play(.insert)
             Haptics.seat()
+            events.send(.flipped)
             await pause(seconds: 0.3)
             Haptics.door()
+            guard hasTape else { return }
 
             do {
                 try await player.prepareToPlay()
@@ -466,7 +518,7 @@ final class PlayerModel: ObservableObject {
                     try await player.play()
                 }
             } catch {
-                errorMessage = "The tape would not play. \(error.localizedDescription)"
+                errorMessage = await explain(error, doing: "The tape would not play.")
             }
         }
     }
@@ -485,6 +537,8 @@ final class PlayerModel: ObservableObject {
             }
             return
         }
+        // Already down and playing: the key has nothing more to do.
+        guard motion != .playing else { return }
         promise(.playing)
         startTape()
     }
@@ -492,8 +546,9 @@ final class PlayerModel: ObservableObject {
     /// Stops the tape where it is. Play carries on from the same place.
     func stopKey() {
         pressFeedback()
-        guard hasTape else { return }
+        guard hasTape, !swapping else { return }
         if motion != .paused, motion != .stopped {
+            if player.state.playbackStatus == .playing { events.send(.stopped) }
             promise(.paused)
             stopTape()
         }
@@ -510,62 +565,94 @@ final class PlayerModel: ObservableObject {
     private static let rampUp: [Float] = [0.55, 0.7, 0.82, 0.92, 1.0]
     private static let rampDown: [Float] = [0.85, 0.7, 0.55, 0.42, 0.32]
 
+    /// Starts a run-up or run-down, replacing any in progress.
+    private func ramp(_ body: @escaping @MainActor () async -> Void) {
+        rampTask?.cancel()
+        rampNumber += 1
+        let number = rampNumber
+        rampTask = Task {
+            await body()
+            if number == rampNumber { rampTask = nil }
+            refresh()
+        }
+    }
+
+    /// Ends a run-up or run-down where it stands and puts the speed back.
+    private func cancelRamp() {
+        rampTask?.cancel()
+        rampTask = nil
+        rampNumber += 1
+        restoreRate()
+    }
+
+    /// Changes the speed, but only of music that is playing: setting the
+    /// rate of a paused player starts it.
+    private func setRate(_ rate: Float) {
+        guard player.state.playbackStatus == .playing else { return }
+        player.state.playbackRate = rate
+    }
+
+    private func restoreRate() {
+        if player.state.playbackStatus == .playing, player.state.playbackRate != 1 {
+            player.state.playbackRate = 1
+        }
+    }
+
     /// Plays, letting the tape run up to speed.
     private func startTape() {
-        rampTask?.cancel()
-        rampTask = Task {
-            ramping = true
-            defer { ramping = false }
+        ramp { [self] in
             do {
-                let ramp = Prefs.isOn(Prefs.tapeRamp)
-                if ramp { player.state.playbackRate = Self.rampUp[0] }
+                let slur = Prefs.isOn(Prefs.tapeRamp)
                 let from = player.playbackTime
                 try await player.play()
-                if ramp {
-                    // Apple Music can take a moment to start after play()
-                    // returns. Wait until the tape is really moving, so the
-                    // motor is heard together with the music, not before it.
-                    var waited = 0
-                    while player.playbackTime <= from + 0.02, waited < 40 {
-                        try await Task.sleep(nanoseconds: 25_000_000)
-                        waited += 1
-                    }
-                    sounds.play(.motorUp)
-                    for rate in Self.rampUp.dropFirst() {
-                        try await Task.sleep(nanoseconds: 70_000_000)
-                        player.state.playbackRate = rate
-                    }
+                // Stop was pressed while the music was still starting.
+                if Task.isCancelled {
+                    if promised?.motion == .paused { player.pause() }
+                    return
+                }
+                guard slur else { return }
+                setRate(Self.rampUp[0])
+                // Apple Music can take a moment to start after play()
+                // returns. Wait until the tape is really moving, so the
+                // motor is heard together with the music, not before it.
+                var waited = 0
+                while player.playbackTime <= from + 0.02, waited < 40 {
+                    try await Task.sleep(nanoseconds: 25_000_000)
+                    waited += 1
+                }
+                sounds.play(.motorUp)
+                for rate in Self.rampUp.dropFirst() {
+                    try await Task.sleep(nanoseconds: 70_000_000)
+                    setRate(rate)
                 }
             } catch is CancellationError {
+                // Replaced by another run; that one looks after the speed.
             } catch {
-                errorMessage = error.localizedDescription
+                promised = nil
+                errorMessage = await explain(error, doing: "The tape would not play.")
             }
-            if player.state.playbackRate != 1, !Task.isCancelled { player.state.playbackRate = 1 }
-            refresh()
+            if !Task.isCancelled { restoreRate() }
         }
     }
 
     /// Stops, letting the tape run down first.
     private func stopTape() {
-        rampTask?.cancel()
-        rampTask = Task {
-            ramping = true
-            defer { ramping = false }
+        ramp { [self] in
             if Prefs.isOn(Prefs.tapeRamp), player.state.playbackStatus == .playing {
                 // The music reaches the speaker a little after the player
                 // is told to slow, so the motor sound waits for the first
                 // step to be heard, and the tape stops as the sound ends.
                 for (step, rate) in Self.rampDown.enumerated() {
-                    player.state.playbackRate = rate
+                    setRate(rate)
                     if step == 1 { sounds.play(.motorDown) }
-                    do { try await Task.sleep(nanoseconds: 80_000_000) } catch { break }
+                    do { try await Task.sleep(nanoseconds: 80_000_000) } catch { return }
                 }
             }
-            // Setting the rate on a paused player starts it again, so the
-            // rate is left as it is here and put back to normal only once
-            // the music is playing again (see `refresh`).
+            // Back to full speed in the same breath as the pause, so the
+            // slow rate is never left behind for the next thing that plays
+            // (headphone keys, the lock screen), and nothing is heard of it.
+            restoreRate()
             player.pause()
-            refresh()
         }
     }
 
@@ -580,8 +667,9 @@ final class PlayerModel: ObservableObject {
 
     func pauseKey() {
         pressFeedback()
-        guard hasTape else { return }
+        guard hasTape, !swapping else { return }
         if motion == .playing {
+            if player.state.playbackStatus == .playing { events.send(.stopped) }
             promise(.paused)
             stopTape()
         } else if motion == .paused, !sideEnded {
@@ -595,7 +683,8 @@ final class PlayerModel: ObservableObject {
     /// set it takes the tape out.
     func ejectKey(removeTape: Bool) {
         lastKeyPress = Date()
-        if removeTape, hasTape {
+        // Not while a tape is being put in or turned over.
+        if removeTape, hasTape, !swapping {
             eject()
         } else {
             sounds.play(.keyDown)
@@ -606,7 +695,7 @@ final class PlayerModel: ObservableObject {
     /// Rewind and fast forward: a tap skips a song, a hold winds the tape.
     func seekKeyDown(forward: Bool) {
         pressFeedback()
-        guard hasTape else { return }
+        guard hasTape, !swapping else { return }
         keyWound = false
         seekTask?.cancel()
         seekTask = Task {
@@ -620,10 +709,17 @@ final class PlayerModel: ObservableObject {
     /// the reels up to speed, and the tape runs on through one song after
     /// another until the key is let go or the tape runs out.
     private func wind(forward: Bool) async {
+        guard sideIndex < sides.count else { return }
         let side = sides[sideIndex]
         guard side.duration > 0 else { return }
         keyWound = true
-        windResume = motion == .playing
+        // Playing now, or about to be once the last wind has been tidied up
+        windResume = motion == .playing || resumePending
+        finishTask?.cancel()
+        finishTask = nil
+        resumePending = false
+        promised = nil
+        cancelRamp()
         windPosition = sideEnded ? side.duration : side.start(of: trackIndex) + elapsed
         player.pause()
         sideEnded = false
@@ -675,16 +771,24 @@ final class PlayerModel: ObservableObject {
         }
         let resume = windResume
         let position = windPosition
-        Task {
+        events.send(.wound)
+        resumePending = resume
+        finishTask = Task {
             do {
                 let spot = side.locate(position)
                 setQueue(side: side, startAt: spot.index)
                 try await player.prepareToPlay()
+                guard !Task.isCancelled else { return }
                 if spot.offset > 0 { player.playbackTime = spot.offset }
                 if resume { try await player.play() }
             } catch {
-                errorMessage = "The tape would not play. \(error.localizedDescription)"
+                if !Task.isCancelled {
+                    errorMessage = await explain(error, doing: "The tape would not play.")
+                }
             }
+            guard !Task.isCancelled else { return }
+            resumePending = false
+            finishTask = nil
             refresh()
         }
     }
@@ -701,13 +805,14 @@ final class PlayerModel: ObservableObject {
     func seekKeyUp(forward: Bool) {
         seekTask?.cancel()
         seekTask = nil
-        guard hasTape else { return }
+        guard hasTape, !swapping else { return }
         if winding {
             finishWinding()
         } else if keyWound {
             // The tape ran out while the key was still held.
             keyWound = false
         } else {
+            events.send(.skipped)
             run {
                 if forward {
                     try await self.player.skipToNextEntry()
@@ -716,6 +821,16 @@ final class PlayerModel: ObservableObject {
                 }
             }
         }
+    }
+
+    /// A message for something that went wrong, in plain words. The usual
+    /// cause of music not playing is no Apple Music subscription, so that is
+    /// checked first and said outright.
+    func explain(_ error: Error, doing what: String) async -> String {
+        if let subscription = try? await MusicSubscription.current, !subscription.canPlayCatalogContent {
+            return "\(what) Cassety plays music from Apple Music, and this Apple Account has no active Apple Music subscription. Music you have bought or added to your library may still play."
+        }
+        return "\(what) \(error.localizedDescription)"
     }
 
     // MARK: Internals
@@ -753,7 +868,7 @@ final class PlayerModel: ObservableObject {
             sideEnded = false
         }
         // The music stopped on its own: the play key pops back up.
-        if old == .playing, motion == .stopped || motion == .paused,
+        if old == .playing, motion == .stopped || motion == .paused, !promiseLapsed,
            Date().timeIntervalSince(lastKeyPress) > 1.0 {
             sounds.play(.keyUp)
             Haptics.keyUp()
@@ -817,13 +932,21 @@ final class PlayerModel: ObservableObject {
         // A key's promise holds until the player agrees, or for two seconds
         // if it never does.
         if let promised {
-            if newMotion == promised.motion || Date().timeIntervalSince(promised.since) > 2 {
+            if newMotion == promised.motion {
                 self.promised = nil
+            } else if Date().timeIntervalSince(promised.since) > 2 {
+                self.promised = nil
+                promiseLapsed = true
             } else {
                 newMotion = promised.motion
             }
         }
         if newMotion != motion { motion = newMotion }
+        promiseLapsed = false
+        // The music is really playing, not just promised.
+        let reallyPlaying = player.state.playbackStatus == .playing
+        if reallyPlaying, !wasReallyPlaying { events.send(.played) }
+        wasReallyPlaying = reallyPlaying
 
         let time = player.playbackTime
         if time.isFinite, abs(time - elapsed) > 0.05 { elapsed = max(time, 0) }

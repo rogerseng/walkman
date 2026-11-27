@@ -21,6 +21,8 @@ struct ShelfView: View {
     @State private var recent: [Album] = []
     /// The mixtape being recorded or edited, if any.
     @State private var editing: Mixtape?
+    /// The mixtape waiting for a yes before it is deleted.
+    @State private var deleting: Mixtape?
     @State private var showSettings = false
     @Environment(\.playerTheme) private var theme
 
@@ -69,10 +71,15 @@ struct ShelfView: View {
             }
             .background(ShelfBackground())
         }
+        .errorAlert(model, when: editing == nil && !showSettings)
         .environment(\.pickTape, PickTape { tape, track in
             model.insert(tape, autoPlay: playOnPick, startingAt: track)
             onPick()
         })
+    }
+
+    private var deletingShown: Binding<Bool> {
+        Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })
     }
 
     private var isSearching: Bool { !term.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -129,7 +136,10 @@ struct ShelfView: View {
                 guard !Task.isCancelled else { return }
                 findings = found
             } catch {
-                if !Task.isCancelled { findings = SearchFindings() }
+                if !Task.isCancelled {
+                    findings = SearchFindings()
+                    model.errorMessage = await model.explain(error, doing: "Search failed.")
+                }
             }
             searching = false
         }
@@ -140,6 +150,15 @@ struct ShelfView: View {
         }
         .fullScreenCover(item: $editing) { mixtape in
             MixtapeEditor(mixtape: mixtape)
+        }
+        .confirmationDialog("Delete this mixtape?", isPresented: deletingShown, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                if let deleting { model.delete(deleting) }
+                deleting = nil
+            }
+            Button("Cancel", role: .cancel) { deleting = nil }
+        } message: {
+            Text("The songs stay in Apple Music. Only the tape is erased.")
         }
     }
 
@@ -165,7 +184,7 @@ struct ShelfView: View {
                         .font(.system(size: 16, weight: .bold))
                         .frame(width: 40, height: 40)
                     Text("Record a new mixtape")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(Typeface.display(16))
                     Spacer(minLength: 0)
                 }
                 .foregroundColor(.white.opacity(0.85))
@@ -194,12 +213,16 @@ struct ShelfView: View {
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .swipeActions {
-                    Button("Delete", role: .destructive) {
-                        model.delete(mixtape)
-                    }
+                    Button("Delete") { deleting = mixtape }
+                        .tint(.red)
                     Button("Edit") {
                         editing = mixtape
                     }
+                }
+                // The same two, for anyone who does not find the swipe
+                .contextMenu {
+                    Button("Edit", systemImage: "pencil") { editing = mixtape }
+                    Button("Delete", systemImage: "trash", role: .destructive) { deleting = mixtape }
                 }
             }
         } header: {
@@ -263,6 +286,7 @@ struct TapeSpine: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(tape.title)
                     .font(Typeface.marker(18))
+                    .minimumScaleFactor(0.75)
                     .foregroundColor(ink.opacity(0.92))
                 Text(tape.subtitle)
                     .font(.system(size: 12))
@@ -273,9 +297,10 @@ struct TapeSpine: View {
             Text(length)
                 .font(.system(size: 13, weight: .light))
                 .foregroundColor(Color(white: 0.45))
+                .accessibilityHidden(true)
         }
         .padding(.trailing, 12)
-        .frame(height: 52)
+        .frame(minHeight: 52)
         .background(
             LinearGradient(colors: [Color(red: 0.96, green: 0.95, blue: 0.92),
                                     Color(red: 0.89, green: 0.88, blue: 0.84)],

@@ -41,7 +41,8 @@ struct TapeLiveActivity: Widget {
                     .lineLimit(1)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    TapeKeys(isPlaying: context.state.isPlaying, accent: context.state.accentColor)
+                    TapeKeys(isPlaying: context.state.isPlaying, accent: context.state.accentColor,
+                             accentInk: context.state.accentInkColor)
                 }
             } compactLeading: {
                 ReelView(state: context.state, fill: 0, size: 24)
@@ -81,7 +82,7 @@ struct LockScreenTapeView: View {
                     }
                 }
                 .tint(state.accentColor)
-                TapeKeys(isPlaying: state.isPlaying, accent: state.accentColor)
+                TapeKeys(isPlaying: state.isPlaying, accent: state.accentColor, accentInk: state.accentInkColor)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -182,6 +183,8 @@ struct ReelView: View {
 struct TapeKeys: View {
     var isPlaying: Bool
     var accent: Color = Palette.accent
+    /// For the symbol on the accent-coloured key.
+    var accentInk: Color = .white
 
     var body: some View {
         HStack(spacing: 8) {
@@ -204,7 +207,7 @@ struct TapeKeys: View {
     private func key(_ symbol: String, accent lit: Bool) -> some View {
         Image(systemName: symbol)
             .font(.system(size: 14, weight: .bold))
-            .foregroundColor(.white)
+            .foregroundColor(lit ? accentInk : .white)
             .frame(maxWidth: .infinity)
             .frame(height: 30)
             .background(RoundedRectangle(cornerRadius: 6)
@@ -218,6 +221,11 @@ private extension TapeActivityAttributes.ContentState {
     var bodyColor: Color {
         guard let theme, theme.count >= 6 else { return Palette.body }
         return Color(red: theme[0], green: theme[1], blue: theme[2])
+    }
+
+    var accentInkColor: Color {
+        guard let theme, theme.count >= 9 else { return .white }
+        return Color(red: theme[6], green: theme[7], blue: theme[8])
     }
 
     var accentColor: Color {

@@ -12,6 +12,7 @@ struct OnboardingView: View {
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
     @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
     @State private var page = 0
+    @Environment(\.playerTheme) private var theme
 
     private let lastPage = 3
 
@@ -24,6 +25,7 @@ struct OnboardingView: View {
                     .foregroundColor(.white.opacity(0.6))
                     .opacity(page == lastPage ? 0 : 1)
                     .disabled(page == lastPage)
+                    .accessibilityHidden(page == lastPage)
             }
             .padding(.horizontal, 22)
             .padding(.top, 14)
@@ -90,7 +92,7 @@ struct OnboardingView: View {
             Text("How the deck works")
                 .font(Typeface.display(27))
                 .foregroundColor(.white)
-            Text("After this, a short tour has you try each one on the deck yourself.")
+            Text("After this, a short tour on the tape deck has you try each one yourself.")
                 .foregroundColor(.white.opacity(0.7))
             VStack(alignment: .leading, spacing: 16) {
                 tip("play.fill", "Play and stop", "They are a pair. Press one in and the other pops out.")
@@ -163,7 +165,7 @@ struct OnboardingView: View {
                     .padding(.vertical, 5)
             }
             .foregroundColor(.white)
-            .tint(Skin.hotPink)
+            .tint(theme.accentColor)
             .padding(.horizontal, 16)
             .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.07)))
             .multilineTextAlignment(.leading)

@@ -63,29 +63,46 @@ struct ContentView: View {
             .onChange(of: open) { wasOpen, isOpen in
                 if wasOpen, !isOpen { model.lidClosed() }
             }
+            // The tour runs on the tape deck, so it needs to know when the
+            // deck is what is showing.
+            .onChange(of: open || player != "tape", initial: true) { _, hidden in
+                tour.deckShowing = !hidden
+            }
         }
         .environment(\.playerTheme, Theme.current(player: player, skinName: skinName).skin.theme)
+        // Switches, links and bar buttons in the theme's colour too
+        .tint(Theme.current(player: player, skinName: skinName).skin.theme.accentColor)
         // The introduction, the first time the app is opened
         .fullScreenCover(isPresented: introShown) {
             OnboardingView(done: {
                 introSeen = true
                 // Then try the keys for real, on the deck
-                if player == "tape" { tour.start(hasTape: model.hasTape) }
+                tour.start(hasTape: model.hasTape)
             })
         }
-        .alert("Cassety", isPresented: errorShown) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(model.errorMessage ?? "")
-        }
+        .errorAlert(model, when: !showShelf)
     }
 
     private var introShown: Binding<Bool> {
         Binding(get: { !introSeen }, set: { if !$0 { introSeen = true } })
     }
 
-    private var errorShown: Binding<Bool> {
-        Binding(get: { model.errorMessage != nil },
-                set: { if !$0 { model.errorMessage = nil } })
+}
+
+extension View {
+    /// Shows the model's error message, if it has one. A full-screen cover
+    /// carries its own, because an alert on a view that is covered cannot
+    /// appear until the cover is gone. `when` lets the view underneath stand
+    /// down while its cover is up.
+    func errorAlert(_ model: PlayerModel, when active: Bool = true) -> some View {
+        alert("Cassety", isPresented: Binding(
+            get: { active && model.errorMessage != nil },
+            set: { if !$0 { model.errorMessage = nil } })
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.errorMessage ?? "")
+        }
     }
 }
+

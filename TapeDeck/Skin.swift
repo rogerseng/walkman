@@ -36,6 +36,16 @@ enum Skin: String, CaseIterable, Identifiable {
         #endif
     }()
 
+    /// What the personal-build players are called. The words are left out
+    /// of the build that goes to the App Store altogether.
+    static let wheelWord: String = {
+        #if DEBUG
+        return "click wheel"
+        #else
+        return "player"
+        #endif
+    }()
+
     /// The skins a person can choose from.
     static var offered: [Skin] {
         includesClickWheel ? allCases : allCases.filter { !$0.isWheel }
@@ -52,8 +62,8 @@ enum Skin: String, CaseIterable, Identifiable {
         case .yellow: return "Yellow cassette player"
         case .neon: return "Retro 80s cassette player"
         case .blue: return "Blue cassette player"
-        case .wheelBlack: return "Black click wheel"
-        case .wheelSilver: return "Silver click wheel"
+        case .wheelBlack: return "Black \(Self.wheelWord)"
+        case .wheelSilver: return "Silver \(Self.wheelWord)"
         }
     }
 
@@ -158,7 +168,7 @@ enum Skin: String, CaseIterable, Identifiable {
     var mark: Color {
         if self == .neon { return Self.hotPink.opacity(0.85) }
         if self == .blue { return Color.white.opacity(0.55) }
-        return isPale ? Color.black.opacity(0.20) : Color.white.opacity(0.22)
+        return isPale ? Color.black.opacity(0.34) : Color.white.opacity(0.36)
     }
 
     /// Lines of text printed on the case, such as the song under the window.
@@ -237,8 +247,9 @@ struct PlayerTheme: Equatable {
     var secondaryColor: Color { Self.color(secondary) }
     var accentInkColor: Color { Self.color(accentInk) }
 
-    /// Six numbers for the lock screen: the background, then the accent.
-    var lockScreen: [Double] { background + accent }
+    /// Nine numbers for the lock screen: the background, the accent, and the
+    /// colour for symbols drawn on the accent.
+    var lockScreen: [Double] { background + accent + accentInk }
 }
 
 extension Skin {
