@@ -64,9 +64,11 @@ Check "walkman" before submitting. It is a Sony trademark, and Apple sometimes r
 
 | Field | What it needs |
 | --- | --- |
-| Support URL | A web page where buyers can reach you. A simple page with an email address is enough. |
-| Privacy Policy URL | A web page with the text of `privacy-policy.md`. |
-| Marketing URL | Optional. |
+| Support URL | `https://cassety.com/support.html` |
+| Privacy Policy URL | `https://cassety.com/privacy.html` |
+| Marketing URL | `https://cassety.com` |
+
+These pages are in the `website` folder and need putting online first. See `website/README.md`.
 
 ## Age rating
 

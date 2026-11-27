@@ -81,6 +81,10 @@ Sync needs the iCloud capability on the app's identifier. The project carries th
 
 The `store/` folder has what is needed to put Cassety on the App Store at $4.99: the listing text, a privacy policy, notes for App Review, and a checklist of what is done and what is left, including the risks to know about before submitting. Start with `store/checklist.md`.
 
+## Website
+
+The `website` folder is the site for cassety.com: a home page, the support page and the privacy policy. It is plain files with nothing to build. `website/README.md` says how to put it online.
+
 ## Running it on your iPhone
 
 You need a Mac with Xcode 16 or later, an Apple Music subscription on the phone, and an Apple Developer Program membership (MusicKit needs it).

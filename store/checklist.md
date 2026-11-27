@@ -18,7 +18,7 @@
 4. **Test on a real phone** with an Apple Music subscription: playing, flipping, winding, mixtapes, sync between two devices, backup and restore, the Lock Screen tape.
 5. **Set the bundle identifier** to one you own, and turn on MusicKit and iCloud for it at developer.apple.com.
 6. **Take real screenshots** (see `listing.md`).
-7. **Publish the privacy policy** and a support page on the web. Put their addresses into `AppLinks` in `Theme.swift` so Settings links to them, and into App Store Connect.
+7. **Put the website online.** Buy cassety.com and publish the `website` folder to it, following `website/README.md`. It carries the privacy policy and support pages Apple requires. The app's Settings already links to them. Set up the `support@cassety.com` address, or change it in the pages.
 8. **Create the app in App Store Connect**: paste in the listing, set the price to $4.99, answer the age rating and privacy questions, add the review notes.
 9. **Archive and upload** from Xcode, then submit for review.
 

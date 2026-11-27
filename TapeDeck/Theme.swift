@@ -75,11 +75,9 @@ struct ThemePicker: View {
     }
 }
 
-/// Web pages the app links to from Settings. Fill these in once the pages
-/// exist; a row is shown only when its address is set.
+/// Web pages the app links to from Settings. The pages are in the `website`
+/// folder. A row is shown only when its address is set.
 enum AppLinks {
-    /// The page carrying the text of store/privacy-policy.md.
-    static let privacyPolicy = ""
-    /// A page where buyers can reach you.
-    static let support = ""
+    static let privacyPolicy = "https://cassety.com/privacy.html"
+    static let support = "https://cassety.com/support.html"
 }
