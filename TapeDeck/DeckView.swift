@@ -58,11 +58,14 @@ struct DeckView: View {
                     clearCase
                 }
             )
-            // When the tape runs out, say so under the window.
+            // Under the window: the song that is playing on an album tape
+            // (its printed label has no room for it), or word that the tape
+            // has run out.
             .overlay(alignment: .topLeading) {
-                if let note = model.endOfSideNote {
+                if let note = underWindowNote {
                     Text(note)
                         .font(.system(size: 11, weight: .semibold))
+                        .lineLimit(2)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.white.opacity(0.85))
                         .frame(width: window.width)
@@ -78,6 +81,12 @@ struct DeckView: View {
             }
             .ignoresSafeArea()
         }
+    }
+
+    private var underWindowNote: String? {
+        if let ended = model.endOfSideNote { return ended }
+        guard model.hasTape, model.printedLabel, !model.trackTitle.isEmpty else { return nil }
+        return model.trackTitle
     }
 
     // MARK: Tape and casing
