@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// The closed phone: the whole screen is the body of a tape player in dark
-/// clear plastic. The cassette sits inside it, seated in a recessed
-/// compartment behind a clear door, with the body wrapping around it.
+/// clear plastic. The cassette sits inside it at full size: the compartment
+/// and its clear door take up the whole face, and the body's edge and the
+/// column of keys frame it.
 ///
 /// Laid out for the iPhone Duo's outer display: 466 x 678 points, with an
 /// 84 point column down one side that iOS reports as a safe area inset. The
@@ -30,11 +31,9 @@ struct DeckView: View {
             let railLeading = rail && insets.leading > insets.trailing
             HStack(spacing: 0) {
                 if railLeading { keyColumn(insets: insets, rail: true, leading: true) }
-                face
-                    .padding(.top, insets.top + 14)
-                    .padding(.bottom, insets.bottom + 14)
-                    .padding(.leading, (railLeading ? 0 : insets.leading) + 14)
-                    .padding(.trailing, 14)
+                // The compartment runs to the edges of the screen, leaving
+                // only a rim of the body showing around it.
+                compartment.padding(6)
                 if !railLeading { keyColumn(insets: insets, rail: rail, leading: false) }
             }
             .frame(width: geo.size.width + insets.leading + insets.trailing,
@@ -55,15 +54,18 @@ struct DeckView: View {
 
     /// The compartment the cassette sits in: a recessed well, the cassette
     /// seated in it (on end when the space is taller than wide, head opening
-    /// toward the keys), and the clear door over the top with its hinges.
+    /// toward the keys), and the clear door over the top.
     private var compartment: some View {
         GeometryReader { geo in
             let upright = geo.size.height > geo.size.width
-            let aspect: CGFloat = upright ? 0.63 : 1 / 0.63
-            let rim: CGFloat = 9
-            let width = max(10, min(geo.size.width - 2 * rim, (geo.size.height - 2 * rim - 8) * aspect))
-            let height = width / aspect
-            let shape = RoundedRectangle(cornerRadius: 16)
+            let long = upright ? geo.size.height : geo.size.width
+            let short = upright ? geo.size.width : geo.size.height
+            // Fill the compartment. The cassette may run a hair past the
+            // edges, but never far enough to lose the label.
+            let fit = min(long / 100, short / 63)
+            let fill = max(long / 100, short / 63)
+            let scale = min(fill, fit * 1.04)
+            let shape = RoundedRectangle(cornerRadius: 26)
             ZStack {
                 // The well, with shadow falling in from its edges
                 shape.fill(LinearGradient(colors: [Color.black, Color(white: 0.06)],
@@ -73,23 +75,20 @@ struct DeckView: View {
                                  subtitle: model.trackLine,
                                  progress: model.progress,
                                  motion: model.motion)
-                        .frame(width: upright ? height : width, height: upright ? width : height)
+                        .frame(width: 100 * scale, height: 63 * scale)
                         .rotationEffect(.degrees(upright ? -90 : 0))
                         .transition(.move(edge: .top).combined(with: .opacity))
                 } else {
-                    emptyWell(upright: upright, length: upright ? height : width)
+                    emptyWell(upright: upright, length: 100 * scale)
                 }
-                shape.strokeBorder(Color.black.opacity(0.85), lineWidth: 9).blur(radius: 6)
+                shape.strokeBorder(Color.black.opacity(0.8), lineWidth: 7).blur(radius: 5)
 
                 // The clear door
-                shape.fill(Color.white.opacity(0.035))
-                shape.fill(LinearGradient(colors: [Color.white.opacity(0.14), Color.white.opacity(0.02), .clear],
+                shape.fill(Color.white.opacity(0.03))
+                shape.fill(LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.02), .clear],
                                           startPoint: .topLeading, endPoint: .center))
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
-                    .padding(5)
             }
-            .frame(width: width + 2 * rim, height: height + 2 * rim)
+            .frame(width: geo.size.width, height: geo.size.height)
             .clipShape(shape)
             // Bright moulded edge of the door
             .overlay(
@@ -98,30 +97,11 @@ struct DeckView: View {
                                                   startPoint: .topLeading, endPoint: .bottomTrailing),
                                    lineWidth: 2.5)
             )
-            // Hinges along the bottom edge
-            .overlay(alignment: .bottom) {
-                HStack(spacing: (width + 2 * rim) * 0.42) {
-                    hinge
-                    hinge
-                }
-                .offset(y: 5)
-            }
-            .shadow(color: .black.opacity(0.6), radius: 8, y: 4)
-            .frame(width: geo.size.width, height: geo.size.height)
             .contentShape(Rectangle())
             .onTapGesture {
                 if !model.hasTape { openShelf() }
             }
         }
-    }
-
-    private var hinge: some View {
-        RoundedRectangle(cornerRadius: 3)
-            .fill(LinearGradient(colors: [Color(white: 0.75), Color(white: 0.35)],
-                                 startPoint: .top, endPoint: .bottom))
-            .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.black.opacity(0.6), lineWidth: 0.75))
-            .frame(width: 36, height: 10)
-            .accessibilityHidden(true)
     }
 
     /// The well with nothing in it: the two drive spindles and a prompt.
@@ -173,41 +153,36 @@ struct DeckView: View {
         .allowsHitTesting(false)
     }
 
-    // MARK: Face
+    // MARK: Keys
 
-    private var face: some View {
-        VStack(spacing: 10) {
-            HStack(alignment: .center, spacing: 8) {
-                Screw()
-                Spacer(minLength: 4)
-                Button {
-                    Haptics.keyDown()
-                    model.soundEffectsOn.toggle()
-                } label: {
-                    Image(systemName: model.soundEffectsOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                }
-                .accessibilityLabel(model.soundEffectsOn ? "Tape sound effects on" : "Tape sound effects off")
-                Button {
-                    Haptics.keyDown()
-                    openShelf()
-                } label: {
-                    Image(systemName: "square.stack.3d.up.fill")
-                }
-                .accessibilityLabel("Tape shelf")
+    /// The five transport keys, then the two small ones: sound effects and
+    /// the tape shelf.
+    private func keys(height: CGFloat, bare: Bool) -> some View {
+        VStack(spacing: 14) {
+            TransportKeys(vertical: true, keyHeight: height, bare: bare, onEject: openShelf)
+            VStack(spacing: 6) {
+                TapeKey(symbol: model.soundEffectsOn ? "speaker.wave.2.fill" : "speaker.slash.fill",
+                        label: model.soundEffectsOn ? "Tape sound effects on" : "Tape sound effects off",
+                        height: smallKeyHeight, showsLabel: false,
+                        onDown: {
+                            Haptics.keyDown()
+                            model.soundEffectsOn.toggle()
+                        })
+                TapeKey(symbol: "square.stack.3d.up.fill", label: "Tape shelf",
+                        height: smallKeyHeight, showsLabel: false,
+                        onDown: {
+                            Haptics.keyDown()
+                            openShelf()
+                        })
             }
-            .buttonStyle(ClearButtonStyle())
-
-            compartment
-
-            HStack {
-                Screw()
-                Spacer()
-                Screw()
-            }
+            .padding(.horizontal, bare ? 0 : 6)
         }
     }
 
-    // MARK: Keys
+    private let smallKeyHeight: CGFloat = 38
+    /// Room the two small keys and the gaps around them take in the column.
+    private var smallKeysRoom: CGFloat { 14 + 2 * smallKeyHeight + 6 }
+
 
     /// The column of keys. In the Duo's rail it is a slim smoked bar that
     /// starts below the camera and clock; elsewhere it is a frosted strip.
@@ -217,11 +192,11 @@ struct DeckView: View {
             let width = max(insets.leading, insets.trailing)
             let inner = max(0, width - railKeyWidth - railOuterMargin)
             GeometryReader { geo in
-                let room = geo.size.height - railStatusHeight - insets.bottom - 12
-                let keyHeight = min(76, max(34, (room - 4 * 6) / 5))
+                let room = geo.size.height - railStatusHeight - insets.bottom - 12 - smallKeysRoom
+                let keyHeight = min(64, max(30, (room - 4 * 6) / 5))
                 VStack(spacing: 0) {
                     Color.clear.frame(height: railStatusHeight)
-                    TransportKeys(vertical: true, keyHeight: keyHeight, bare: true, onEject: openShelf)
+                    keys(height: keyHeight, bare: true)
                     Spacer(minLength: 0)
                 }
                 .frame(width: railKeyWidth)
@@ -242,11 +217,11 @@ struct DeckView: View {
             .frame(width: width)
         } else {
             GeometryReader { geo in
-                let room = geo.size.height - insets.top - insets.bottom - 24 - 12
-                let keyHeight = min(64, max(34, (room - 4 * 6) / 5))
+                let room = geo.size.height - insets.top - insets.bottom - 24 - 12 - smallKeysRoom
+                let keyHeight = min(64, max(30, (room - 4 * 6) / 5))
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
-                    TransportKeys(vertical: true, keyHeight: keyHeight, onEject: openShelf)
+                    keys(height: keyHeight, bare: false)
                     Spacer(minLength: 0)
                 }
                 .padding(.top, insets.top + 12)
@@ -254,13 +229,7 @@ struct DeckView: View {
                 .padding(.leading, 8)
                 .padding(.trailing, 8 + insets.trailing)
                 .frame(width: stripWidth + insets.trailing, height: geo.size.height)
-                .background(
-                    ZStack(alignment: .leading) {
-                        Rectangle().fill(.ultraThinMaterial)
-                        Color.black.opacity(0.35)
-                        Color.white.opacity(0.25).frame(width: 1)
-                    }
-                )
+
             }
             .frame(width: stripWidth + insets.trailing)
         }
