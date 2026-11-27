@@ -90,13 +90,16 @@ struct RecessIn<Outline: Shape>: ViewModifier {
 /// shadow along its foot, and throwing a shadow below.
 struct Raised: ViewModifier {
     var corner: CGFloat = 12
+    /// How brightly its lit edge shows, from 0 to 1.
+    var shine: Double = 1
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: corner)
         content
             .clipShape(shape)
             .overlay(
-                shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.42), Color.white.opacity(0.06),
+                shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.42 * shine),
+                                                           Color.white.opacity(0.06 * shine),
                                                            Color.black.opacity(0.55)],
                                                   startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 2)
                     .allowsHitTesting(false)
