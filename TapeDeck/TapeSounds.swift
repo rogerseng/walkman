@@ -3,9 +3,9 @@ import AVFoundation
 /// Tape deck sound effects, synthesised in code so the app ships no audio files.
 ///
 /// The music itself is played by the system music player, so these sounds use an
-/// audio session that mixes on top of it. It is a playback session so the app
-/// stays awake behind the lock screen (see `keepAlive`), which also means the
-/// sounds are not muted by the silent switch.
+/// audio session that mixes on top of it. It is a playback session so the hiss
+/// carries on behind the lock screen, which also means the sounds are not muted
+/// by the silent switch.
 final class TapeSounds {
     enum Effect { case keyDown, keyUp, eject, insert }
     enum Loop { case hiss, whir }
@@ -19,9 +19,12 @@ final class TapeSounds {
         didSet { if hissEnabled != oldValue { applyLoop() } }
     }
 
-    /// While true, something is always playing, silence if need be. iOS suspends
-    /// an app in the background unless it is playing audio, and the app has to
-    /// stay awake to keep the lock screen tape in step with the music.
+    /// Set while a tape is in. It only makes sure the audible loop (hiss or
+    /// motor) is running; it never plays silence. iOS keeps an app awake in
+    /// the background only while it is making sound the listener can hear, and
+    /// App Review rejects apps that play silence to stay awake. So the lock
+    /// screen tape keeps in step with the music while the hiss is on, and
+    /// otherwise shows the tape as it was when the app was left.
     var keepAlive = false {
         didSet {
             // Also restart the loop if the engine was stopped under us.
@@ -38,7 +41,6 @@ final class TapeSounds {
     private var loops: [Loop: AVAudioPCMBuffer] = [:]
     private var currentLoop: Loop?
     private var playingLoop: AVAudioPCMBuffer?
-    private lazy var silentLoop = buffer(Self.silence(1.0))
     private var configured = false
 
     init() {
@@ -73,8 +75,6 @@ final class TapeSounds {
         if enabled, let loop = currentLoop, hissEnabled || loop != .hiss {
             wanted = loops[loop]
             volume = loop == .hiss ? 0.5 : 0.9
-        } else if keepAlive {
-            wanted = silentLoop
         }
         guard wanted !== playingLoop else { return }
         guard let wanted, start() else {

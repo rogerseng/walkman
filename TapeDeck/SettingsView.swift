@@ -38,7 +38,7 @@ struct SettingsView: View {
                 }
 
                 Section("Skin") {
-                    ForEach(Skin.allCases) { skin in
+                    ForEach(Skin.offered) { skin in
                         Button {
                             Haptics.detent()
                             skinName = skin.rawValue
@@ -79,7 +79,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Lock screen")
                 } footer: {
-                    Text("To show it, Cassety stays awake in the background while a tape is in.")
+                    Text("It keeps in step with the music while tape hiss is on. With hiss off, it shows the tape as it was when you left Cassety.")
                 }
 
                 Section {

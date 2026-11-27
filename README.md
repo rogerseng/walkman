@@ -56,7 +56,7 @@ Opened from the black key at the foot of the column.
 | Level lights in the volume slot | The amber lights under the knob | On |
 | Play when the phone is closed | A tape chosen with the phone open starts when it shuts | On |
 | Flip at the end of a side | Turns the tape over by itself when a side runs out | Off |
-| Show the tape on the lock screen | The Live Activity, and staying awake in the background to feed it | On |
+| Show the tape on the lock screen | The Live Activity. It keeps in step with the music while tape hiss is on | On |
 | Sync with iCloud | Keeps mixtapes and settings the same across your devices | On |
 
 Settings also shows whether Apple Music is connected, with a button to connect or to open the system settings, and a short guide to the deck.
@@ -69,6 +69,10 @@ Settings also shows whether Apple Music is connected, with a button to connect o
 * Not covered: your Apple Music library and playlists, which Apple Music keeps itself, and which tape was in the deck.
 
 Sync needs the iCloud capability on the app's identifier. The project carries the entitlement in `Config/TapeDeck.entitlements`; with automatic signing Xcode registers it when you pick your team.
+
+## Selling it
+
+The `store/` folder has what is needed to put Cassety on the App Store at $4.99: the listing text, a privacy policy, notes for App Review, and a checklist of what is done and what is left, including the risks to know about before submitting. Start with `store/checklist.md`.
 
 ## Running it on your iPhone
 

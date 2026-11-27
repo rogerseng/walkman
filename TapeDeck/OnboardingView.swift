@@ -155,7 +155,7 @@ struct OnboardingView: View {
                 HStack {
                     Text("Skin")
                     Spacer()
-                    ForEach(Skin.allCases) { skin in
+                    ForEach(Skin.offered) { skin in
                         Button {
                             Haptics.detent()
                             skinName = skin.rawValue

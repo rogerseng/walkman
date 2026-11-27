@@ -19,7 +19,10 @@ struct DeckView: View {
     @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
     var openShelf: () -> Void
 
-    private var skin: Skin { Skin(rawValue: skinName) ?? .smoke }
+    private var skin: Skin {
+        let stored = Skin(rawValue: skinName) ?? .smoke
+        return stored.isWheel ? .smoke : stored
+    }
 
     /// Width of the key column on phones that have no side rail.
     private let stripWidth: CGFloat = 78

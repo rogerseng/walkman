@@ -15,8 +15,19 @@ enum Skin: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Whether the click-wheel skins are offered. They are built and working,
+    /// but left out of the App Store build: Apple has removed apps whose
+    /// players resembled the iPod. Set this to true to bring them back.
+    static let includesClickWheel = false
+
+    /// The skins a person can choose from.
+    static var offered: [Skin] {
+        includesClickWheel ? allCases : allCases.filter { !$0.isWheel }
+    }
+
     static var current: Skin {
-        Skin(rawValue: UserDefaults.standard.string(forKey: Prefs.skin) ?? "") ?? .smoke
+        let stored = Skin(rawValue: UserDefaults.standard.string(forKey: Prefs.skin) ?? "") ?? .smoke
+        return offered.contains(stored) ? stored : .smoke
     }
 
     var name: String {

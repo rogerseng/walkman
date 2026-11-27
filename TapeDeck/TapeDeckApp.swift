@@ -39,7 +39,7 @@ struct ContentView: View {
                             .frame(width: geo.size.width * 0.5)
                         OpenTrayView()
                     }
-                } else if Skin(rawValue: skinName)?.isWheel == true {
+                } else if Skin.includesClickWheel, Skin(rawValue: skinName)?.isWheel == true {
                     // The click-wheel skins have their own menus for choosing music.
                     WheelPlayerView()
                 } else {
