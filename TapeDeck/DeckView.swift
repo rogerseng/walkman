@@ -16,13 +16,16 @@ struct DeckView: View {
 
     /// Width of the key column on phones that have no side rail.
     private let stripWidth: CGFloat = 78
-    /// The key column on the Duo is 48 points wide inside the 84 point rail:
-    /// 24 points from the screen edge and 12 from the content.
-    private let railKeyWidth: CGFloat = 48
-    private let railOuterMargin: CGFloat = 24
+    /// Keys in the Duo's rail are 66 points wide, centred 48 points in from
+    /// the screen edge like the system's own status pill, and up to 84 tall.
+    private let railKeyWidth: CGFloat = 66
+    private let railOuterMargin: CGFloat = 15
+    private let bigKeyHeight: CGFloat = 84
+    private let keyGap: CGFloat = 16
     /// Height kept clear at the top of the rail for the camera, clock and
-    /// status icons. Not a published figure: tune it on a real Duo.
-    private let railStatusHeight: CGFloat = 176
+    /// status icons. Measured from a Duo screenshot, where the status pill
+    /// ends about 154 points down; not a published figure.
+    private let railStatusHeight: CGFloat = 180
 
     var body: some View {
         GeometryReader { geo in
@@ -155,73 +158,63 @@ struct DeckView: View {
 
     // MARK: Keys
 
-    /// The five transport keys, then the two small ones: sound effects and
-    /// the tape shelf.
-    private func keys(height: CGFloat, bare: Bool) -> some View {
+    /// Four big transport keys (play and pause share one), then two small
+    /// ones side by side: sound effects and the tape shelf.
+    private func keys(height: CGFloat) -> some View {
         VStack(spacing: 14) {
-            TransportKeys(vertical: true, keyHeight: height, bare: bare, onEject: openShelf)
-            VStack(spacing: 6) {
+            TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
+                          spacing: keyGap, onEject: openShelf)
+            HStack(spacing: 6) {
                 TapeKey(symbol: model.soundEffectsOn ? "speaker.wave.2.fill" : "speaker.slash.fill",
                         label: model.soundEffectsOn ? "Tape sound effects on" : "Tape sound effects off",
-                        height: smallKeyHeight, showsLabel: false,
+                        height: smallKeyHeight, showsLabel: false, corner: 10, symbolSize: 13,
                         onDown: {
                             Haptics.keyDown()
                             model.soundEffectsOn.toggle()
                         })
                 TapeKey(symbol: "square.stack.3d.up.fill", label: "Tape shelf",
-                        height: smallKeyHeight, showsLabel: false,
+                        height: smallKeyHeight, showsLabel: false, corner: 10, symbolSize: 13,
                         onDown: {
                             Haptics.keyDown()
                             openShelf()
                         })
             }
-            .padding(.horizontal, bare ? 0 : 6)
         }
     }
 
-    private let smallKeyHeight: CGFloat = 38
-    /// Room the two small keys and the gaps around them take in the column.
-    private var smallKeysRoom: CGFloat { 14 + 2 * smallKeyHeight + 6 }
+    private let smallKeyHeight: CGFloat = 34
+    /// Room the small keys and the gap above them take in the column.
+    private var smallKeysRoom: CGFloat { 14 + smallKeyHeight }
 
+    private func keyHeight(room: CGFloat) -> CGFloat {
+        min(bigKeyHeight, max(40, (room - smallKeysRoom - 3 * keyGap) / 4))
+    }
 
-    /// The column of keys. In the Duo's rail it is a slim smoked bar that
-    /// starts below the camera and clock; elsewhere it is a frosted strip.
+    /// The column of keys. In the Duo's rail it starts below the camera and
+    /// clock; on other phones it is a strip inside the safe area.
     @ViewBuilder
     private func keyColumn(insets: EdgeInsets, rail: Bool, leading: Bool) -> some View {
         if rail {
             let width = max(insets.leading, insets.trailing)
             let inner = max(0, width - railKeyWidth - railOuterMargin)
             GeometryReader { geo in
-                let room = geo.size.height - railStatusHeight - insets.bottom - 12 - smallKeysRoom
-                let keyHeight = min(64, max(30, (room - 4 * 6) / 5))
+                let room = geo.size.height - railStatusHeight - insets.bottom - 12
                 VStack(spacing: 0) {
                     Color.clear.frame(height: railStatusHeight)
-                    keys(height: keyHeight, bare: true)
+                    keys(height: keyHeight(room: room))
                     Spacer(minLength: 0)
                 }
                 .frame(width: railKeyWidth)
-                // Smoked bar behind the camera, the clock and the keys
-                .background(
-                    RoundedRectangle(cornerRadius: 22)
-                        .fill(Color.black.opacity(0.55))
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22))
-                        .overlay(RoundedRectangle(cornerRadius: 22)
-                            .strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
-                        .padding(.horizontal, -6)
-                        .padding(.top, 8)
-                        .padding(.bottom, insets.bottom + 4)
-                )
                 .padding(.leading, leading ? railOuterMargin : inner)
                 .padding(.trailing, leading ? inner : railOuterMargin)
             }
             .frame(width: width)
         } else {
             GeometryReader { geo in
-                let room = geo.size.height - insets.top - insets.bottom - 24 - 12 - smallKeysRoom
-                let keyHeight = min(64, max(30, (room - 4 * 6) / 5))
+                let room = geo.size.height - insets.top - insets.bottom - 24
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
-                    keys(height: keyHeight, bare: false)
+                    keys(height: keyHeight(room: room))
                     Spacer(minLength: 0)
                 }
                 .padding(.top, insets.top + 12)
@@ -243,25 +236,41 @@ struct TransportKeys: View {
     var keyHeight: CGFloat = 62
     /// Without the tray behind the keys, for places that supply their own.
     var bare = false
+    /// Four large rounded keys, with play and pause sharing one.
+    var big = false
+    var spacing: CGFloat = 6
     var onEject: () -> Void = {}
 
     var body: some View {
-        let layout = vertical ? AnyLayout(VStackLayout(spacing: 6)) : AnyLayout(HStackLayout(spacing: 6))
+        let layout = vertical ? AnyLayout(VStackLayout(spacing: spacing)) : AnyLayout(HStackLayout(spacing: spacing))
+        let corner: CGFloat = big ? 17 : 7
+        let symbol: CGFloat = big ? 23 : 17
+        let labels = !vertical && !big
         layout {
-            TapeKey(symbol: "play.fill", label: "PLAY", accent: true, latched: model.motion == .playing,
-                    height: keyHeight, showsLabel: !vertical, onDown: { model.playKey() })
-            TapeKey(symbol: "pause.fill", label: "PAUSE", latched: model.motion == .paused,
-                    height: keyHeight, showsLabel: !vertical, onDown: { model.pauseKey() })
+            if big {
+                // Down and lit while the tape plays; press again to pause.
+                TapeKey(symbol: model.motion == .playing ? "pause.fill" : "play.fill",
+                        label: model.motion == .playing ? "Pause" : "Play",
+                        accent: true, latched: model.motion == .playing,
+                        height: keyHeight, showsLabel: false, corner: corner, symbolSize: symbol,
+                        onDown: { model.playPauseKey() })
+            } else {
+                TapeKey(symbol: "play.fill", label: "PLAY", accent: true, latched: model.motion == .playing,
+                        height: keyHeight, showsLabel: labels, onDown: { model.playKey() })
+                TapeKey(symbol: "pause.fill", label: "PAUSE", latched: model.motion == .paused,
+                        height: keyHeight, showsLabel: labels, onDown: { model.pauseKey() })
+            }
             TapeKey(symbol: "forward.fill", label: "FF", latched: model.motion == .fastForward,
-                    height: keyHeight, showsLabel: !vertical,
+                    height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: { model.seekKeyDown(forward: true) },
                     onUp: { model.seekKeyUp(forward: true) })
             TapeKey(symbol: "backward.fill", label: "REW", latched: model.motion == .rewind,
-                    height: keyHeight, showsLabel: !vertical,
+                    height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: { model.seekKeyDown(forward: false) },
                     onUp: { model.seekKeyUp(forward: false) })
             TapeKey(symbol: "eject.fill", label: "STOP/EJECT",
-                    height: keyHeight, showsLabel: !vertical, onDown: { if model.stopKey() { onEject() } })
+                    height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
+                    onDown: { if model.stopKey() { onEject() } })
         }
         .padding(bare ? 0 : 6)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(bare ? 0 : 0.28)))
@@ -282,6 +291,8 @@ struct TapeKey: View {
     var latched = false
     var height: CGFloat = 62
     var showsLabel = true
+    var corner: CGFloat = 7
+    var symbolSize: CGFloat = 17
     var onDown: () -> Void = {}
     var onUp: () -> Void = {}
 
@@ -290,7 +301,7 @@ struct TapeKey: View {
     var body: some View {
         let down = pressed || latched
         VStack(spacing: 4) {
-            Image(systemName: symbol).font(.system(size: 17, weight: .bold))
+            Image(systemName: symbol).font(.system(size: symbolSize, weight: .bold))
             if showsLabel, height >= 50 {
                 Text(label).font(.system(size: 7, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.6)
             }
@@ -300,17 +311,17 @@ struct TapeKey: View {
         .frame(maxWidth: .infinity)
         .frame(height: height)
         .background(
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: corner)
                 .fill(LinearGradient(colors: keyColors(down: down), startPoint: .top, endPoint: .bottom))
         )
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 7))
-        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.white.opacity(0.30), lineWidth: 0.75))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: corner))
+        .overlay(RoundedRectangle(cornerRadius: corner).strokeBorder(Color.white.opacity(0.30), lineWidth: 0.75))
         // Light catching the moulded top edge
         .overlay(alignment: .top) {
             Capsule()
                 .fill(Color.white.opacity(0.55))
                 .frame(height: 1)
-                .padding(.horizontal, 7)
+                .padding(.horizontal, corner)
                 .padding(.top, 2)
         }
         .offset(y: down ? 3 : 0)

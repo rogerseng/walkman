@@ -243,6 +243,15 @@ final class PlayerModel: ObservableObject {
         run { try await self.player.play() }
     }
 
+    /// One key for both: pauses while playing, plays otherwise.
+    func playPauseKey() {
+        if motion == .playing {
+            pauseKey()
+        } else {
+            playKey()
+        }
+    }
+
     func pauseKey() {
         pressFeedback()
         guard hasTape else { return }

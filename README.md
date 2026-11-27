@@ -6,7 +6,7 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
 * Closed phone (or any ordinary phone screen): the whole screen is the body of a tape player in dark clear plastic, and the cassette sits inside it at full size. The compartment and its clear door take up the whole face; the rim of the body and the column of keys frame it. Glare on the body moves only when the phone moves: reflections slide as it tilts left and right, and a hot spot follows both tilts.
-* Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; the five keys, and two small ones for sound effects and the tape shelf, sit in that column underneath them. On other phones the keys get their own strip. Volume is on the phone's own buttons.
+* Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; four large keys (play/pause, fast forward, rewind, stop/eject) and two small ones for sound effects and the tape shelf sit in that column underneath them. On other phones the keys get their own strip. Volume is on the phone's own buttons.
 * Haptics: a firm tap when a key goes down, a lighter one when it springs back, a heavy thud for the cassette door, and a soft pulse four times a second while the tape winds.
 * The cassette is a clear one. The shell front is see-through artwork (bright moulded edges and ridges, stickers, a stick-on paper label, guide rollers, black screws, reflections). Under it the whole reels, their clear hubs, the tape running down to the rollers and the handwriting on the label are drawn live. The artwork source is `tools/cassette-art.html`; `node tools/render-art.js` re-renders it.
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. Pick a tape, then close the phone to start it playing. The keys are there too, for screens that cannot fold.
@@ -33,7 +33,7 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 
 * Outer display: 466 x 678 points at 3x (Apple lists 1398 x 2034 pixels, 5.4 inches).
 * Outer safe area: 84 points on the side with the camera, 34 at the bottom, none at the top. The app reads these from the system, so it follows whatever the device reports.
-* Key column: 48 points wide, 24 from the screen edge. `railStatusHeight` in `DeckView.swift` (176 points) is how far down the keys start, to clear the camera and clock. That figure is an estimate.
+* Key column: keys 66 points wide and up to 84 tall, centred 48 points in from the screen edge. `railStatusHeight` in `DeckView.swift` (180 points) is how far down the keys start, to clear the camera and clock. It was measured from a screenshot of another app on a Duo, where the status pill ends about 154 points down.
 * Inner display: reported as 669 x 951 or 626 x 890 points, regular in both size classes. The app treats either as open.
 
 ## Layout of the code
