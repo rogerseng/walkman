@@ -3,8 +3,8 @@ const q=new URLSearchParams(location.search),pick=q.get('i'),gray=q.get('gray');
 const bg='<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2b2d"/><stop offset="1" stop-color="#121213"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#b)"/>';
 // The app's icon: a cassette made of flat nested bands of colour, dusk on
 // the outside to sunlight at the window, with the two reels in the middle.
-const bands=[[1024,1024,0,'#1d0b45'],[888,640,120,'#4a2296'],[764,516,98,'#a02a9c'],[640,392,76,'#f2418f'],[516,268,54,'#ff8442'],[392,144,72,'#ffd23f']];
-const A=bands.map(([w,h,r,c])=>`<rect x="${512-w/2}" y="${512-h/2}" width="${w}" height="${h}" rx="${r}" fill="${c}"/>`).join('')+`<circle cx="398" cy="512" r="42" fill="#1d0b45"/><circle cx="626" cy="512" r="42" fill="#1d0b45"/>`;
+const bands=[[1024,1024,0,'#1d0b45'],[1180,940,190,'#35167a'],[1010,770,160,'#5a24a0'],[840,600,130,'#a02a9c'],[670,430,100,'#f2418f'],[500,260,70,'#ff8442'],[360,130,65,'#ffd23f']];
+const A=bands.map(([w,h,r,c])=>`<rect x="${512-w/2}" y="${512-h/2}" width="${w}" height="${h}" rx="${r}" fill="${c}"/>`).join('')+`<circle cx="408" cy="512" r="38" fill="#1d0b45"/><circle cx="616" cy="512" r="38" fill="#1d0b45"/>`;
 const B=bg+`<g fill="none" stroke="#f2efe8" stroke-width="44"><circle cx="352" cy="512" r="150"/><circle cx="672" cy="512" r="150"/></g>
 <circle cx="352" cy="512" r="46" fill="#f57a21"/><circle cx="672" cy="512" r="46" fill="#f2efe8"/>`;
 const teeth=[...Array(6)].map((_,i)=>`<rect x="488" y="330" width="48" height="96" rx="10" fill="#f2efe8" transform="rotate(${i*60} 512 512)"/>`).join('');
