@@ -820,16 +820,25 @@ private struct KeyCap: View {
     }
 }
 
-/// Fine moulded grain, laid over a plastic surface.
+/// Fine moulded grain, laid over a plastic surface: faint light and dark
+/// speckles cut from the grain texture. It is drawn as plain, nearly clear
+/// white and black, not with a blend mode, so it reads the same wherever it
+/// is used and never greys the colour beneath.
 struct PlasticGrain: View {
     var strength = 0.45
 
     var body: some View {
-        Image("Grain")
-            .resizable(resizingMode: .tile)
-            .blendMode(.overlay)
-            .opacity(strength)
-            .allowsHitTesting(false)
+        ZStack {
+            Color.white.opacity(0.20 * strength)
+                .mask(tile.luminanceToAlpha())
+            Color.black.opacity(0.34 * strength)
+                .mask(tile.colorInvert().luminanceToAlpha())
+        }
+        .allowsHitTesting(false)
+    }
+
+    private var tile: some View {
+        Image("Grain").resizable(resizingMode: .tile)
     }
 }
 
