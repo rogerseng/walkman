@@ -16,7 +16,7 @@
 2. **Sign the Paid Apps agreement** in App Store Connect, under Business, and enter your bank and tax details. Without it a paid app cannot go on sale.
 3. **Get the app building.** Done: the app builds in Debug and Release with no warnings and runs on a real iPhone Duo.
 4. **Test on a real phone** with an Apple Music subscription: playing, flipping, winding, the open-phone boombox, and settings sync between two devices.
-5. **Turn on MusicKit** (under App Services) for the app ID `com.rogerseng.tapedeck` at developer.apple.com, and check iCloud is on for it.
+5. **Turn on MusicKit** (under App Services) for the app ID `com.rogersengstudios.casseti` at developer.apple.com, and check iCloud is on for it.
 6. **Take real screenshots** (see `listing.md`).
 7. **Put the website online.** Buy casseti.com and publish the `website` folder to it, following `website/README.md`. It carries the privacy policy and support pages Apple requires. The app's Settings already links to them. Set up the `hello@casseti.com` address, or change it in the pages.
 8. **Create the app in App Store Connect**: paste in the listing, set the price to $4.99, answer the age rating and privacy questions, add the review notes.

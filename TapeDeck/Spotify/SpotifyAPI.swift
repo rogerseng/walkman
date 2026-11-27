@@ -191,7 +191,7 @@ private struct SpotifyTokens: Codable {
 /// Keeps the Spotify sign-in in the keychain.
 private enum TokenStore {
     static let account = "spotify"
-    static let service = "com.rogerseng.tapedeck.spotify"
+    static let service = "com.rogersengstudios.casseti.spotify"
 
     static func load() -> SpotifyTokens? {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
