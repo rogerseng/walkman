@@ -84,17 +84,31 @@ struct OpenTrayView: View {
                     .frame(height: grilleHeight + above)
                     // Moulded round the clock and status icons, which
                     // stand on plain case in the top right corner
-                    .modifier(RecessIn(outline: NotchedPanel(notch: CGSize(width: above > 24 ? 176 : 0,
+                    .modifier(RecessIn(outline: NotchedPanel(notch: CGSize(width: above > 24 ? 116 : 0,
                                                                            height: above - 4)),
                                        depth: 0.7))
                     .padding(.top, -above)
                 controlStrip
                     .frame(height: 44)
-                if isMP3 {
-                    playerScreen(width: doorWidth, height: doorHeight)
-                } else {
-                    door(width: doorWidth, height: doorHeight)
+                Group {
+                    if isMP3 {
+                        playerScreen(width: doorWidth, height: doorHeight)
+                    } else {
+                        door(width: doorWidth, height: doorHeight)
+                    }
                 }
+                // The deck has eaten the tape: own up in a card over it,
+                // with the way to wind it back
+                .overlay {
+                    if model.hasTape, model.tapeEaten || model.tapeChurn == .winding {
+                        TapeEatenCard()
+                            .frame(width: min(340, doorWidth - 60))
+                            .transition(.scale(scale: 0.9).combined(with: .opacity))
+                    }
+                }
+                .animation(model.tapeJammed ? .spring(response: 0.35, dampingFraction: 0.8).delay(1.3)
+                                            : .easeOut(duration: 0.15),
+                           value: model.tapeJammed)
                 uprightLine
                     .frame(maxHeight: .infinity)
                 keyTrough(height: keysHeight)
@@ -142,13 +156,9 @@ struct OpenTrayView: View {
             }
             .foregroundColor(skin.note)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // The card over the tape says it all while the tape is out.
+            .opacity(model.tapeJammed ? 0 : 1)
 
-            if model.hasTape, model.tapeChurn == .winding {
-                WindingReel().frame(width: 28, height: 28).foregroundColor(theme.accentColor)
-            } else if model.hasTape, model.tapeEaten {
-                Button("Wind it back in") { model.windTapeBack() }
-                    .buttonStyle(PlainKeyButtonStyle())
-            }
             // The songs on the tape in the deck, with the one that is playing
             if model.hasTape, hasSongList {
                 Button {
@@ -500,7 +510,7 @@ struct OpenTrayView: View {
 
             // The tape drops in from above and lifts out the same way
             if model.hasTape {
-                DeckCassette()
+                DeckCassette(whole: true)
                     .frame(width: tapeWidth, height: tapeWidth * 0.63)
                     .rotation3DEffect(.degrees(model.flipAngle), axis: (x: 1, y: 0, z: 0), perspective: 0.4)
                     .transition(reduceMotion

@@ -46,6 +46,10 @@ struct CassetteView: View {
     var onSpindles = false
     /// The deck has chewed the tape: it hangs out of the shell in a tangle.
     var eaten = false
+    /// The whole label is on show, so its lettering is set evenly between
+    /// its two ends. Where a window hides the label's first few
+    /// millimetres, the lettering keeps clear of that end.
+    var wholeLabel = false
 
     @State private var spin = SpinState()
 
@@ -94,6 +98,11 @@ struct CassetteView: View {
     private func label(u: CGFloat) -> some View {
         let showPrint = printed && tint != nil
         let lettering = showPrint ? (printColor ?? .white) : Color(white: 0.17)
+        // The label runs from 13 to 87 mm. The side letter and the lines
+        // of writing are set in from each end by the same amount.
+        let ringX: CGFloat = wholeLabel ? 18.4 : 22.6
+        let textWidth: CGFloat = wholeLabel ? 60.5 : 58
+        let textX: CGFloat = wholeLabel ? 22.9 + textWidth / 2 : 56
         if showPrint, let tint {
             // Printed label: a block of the album's colour with a light gloss
             RoundedRectangle(cornerRadius: 0.5 * u)
@@ -113,7 +122,7 @@ struct CassetteView: View {
             .foregroundColor(lettering)
             .frame(width: 4.6 * u, height: 4.6 * u)
             .overlay(Circle().strokeBorder(lettering, lineWidth: 0.26 * u))
-            .position(x: 22.6 * u, y: 8.4 * u)
+            .position(x: ringX * u, y: 8.4 * u)
 
         if showPrint {
             // Album title and artist, in the same marker as every tape name
@@ -122,15 +131,15 @@ struct CassetteView: View {
                 .foregroundColor(lettering)
                 .lineLimit(1)
                 .minimumScaleFactor(0.45)
-                .frame(width: 58 * u, height: 5.0 * u, alignment: .leading)
-                .position(x: 56 * u, y: 6.4 * u)
+                .frame(width: textWidth * u, height: 5.0 * u, alignment: .leading)
+                .position(x: textX * u, y: 6.4 * u)
             Text(subtitle.isEmpty ? " " : subtitle)
                 .font(Typeface.markerFixed(2.9 * u))
                 .foregroundColor(lettering.opacity(0.85))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-                .frame(width: 58 * u, height: 3.6 * u, alignment: .leading)
-                .position(x: 56 * u, y: 10.7 * u)
+                .frame(width: textWidth * u, height: 3.6 * u, alignment: .leading)
+                .position(x: textX * u, y: 10.7 * u)
         } else {
             // Handwriting on the paper label's ruled lines
             Text(title.isEmpty ? " " : title)
@@ -138,15 +147,15 @@ struct CassetteView: View {
                 .foregroundColor(ink.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-                .frame(width: 58 * u, height: 5.0 * u, alignment: .bottomLeading)
-                .position(x: 56 * u, y: 6.3 * u)
+                .frame(width: textWidth * u, height: 5.0 * u, alignment: .bottomLeading)
+                .position(x: textX * u, y: 6.3 * u)
             Text(subtitle.isEmpty ? " " : subtitle)
                 .font(Typeface.markerFixed(3.0 * u))
                 .foregroundColor(ink.opacity(0.80))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-                .frame(width: 58 * u, height: 3.6 * u, alignment: .bottomLeading)
-                .position(x: 56 * u, y: 10.8 * u)
+                .frame(width: textWidth * u, height: 3.6 * u, alignment: .bottomLeading)
+                .position(x: textX * u, y: 10.8 * u)
         }
     }
 

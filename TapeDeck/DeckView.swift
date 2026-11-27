@@ -717,6 +717,8 @@ struct BowedPanel: Shape {
 /// The cassette that is in the deck, drawn from the player's state.
 struct DeckCassette: View {
     @EnvironmentObject private var model: PlayerModel
+    /// The whole cassette is on show, not a part of it through a window.
+    var whole = false
 
     var body: some View {
         CassetteView(title: model.tapeTitle,
@@ -733,7 +735,8 @@ struct DeckCassette: View {
                      tint: model.labelColor.map { Color(cgColor: $0) },
                      printColor: model.printColor.map { Color(cgColor: $0) },
                      onSpindles: true,
-                     eaten: model.tapeEaten)
+                     eaten: model.tapeEaten,
+                     wholeLabel: whole)
     }
 }
 
