@@ -231,18 +231,8 @@ struct DeckView: View {
             // window and as tall as it, and the keys in the rail
             .overlay(alignment: .topLeading) {
                 if phone {
-                    // No room beside the tape on a phone: the fader lies
-                    // across the case under the song.
-                    HStack(spacing: 8) {
-                        volumeWord.fixedSize()
-                        fader
-                            .frame(width: 44, height: max(60, window.width - 62))
-                            .rotationEffect(.degrees(90))
-                            .frame(width: max(60, window.width - 62), height: 44)
-                    }
-                    .frame(width: window.width, height: 44)
-                    .offset(x: window.minX, y: min(full.height - real.bottom - (skin.hasStripes ? 86 : 56),
-                                                    window.maxY + 62))
+                    // On a phone the fader stands in the column, over the keys.
+                    EmptyView()
                 } else if plan.rail {
                     // Never under the keys
                     let keysLeft = full.width - plan.railWidth
@@ -488,11 +478,18 @@ struct DeckView: View {
         if phone {
             // The window takes all the width the keys leave, or all the
             // height under the name, whichever runs out first.
+            // The name above it and the song under it go with it, and the
+            // three together sit in the middle of the screen.
+            let nameBand: CGFloat = 58
+            let songBand: CGFloat = 56
+            let foot: CGFloat = skin.hasStripes ? 34 : 0
             let roomWide = full.width - railWidth - 32
-            let roomTall = full.height - insets.top - 58 - insets.bottom - 132 - (skin.hasStripes ? 30 : 0)
+            let usable = full.height - insets.top - insets.bottom - foot
+            let roomTall = usable - nameBand - songBand - 16
             let scale = min(roomWide / windowMinWidth, roomTall / windowLength)
             let windowX = 10 + (roomWide - windowMinWidth * scale) / 2
-            let windowY = insets.top + 58
+            let free = usable - (nameBand + windowLength * scale + songBand)
+            let windowY = insets.top + max(0, free / 2) + nameBand
             let left = windowX - windowEdgeInset * scale
             let bottom = windowY + windowFarEnd * scale
             let window = CGRect(x: windowX, y: windowY, width: windowMinWidth * scale, height: windowLength * scale)
@@ -675,7 +672,18 @@ struct DeckView: View {
             let keyHeight = min(fromFoot ? 78 : railKeyMaxHeight, max(36, (room - 5 * keyGap) / 6))
             VStack(spacing: 0) {
                 if fromFoot {
-                    Spacer(minLength: statusHeight)
+                    // Over the keys, the volume fader stands upright in
+                    // the column, as tall as the room allows.
+                    Color.clear.frame(height: statusHeight)
+                    Spacer(minLength: 0)
+                    VStack(spacing: 8) {
+                        fader
+                            .frame(width: 48)
+                            .frame(maxHeight: 240)
+                        volumeWord.fixedSize()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 16)
                 } else {
                     Color.clear.frame(height: statusHeight)
                 }
