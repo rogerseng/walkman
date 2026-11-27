@@ -48,7 +48,15 @@ header.site nav a:hover { background: var(--violet); color: #fff; }
 header.site nav a[aria-current="page"] { background: var(--orange); color: var(--night); }
 
 /* Hero: the icon's rings, spreading out from behind the phone */
-.hero { position: relative; overflow: hidden; background-color: var(--night); background-image: radial-gradient(circle at 76% 58%, var(--orange) 0 200px, var(--pink) 200px 330px, var(--magenta) 330px 470px, var(--violet) 470px 620px, var(--indigo) 620px 780px, var(--night) 780px); }
+.hero { position: relative; overflow: hidden; background-color: var(--night); --cx: 76%; --cy: 58%; }
+/* The rings sit on a layer of their own so they can breathe: they swell
+   a little and settle, from the middle of the phone outward. */
+.hero::before { content: ""; position: absolute; inset: 0; z-index: 0; transform-origin: var(--cx) var(--cy); animation: rings 9s ease-in-out infinite alternate;
+  background-image: radial-gradient(circle at var(--cx) var(--cy), var(--orange) 0 200px, var(--pink) 200px 330px, var(--magenta) 330px 470px, var(--violet) 470px 620px, var(--indigo) 620px 780px, var(--night) 780px); }
+/* A second, fainter set drifts the other way, so the bands seem to turn. */
+.hero::after { content: ""; position: absolute; inset: 0; z-index: 0; transform-origin: var(--cx) var(--cy); opacity: .35; mix-blend-mode: screen; animation: rings 13s ease-in-out infinite alternate-reverse;
+  background-image: repeating-radial-gradient(circle at var(--cx) var(--cy), transparent 0 118px, rgba(255,255,255,.10) 118px 122px, transparent 122px 150px); }
+@keyframes rings { from { transform: scale(1); } to { transform: scale(1.09); } }
 .hero main.wrap { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 30px; align-items: center; padding-top: 30px; padding-bottom: 70px; z-index: 2; }
 .hero h1 { margin: 0; font: 400 clamp(54px, 10vw, 104px)/0.95 "Righteous", sans-serif; letter-spacing: 1px; color: #fff; }
 .hero .tag { margin: 10px 0 18px; font: clamp(22px, 3.6vw, 32px)/1.15 "Righteous", sans-serif; color: var(--orange); }
@@ -140,10 +148,6 @@ footer.site .legal { flex-basis: 100%; margin: 4px 0 0; }
 .levels i:nth-child(5) { animation-delay: -.45s; }
 @keyframes level { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
 
-/* The phone in the hero drifts a little */
-.float img, .float video { animation: drift 7s ease-in-out infinite; }
-@keyframes drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
-
 /* The cassette beside the heading, reels turning */
 .heading { display: flex; align-items: center; gap: 30px; justify-content: space-between; }
 .tape-art { width: 200px; flex: none; margin-bottom: 24px; }
@@ -198,7 +202,8 @@ footer.site .legal { flex-basis: 100%; margin: 4px 0 0; }
 }
 
 @media (max-width: 760px) {
-  .hero { background-image: radial-gradient(circle at 50% 76%, var(--orange) 0 150px, var(--pink) 150px 250px, var(--magenta) 250px 360px, var(--violet) 360px 480px, var(--indigo) 480px 610px, var(--night) 610px); }
+  .hero { --cx: 50%; --cy: 76%; }
+  .hero::before { background-image: radial-gradient(circle at var(--cx) var(--cy), var(--orange) 0 150px, var(--pink) 150px 250px, var(--magenta) 250px 360px, var(--violet) 360px 480px, var(--indigo) 480px 610px, var(--night) 610px); }
   .hero main.wrap, .pair { grid-template-columns: 1fr; }
   .hero main.wrap { padding-bottom: 50px; }
   .grid, .shots { grid-template-columns: 1fr; }

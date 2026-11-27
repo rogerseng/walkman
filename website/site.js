@@ -39,5 +39,12 @@ document.querySelectorAll('details').forEach((item) => {
   });
 });
 
-// The clip of the deck stays still for anyone who has asked for less motion.
-if (still) document.querySelectorAll('video').forEach((clip) => { clip.removeAttribute('autoplay'); clip.pause(); });
+// The clip of the deck is the point of the page, so make sure it runs even
+// where a browser has held it back.
+document.querySelectorAll('video').forEach((clip) => {
+  clip.muted = true;
+  const go = () => clip.play().catch(() => {});
+  go();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) go(); });
+  document.addEventListener('touchstart', go, { once: true, passive: true });
+});
