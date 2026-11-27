@@ -82,7 +82,11 @@ struct OpenTrayView: View {
                 SpeakerGrille(colors: skin.isWheel ? skin.wheelBody : skin.panel,
                               playing: model.motion == .playing, tempo: model.beatsPerMinute)
                     .frame(height: grilleHeight + above)
-                    .modifier(Recess(corner: 14, depth: 0.7))
+                    // Moulded round the clock and status icons, which
+                    // stand on plain case in the top right corner
+                    .modifier(RecessIn(outline: NotchedPanel(notch: CGSize(width: above > 24 ? 176 : 0,
+                                                                           height: above - 4)),
+                                       depth: 0.7))
                     .padding(.top, -above)
                 controlStrip
                     .frame(height: 44)
@@ -283,7 +287,8 @@ struct OpenTrayView: View {
                              model.ejectKey(removeTape: false)
                              showShelf = true
                          })
-                PianoKey(symbol: "gearshape.fill", label: "Settings", height: height, lowerRight: corner - 7,
+                PianoKey(symbol: "gearshape.fill", label: "Settings", dark: true, height: height,
+                         lowerRight: corner - 7,
                          onDown: {
                              Haptics.keyDown()
                              showSettings = true

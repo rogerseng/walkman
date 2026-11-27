@@ -33,6 +33,59 @@ struct Recess: ViewModifier {
     }
 }
 
+/// A rounded panel with a bite out of its top right corner, for the speaker
+/// plate that is moulded round the clock and status icons.
+struct NotchedPanel: Shape {
+    var notch: CGSize
+    var corner: CGFloat = 14
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let w = rect.width
+        let h = rect.height
+        let nw = min(max(0, notch.width), w - corner * 3)
+        let nh = min(max(0, notch.height), h - corner * 3)
+        guard nw > 0, nh > corner else { return Path(roundedRect: rect, cornerRadius: corner) }
+        path.move(to: CGPoint(x: corner, y: 0))
+        path.addArc(tangent1End: CGPoint(x: w - nw, y: 0), tangent2End: CGPoint(x: w - nw, y: nh), radius: corner)
+        path.addArc(tangent1End: CGPoint(x: w - nw, y: nh), tangent2End: CGPoint(x: w, y: nh), radius: corner)
+        path.addArc(tangent1End: CGPoint(x: w, y: nh), tangent2End: CGPoint(x: w, y: h), radius: corner)
+        path.addArc(tangent1End: CGPoint(x: w, y: h), tangent2End: CGPoint(x: 0, y: h), radius: corner)
+        path.addArc(tangent1End: CGPoint(x: 0, y: h), tangent2End: CGPoint(x: 0, y: 0), radius: corner)
+        path.addArc(tangent1End: CGPoint(x: 0, y: 0), tangent2End: CGPoint(x: w, y: 0), radius: corner)
+        path.closeSubpath()
+        return path.offsetBy(dx: rect.minX, dy: rect.minY)
+    }
+}
+
+/// A hollow of any outline, cut into the case: the wall above it in shadow
+/// and the lip below it catching the light.
+struct RecessIn<Outline: Shape>: ViewModifier {
+    let outline: Outline
+    var depth: CGFloat = 1
+
+    func body(content: Content) -> some View {
+        content
+            .clipShape(outline)
+            .overlay(
+                outline.stroke(Color.black.opacity(0.85), lineWidth: 16 * depth)
+                    .blur(radius: 5 * depth)
+                    .offset(y: 4 * depth)
+                    .clipShape(outline)
+                    .allowsHitTesting(false)
+            )
+            .overlay(
+                outline.stroke(LinearGradient(colors: [Color.black.opacity(0.9), Color.white.opacity(0.30)],
+                                              startPoint: .top, endPoint: .bottom), lineWidth: 3)
+                    .clipShape(outline)
+                    .allowsHitTesting(false)
+            )
+            .background(
+                outline.stroke(Color.white.opacity(0.14), lineWidth: 2).blur(radius: 1).offset(y: 1.5)
+            )
+    }
+}
+
 /// A part that stands proud of the case: lit along its top and left, in
 /// shadow along its foot, and throwing a shadow below.
 struct Raised: ViewModifier {
@@ -168,7 +221,8 @@ struct PianoKey: View {
                         }
                     }
                     .foregroundColor(symbolColor(down: down))
-                    .shadow(color: Color.white.opacity(down && accent ? 0 : 0.30), radius: 0, y: 1)
+                    .shadow(color: dark ? Color.black.opacity(0.9) : Color.white.opacity(down && accent ? 0 : 0.30),
+                            radius: 0, y: dark ? -1 : 1)
                     .shadow(color: down && accent ? Self.lit : .clear, radius: 6)
                     .position(x: face.size.width / 2, y: face.size.height / 2)
                 }
@@ -244,6 +298,8 @@ struct PianoKey: View {
     private func symbolColor(down: Bool) -> Color {
         // The play key's mark lights up from behind while the tape plays.
         if down, accent { return Self.lit }
-        return Color.black.opacity(dark ? 0.9 : 0.78)
+        // On the black key the mark is the lighter of the two, or it
+        // would not be seen at all.
+        return dark ? Color(white: down ? 0.34 : 0.50) : Color.black.opacity(0.78)
     }
 }

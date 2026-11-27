@@ -208,18 +208,38 @@ struct SettingsView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            GeometryReader { geo in
-                if geo.safeAreaInsets.trailing < 60 {
-                    doneKey
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 20)
+        // The open phone held upright has room at the top: a small key
+        // there, level with the title.
+        .overlay(alignment: .topLeading) {
+            if wide {
+                GeometryReader { geo in
+                    if geo.safeAreaInsets.trailing < 60 {
+                        doneKey
+                            .frame(width: 84)
+                            .padding(.leading, 18)
+                            // Up into the title bar, level with the title
+                            .offset(y: -min(64, geo.safeAreaInsets.top - 26))
+                    }
                 }
             }
-            .frame(height: 52)
-            .allowsHitTesting(true)
+        }
+        .safeAreaInset(edge: .bottom) {
+            if !wide {
+                GeometryReader { geo in
+                    if geo.safeAreaInsets.trailing < 60 {
+                        doneKey
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 20)
+                    }
+                }
+                .frame(height: 52)
+            }
         }
     }
+
+    @Environment(\.horizontalSizeClass) private var horizontalSize
+    /// A wide screen: the open folding phone.
+    private var wide: Bool { horizontalSize == .regular }
 
     /// The key that closes Settings.
     private var doneKey: some View {
