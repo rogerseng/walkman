@@ -522,11 +522,22 @@ struct ArtistDetail: View {
     /// Counts the tries at loading, so Try again can start another.
     @State private var attempt = 0
     @State private var albums: [Album] = []
+    /// The artist's best-known songs, or the ones of theirs in the library.
+    @State private var songs: [Song] = []
     @State private var loading = true
     @State private var failed = false
 
     var body: some View {
         List {
+            if !songs.isEmpty {
+                Section {
+                    ForEach(songs, id: \.id) { song in
+                        LibrarySongRow(song: song).shelfRow()
+                    }
+                } header: {
+                    ShelfStyle.header(source == .library ? "Songs" : "Top Songs")
+                }
+            }
             if loading {
                 ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
             } else if albums.isEmpty {
@@ -558,6 +569,12 @@ struct ArtistDetail: View {
             }
         }
         .shelfList(artist.name)
+        // The songs load on their own, so a slow or failed answer for one
+        // list does not hold up the other.
+        .task(id: attempt) {
+            guard songs.isEmpty else { return }
+            songs = await PlayerModel.songs(of: artist, source: source)
+        }
         .task(id: attempt) {
             guard albums.isEmpty else { return }
             do {

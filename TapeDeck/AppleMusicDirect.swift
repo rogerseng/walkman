@@ -81,6 +81,25 @@ extension PlayerModel {
         }
     }
 
+    /// An artist's songs: from the catalogue their best-known ones, and
+    /// from the library the ones of theirs that are in it. An empty list
+    /// if they cannot be had; the albums are the page's main business.
+    static func songs(of artist: Artist, source: MusicPropertySource) async -> [Song] {
+        if source == .library {
+            var request = MusicLibraryRequest<Song>()
+            request.filter(matching: \.artistName, equalTo: artist.name)
+            request.limit = 50
+            return Array((try? await request.response().items) ?? [])
+        }
+        if let top = try? await artist.with([.topSongs], preferredSource: .catalog).topSongs, !top.isEmpty {
+            return Array(top.prefix(10))
+        }
+        guard AppleMusicDirect.isCatalog(artist.id),
+              let songs: [Song] = try? await AppleMusicDirect.list("artists/\(artist.id.rawValue)/view/top-songs",
+                                                                  limit: 10, most: 10) else { return [] }
+        return Array(songs.prefix(10))
+    }
+
     /// An artist's albums, by MusicKit's request or, failing that, straight
     /// from the web service.
     static func albums(of artist: Artist, source: MusicPropertySource) async throws -> [Album] {
