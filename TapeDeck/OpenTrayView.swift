@@ -38,7 +38,7 @@ struct OpenTrayView: View {
                 .frame(width: geo.size.width, height: geo.size.height)
             }
             Text(hint)
-                .font(.system(size: 14, weight: .semibold))
+                .font(Typeface.display(15))
                 .multilineTextAlignment(.center)
                 .foregroundColor(.white.opacity(0.85))
             if model.hasTape {
@@ -66,7 +66,7 @@ struct OpenTrayView: View {
                            startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
         )
-        .sheet(isPresented: $showSettings) {
+        .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
         }
     }

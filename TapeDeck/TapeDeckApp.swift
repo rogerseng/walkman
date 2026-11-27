@@ -4,6 +4,10 @@ import SwiftUI
 struct TapeDeckApp: App {
     @StateObject private var model = PlayerModel()
 
+    init() {
+        Typeface.styleNavigationBars()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -48,8 +52,8 @@ struct ContentView: View {
                     MenuPlayerView(jog: true)
                 } else {
                     DeckView(openShelf: { showShelf = true })
-                        .sheet(isPresented: $showShelf) {
-                            ShelfView(onPick: { showShelf = false })
+                        .fullScreenCover(isPresented: $showShelf) {
+                            ShelfView(onPick: { showShelf = false }, onClose: { showShelf = false })
                         }
                 }
             }

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// A theme is what the closed phone looks like: which player it is, and what
 /// colour its case is. It is the one thing people choose; behind it are two
@@ -84,4 +85,35 @@ struct ThemePicker: View {
 enum AppLinks {
     static let privacyPolicy = "https://cassety.com/privacy.html"
     static let support = "https://cassety.com/support.html"
+}
+
+/// The app's three typefaces, so every screen uses them the same way.
+///  - Display: Righteous, the face of the wordmark and the website. Headings,
+///    buttons, and lettering moulded or engraved on the players.
+///  - Marker: Permanent Marker. Anything written on a tape: its name, on
+///    the label, the shelf spine, the lock screen and everywhere else a
+///    tape is named.
+///  - Everything else, the reading text, is the system font.
+enum Typeface {
+    static let displayName = "Righteous-Regular"
+    static let markerName = "PermanentMarker-Regular"
+
+    /// Scales with the reader's text size.
+    static func display(_ size: CGFloat) -> Font { .custom(displayName, size: size) }
+    /// Fixed, for lettering that is part of the drawing.
+    static func displayFixed(_ size: CGFloat) -> Font { .custom(displayName, fixedSize: size) }
+    static func marker(_ size: CGFloat) -> Font { .custom(markerName, size: size) }
+    static func markerFixed(_ size: CGFloat) -> Font { .custom(markerName, fixedSize: size) }
+
+    /// Navigation bar titles in the display face, as on the website.
+    @MainActor
+    static func styleNavigationBars() {
+        let bar = UINavigationBar.appearance()
+        if let inline = UIFont(name: displayName, size: 19) {
+            bar.titleTextAttributes = [.font: inline]
+        }
+        if let large = UIFont(name: displayName, size: 34) {
+            bar.largeTitleTextAttributes = [.font: large]
+        }
+    }
 }

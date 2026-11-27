@@ -17,6 +17,7 @@ struct MixtapeEditor: View {
             List {
                 Section("Tape") {
                     TextField("Name", text: $mixtape.name)
+                        .font(Typeface.marker(19))
                     Picker("Blank", selection: $mixtape.minutesPerSide) {
                         Text("C-60, 30 minutes a side").tag(30)
                         Text("C-90, 45 minutes a side").tag(45)

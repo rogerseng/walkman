@@ -20,7 +20,7 @@ struct OnboardingView: View {
             HStack {
                 Spacer()
                 Button("Skip") { done() }
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(Typeface.display(16))
                     .foregroundColor(.white.opacity(0.6))
                     .opacity(page == lastPage ? 0 : 1)
                     .disabled(page == lastPage)
@@ -78,7 +78,7 @@ struct OnboardingView: View {
                 .shadow(color: Skin.hotPink, radius: 10)
                 .shadow(color: Skin.hotPink.opacity(0.7), radius: 22)
             Text("Your Apple Music, on tape.")
-                .font(.system(size: 19, weight: .semibold))
+                .font(Typeface.display(21))
                 .foregroundColor(Skin.cyan)
             Text("Albums and playlists become cassettes with two sides. Put one in, press play, and watch the reels turn.")
                 .foregroundColor(.white.opacity(0.7))
@@ -88,7 +88,7 @@ struct OnboardingView: View {
     private var howItWorks: some View {
         Page {
             Text("How the deck works")
-                .font(.system(size: 24, weight: .bold))
+                .font(Typeface.display(27))
                 .foregroundColor(.white)
             VStack(alignment: .leading, spacing: 16) {
                 tip("play.fill", "Play and stop", "They are a pair. Press one in and the other pops out.")
@@ -106,7 +106,7 @@ struct OnboardingView: View {
                 .font(.system(size: 54, weight: .bold))
                 .foregroundColor(.white)
             Text("Connect Apple Music")
-                .font(.system(size: 24, weight: .bold))
+                .font(Typeface.display(27))
                 .foregroundColor(.white)
             Text("Cassety plays music from your Apple Music library and catalogue. It needs your permission, and an Apple Music subscription.")
                 .foregroundColor(.white.opacity(0.7))
@@ -114,7 +114,7 @@ struct OnboardingView: View {
             switch model.authStatus {
             case .authorized:
                 Label("Apple Music is connected", systemImage: "checkmark.circle.fill")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(Typeface.display(17))
                     .foregroundColor(.white)
                     .padding(.top, 6)
             case .notDetermined:
@@ -145,7 +145,7 @@ struct OnboardingView: View {
     private var choices: some View {
         Page {
             Text("A few choices")
-                .font(.system(size: 24, weight: .bold))
+                .font(Typeface.display(27))
                 .foregroundColor(.white)
             Text("You can change all of these later in Settings.")
                 .foregroundColor(.white.opacity(0.7))
@@ -175,7 +175,7 @@ struct OnboardingView: View {
                 .foregroundColor(.white)
                 .frame(width: 30)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
+                Text(title).font(Typeface.display(17)).foregroundColor(.white)
                 Text(text).font(.system(size: 14)).foregroundColor(.white.opacity(0.7))
             }
         }

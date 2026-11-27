@@ -11,6 +11,8 @@ struct ShelfView: View {
     /// False on the open phone, where the tape waits for the phone to close.
     var playOnPick = true
     var onPick: () -> Void
+    /// Set where the shelf covers the screen, so it has a key to close it.
+    var onClose: (() -> Void)?
 
     @State private var term = ""
     @State private var scope = SearchScope.catalog
@@ -44,6 +46,14 @@ struct ShelfView: View {
             .navigationTitle("Tape Shelf")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if let onClose {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(action: onClose) {
+                            Image(systemName: "xmark")
+                        }
+                        .accessibilityLabel("Close")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showSettings = true
@@ -53,7 +63,7 @@ struct ShelfView: View {
                     .accessibilityLabel("Settings and themes")
                 }
             }
-            .sheet(isPresented: $showSettings) {
+            .fullScreenCover(isPresented: $showSettings) {
                 SettingsView()
             }
             .background(ShelfStyle.background.ignoresSafeArea())
@@ -127,7 +137,7 @@ struct ShelfView: View {
             await loadRecent()
             await model.loadLibrary()
         }
-        .sheet(item: $editing) { mixtape in
+        .fullScreenCover(item: $editing) { mixtape in
             MixtapeEditor(mixtape: mixtape)
         }
     }
@@ -254,7 +264,7 @@ struct TapeSpine: View {
             .clipShape(RoundedRectangle(cornerRadius: 3))
             VStack(alignment: .leading, spacing: 0) {
                 Text(tape.title)
-                    .font(.custom("PermanentMarker-Regular", size: 18))
+                    .font(Typeface.marker(18))
                     .foregroundColor(ink.opacity(0.92))
                 Text(tape.subtitle)
                     .font(.system(size: 12))

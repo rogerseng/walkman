@@ -110,7 +110,7 @@ struct DeckView: View {
             .overlay(alignment: .topLeading) {
                 if let note = underWindowNote {
                     Text(note)
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(Typeface.marker(14))
                         .lineLimit(2)
                         .multilineTextAlignment(.center)
                         .foregroundColor(skin.note)
@@ -129,7 +129,7 @@ struct DeckView: View {
                     .offset(x: faderX, y: window.minY)
                 // Engraved under the fader
                 Text("VOLUME")
-                    .font(.system(size: 6.5, weight: .bold))
+                    .font(Typeface.displayFixed(7.5))
                     .tracking(1.6)
                     .foregroundColor(skin.engraving)
                     .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
@@ -139,7 +139,7 @@ struct DeckView: View {
             }
             .ignoresSafeArea()
         }
-        .sheet(isPresented: $showSettings) {
+        .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
         }
     }
@@ -180,6 +180,15 @@ struct DeckView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 } else {
                     emptyWell(upright: upright, length: 100 * scale)
+                    // The prompt sits in the middle of the window, not of
+                    // the well behind it.
+                    VStack(spacing: 6) {
+                        Image(systemName: "eject.fill").font(.system(size: 24))
+                        Text("NO TAPE").font(Typeface.display(16)).tracking(3)
+                        Text("Tap to choose one").font(.system(size: 11))
+                    }
+                    .foregroundColor(Color.white.opacity(0.5))
+                    .position(x: window.midX, y: window.midY)
                 }
 
                 // The casing: smoked plastic with the window cut out of it
@@ -276,12 +285,6 @@ struct DeckView: View {
                 spindle
                 spindle
             }
-            VStack(spacing: 6) {
-                Image(systemName: "eject.fill").font(.system(size: 24))
-                Text("NO TAPE").font(.system(size: 14, weight: .bold)).tracking(3)
-                Text("Tap to choose one").font(.system(size: 11))
-            }
-            .foregroundColor(Color.white.opacity(0.5))
         }
     }
 
@@ -401,22 +404,11 @@ struct RetroStripes: View {
 /// The name of the app, as lettering.
 struct Wordmark: View {
     var size: CGFloat = 22
-    /// The app icon beside the name, as in the logo on the website.
-    var showsIcon = true
 
     var body: some View {
-        HStack(spacing: size * 0.42) {
-            if showsIcon {
-                Image("LogoIcon")
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: size * 1.45, height: size * 1.45)
-                    .clipShape(RoundedRectangle(cornerRadius: size * 0.34, style: .continuous))
-            }
-            Text("Cassety")
-                .font(.custom("Righteous-Regular", fixedSize: size))
-                .tracking(size * 0.02)
-        }
+        Text("Cassety")
+            .font(Typeface.displayFixed(size))
+            .tracking(size * 0.02)
     }
 }
 
@@ -573,16 +565,17 @@ struct TapeKey: View {
         VStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: symbolSize, weight: .bold))
             if showsLabel, height >= 50 {
-                Text(label).font(.system(size: 7, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.6)
+                Text(label).font(Typeface.displayFixed(8)).lineLimit(1).minimumScaleFactor(0.6)
             }
         }
         // The symbol is engraved and filled with paint, so it has a thin
-        // edge of shadow or light where the cut catches it. Pressed in, it
-        // lights up from behind: amber on the grey keys, and dark on the
-        // coloured play key, where amber would not show.
+        // edge of shadow or light where the cut catches it. Pressed in, the
+        // paint goes black, except on the play key, which lights up from
+        // behind while the tape plays.
         .foregroundColor(symbolColor(down: down))
         .shadow(color: Color.black.opacity(accent ? 0.45 : 0.75), radius: 0.4, y: -0.8)
-        .shadow(color: down && !accent ? Self.lit.opacity(0.9) : .clear, radius: 6)
+        .shadow(color: down && accent ? Self.lit : .clear, radius: 5)
+        .shadow(color: down && accent ? Self.lit.opacity(0.7) : .clear, radius: 12)
         .scaleEffect(down ? 0.92 : 1)
         .padding(.horizontal, 2)
         .frame(maxWidth: .infinity)
@@ -641,12 +634,14 @@ struct TapeKey: View {
         return [Color(white: 0.17), Color(white: 0.09)]
     }
 
-    /// The amber of a lamp behind a pressed key.
-    private static let lit = Color(red: 1.0, green: 0.66, blue: 0.18)
+    /// The glow of the lamp behind the play key while it is in.
+    private static let lit = Color(red: 1.0, green: 0.88, blue: 0.42)
 
     private func symbolColor(down: Bool) -> Color {
         guard down else { return Color(white: 0.96) }
-        return accent ? Color(white: 0.10) : Self.lit
+        if accent { return Self.lit }
+        // Black paint on a black key would vanish, so it only dims there.
+        return dark ? Color(white: 0.38) : Color(white: 0.04)
     }
 
     private func keyColors(down: Bool) -> [Color] {
@@ -736,7 +731,7 @@ struct PlainKeyButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let down = configuration.isPressed
         configuration.label
-            .font(.system(size: 15, weight: .heavy, design: .rounded))
+            .font(Typeface.display(16))
             .foregroundColor(Color(red: 0.10, green: 0.02, blue: 0.13))
             .background(RoundedRectangle(cornerRadius: 10).fill(Skin.hotPink))
             .overlay(
@@ -762,7 +757,7 @@ struct OutlinedWord: View {
 
     private var word: some View {
         Text(text)
-            .font(.system(size: 21, weight: .heavy))
+            .font(Typeface.displayFixed(23))
             .tracking(1.5)
     }
 

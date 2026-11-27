@@ -29,7 +29,7 @@ enum ShelfStyle {
 
     static func header(_ title: String) -> some View {
         Text(title.uppercased())
-            .font(.system(size: 11, weight: .bold))
+            .font(Typeface.display(13))
             .tracking(1.5)
             .foregroundColor(Skin.cyan)
     }
@@ -126,7 +126,7 @@ struct CategoryRow: View {
                     .foregroundColor(Skin.hotPink)
                     .frame(width: 28)
                 Text(category.rawValue)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(Typeface.display(19))
                     .foregroundColor(.white)
             }
             .frame(height: 40)
@@ -306,7 +306,7 @@ struct CollectionDetail: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .shadow(color: .black.opacity(0.5), radius: 10, y: 6)
                 Text(tape.title)
-                    .font(.system(size: 20, weight: .bold))
+                    .font(Typeface.marker(24))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
                 Text(tape.subtitle)

@@ -35,7 +35,7 @@ struct TapeLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 1) {
-                        Text(context.state.title).font(.system(size: 14, weight: .bold))
+                        Text(context.state.title).font(.custom("PermanentMarker-Regular", size: 15))
                         Text(context.state.subtitle).font(.system(size: 11)).foregroundColor(.secondary)
                     }
                     .lineLimit(1)
@@ -65,7 +65,7 @@ struct LockScreenTapeView: View {
             VStack(alignment: .leading, spacing: 8) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(state.title.isEmpty ? " " : state.title)
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.custom("PermanentMarker-Regular", size: 15))
                         .foregroundColor(.white)
                     Text(state.subtitle.isEmpty ? " " : state.subtitle)
                         .font(.system(size: 12))

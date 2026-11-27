@@ -109,17 +109,16 @@ struct CassetteView: View {
             .position(x: 22.6 * u, y: 8.4 * u)
 
         if showPrint {
-            // Album title and artist, set in type
-            Text(title.isEmpty ? " " : title.uppercased())
-                .font(.system(size: 3.9 * u, weight: .heavy))
-                .tracking(0.25 * u)
+            // Album title and artist, in the same marker as every tape name
+            Text(title.isEmpty ? " " : title)
+                .font(Typeface.markerFixed(4.3 * u))
                 .foregroundColor(lettering)
                 .lineLimit(1)
                 .minimumScaleFactor(0.45)
                 .frame(width: 58 * u, height: 5.0 * u, alignment: .leading)
                 .position(x: 56 * u, y: 6.4 * u)
             Text(subtitle.isEmpty ? " " : subtitle)
-                .font(.system(size: 2.7 * u, weight: .medium))
+                .font(Typeface.markerFixed(2.9 * u))
                 .foregroundColor(lettering.opacity(0.85))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -128,14 +127,14 @@ struct CassetteView: View {
         } else {
             // Handwriting on the paper label's ruled lines
             Text(title.isEmpty ? " " : title)
-                .font(.custom("PermanentMarker-Regular", fixedSize: 4.5 * u))
+                .font(Typeface.markerFixed(4.5 * u))
                 .foregroundColor(ink.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .frame(width: 58 * u, height: 5.0 * u, alignment: .bottomLeading)
                 .position(x: 56 * u, y: 6.3 * u)
             Text(subtitle.isEmpty ? " " : subtitle)
-                .font(.custom("PermanentMarker-Regular", fixedSize: 3.0 * u))
+                .font(Typeface.markerFixed(3.0 * u))
                 .foregroundColor(ink.opacity(0.80))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)

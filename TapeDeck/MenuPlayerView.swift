@@ -151,7 +151,7 @@ struct MenuPlayerView: View {
                 .opacity(0.01)
                 .allowsHitTesting(false)
         )
-        .sheet(isPresented: $showSettings) {
+        .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
         }
     }
@@ -181,7 +181,7 @@ struct MenuPlayerView: View {
                     Spacer(minLength: 10)
                     dial(diameter: dialSize)
                     Text("TURN  ·  PRESS")
-                        .font(.system(size: 7, weight: .bold))
+                        .font(Typeface.displayFixed(8))
                         .tracking(1.8)
                         .foregroundColor(skin.engraving)
                         .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
@@ -700,7 +700,7 @@ struct MenuPlayerView: View {
                             .font(.system(size: 12, weight: .semibold))
                             .lineLimit(1)
                         Text(model.tapeTitle)
-                            .font(.system(size: 12))
+                            .font(Typeface.marker(13))
                             .lineLimit(1)
                             .opacity(0.7)
                         Text(model.sideEnded ? "End of side \(model.sideLetter)" : "Side \(model.sideLetter)")
