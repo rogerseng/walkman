@@ -118,7 +118,7 @@ struct CassetteView: View {
             .foregroundColor(Color.white.opacity(0.34))
             .lineLimit(1)
             .fixedSize()
-            .position(x: 50 * u, y: 16.7 * u)
+            .position(x: 32.5 * u, y: 16.7 * u)
             .accessibilityHidden(true)
 
         if showPrint {
