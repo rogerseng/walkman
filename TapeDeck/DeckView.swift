@@ -6,13 +6,15 @@ import SwiftUI
 /// dimly showing what is underneath, and a clear window over the label and
 /// reels shows the tape itself.
 ///
-/// The keys run in a row along a solid panel at the foot of the screen, so
-/// the window can take the whole width above them. On a plain phone the
-/// volume fader lies across the panel over the keys. The iPhone Duo's outer
-/// display (466 x 678 points) has an 84 point column down one side that iOS
-/// reports as a safe area inset, with the camera, clock and status icons at
-/// its top; there the fader stands in that column under them, which leaves
-/// the short screen more height for the tape.
+/// On an iPhone the keys run in a row along a solid panel at the foot of the
+/// screen, with the volume fader lying across the panel over them, so the
+/// window can take the whole width above them.
+///
+/// The iPhone Duo's outer display (466 x 678 points) has an 84 point column
+/// down one side that iOS reports as a safe area inset, with the camera,
+/// clock and status icons at its top. There the keys go in that column
+/// underneath them, the fader stands on the solid side of the case beside
+/// the window, and the cassette fills the screen.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
     @EnvironmentObject private var tour: Tour
@@ -32,6 +34,8 @@ struct DeckView: View {
     /// points in from the screen edge.
     private let railKeyWidth: CGFloat = 66
     private let railOuterMargin: CGFloat = 15
+    /// Keys in the rail are up to 84 points tall.
+    private let railKeyMaxHeight: CGFloat = 84
     private let keyGap: CGFloat = 10
     /// Height kept clear at the top of the rail for the camera, clock and
     /// status icons. Measured from a Duo screenshot, where the status pill
@@ -81,17 +85,19 @@ struct DeckView: View {
                     Color(white: 0.03)
                     tapeUnderCasing(plan)
                     clearCase
-                    // In the Duo's rail, a solid strip from top to bottom that
-                    // carries the volume fader
                     if plan.rail {
+                        // On the Duo, the solid side of the case starts just
+                        // past the tape window and runs to the edge, so it
+                        // carries the volume fader and the keys.
                         casePanel(seam: plan.railLeading ? .trailing : .leading)
-                            .frame(width: plan.railWidth + 8)
+                            .frame(width: plan.panelWidth)
                             .frame(maxWidth: .infinity, alignment: plan.railLeading ? .leading : .trailing)
+                    } else {
+                        // Along the foot, the panel the keys sit in
+                        casePanel(seam: .top)
+                            .frame(height: full.height - plan.panelTop)
+                            .frame(maxHeight: .infinity, alignment: .bottom)
                     }
-                    // Along the foot, the panel the keys sit in
-                    casePanel(seam: .top)
-                        .frame(height: full.height - plan.panelTop)
-                        .frame(maxHeight: .infinity, alignment: .bottom)
                     // On a pale case, a dark plate behind the Duo's clock and
                     // status icons, which the system draws in white.
                     if plan.rail, skin.needsStatusPlate {
@@ -162,31 +168,41 @@ struct DeckView: View {
                         .foregroundColor(skin.note)
                         .shadow(color: .black.opacity(skin == .yellow ? 0 : 0.6), radius: 2)
                         .frame(width: window.width)
-                        .offset(x: window.minX, y: window.maxY + 8)
+                        .offset(x: window.minX, y: window.maxY + (plan.rail ? 14 : 8))
                         .allowsHitTesting(false)
                 }
             }
-            // In the Duo's rail, the volume fader stands under the status icons
+            // On the Duo: the volume fader on the solid side, level with the
+            // window and as tall as it, and the keys in the rail
             .overlay(alignment: .topLeading) {
                 if plan.rail {
-                    let railMid = plan.railLeading ? plan.railWidth / 2 : full.width - plan.railWidth / 2
-                    let top = railStatusHeight
-                    let bottom = plan.panelTop - 40
-                    fader
-                        .frame(width: 48, height: max(80, bottom - top))
-                        .offset(x: railMid - 24, y: top)
-                    volumeWord
-                        .frame(width: 48)
-                        .offset(x: railMid - 24, y: bottom + 6)
+                    // Never under the keys
+                    let keysLeft = full.width - plan.railWidth
+                    let faderX = plan.railLeading ? plan.panelWidth - 70
+                        : min(full.width - plan.panelWidth + 22, keysLeft - 48 - 4)
+                    VStack(spacing: 9) {
+                        fader
+                            .frame(width: 48, height: window.height)
+                        // Engraved under the fader
+                        volumeWord
+                            .fixedSize()
+                            .frame(width: 48)
+                    }
+                    .offset(x: faderX, y: window.minY)
                 }
             }
-            // The panel along the foot: the fader lying across it, where
-            // there is no rail, and the row of keys under that
+            .overlay(alignment: plan.railLeading ? .topLeading : .topTrailing) {
+                if plan.rail {
+                    railKeyColumn(insets: insets, leading: plan.railLeading)
+                }
+            }
+            // On other phones, the panel along the foot: the fader lying
+            // across it, and the row of keys under that
             .overlay(alignment: .topLeading) {
-                let rowWidth = full.width - 2 * keysMargin
-                VStack(spacing: 10) {
-                    if !plan.rail {
-                        let length = rowWidth - 56 - 10
+                if !plan.rail {
+                    let rowWidth = full.width - 2 * keysMargin
+                    let length = rowWidth - 56 - 10
+                    VStack(spacing: 10) {
                         HStack(spacing: 10) {
                             volumeWord.frame(width: 56, alignment: .leading)
                             // Laid on its side: the loud end is on the right.
@@ -196,14 +212,14 @@ struct DeckView: View {
                                 .frame(width: length, height: faderRow)
                         }
                         .frame(width: rowWidth, height: faderRow)
+                        TransportKeys(vertical: false, keyHeight: plan.keyHeight, bare: true, big: true,
+                                      spacing: keyGap,
+                                      onSettings: { showSettings = true },
+                                      onEject: openShelf)
+                            .frame(width: rowWidth)
                     }
-                    TransportKeys(vertical: false, keyHeight: plan.keyHeight, bare: true, big: true,
-                                  spacing: keyGap,
-                                  onSettings: { showSettings = true },
-                                  onEject: openShelf)
-                        .frame(width: rowWidth)
+                    .offset(x: keysMargin, y: plan.panelTop + panelBow + 8)
                 }
-                .offset(x: keysMargin, y: plan.panelTop + panelBow + 8)
             }
             // The tape has run out: say so in the window, with the way on
             .overlay(alignment: .topLeading) {
@@ -226,11 +242,19 @@ struct DeckView: View {
             }
             // The card sits just above the panel, clear of the keys it asks for
             .overlay(alignment: .bottomLeading) {
-                let cardWidth = min(full.width - 20, max(240, window.width + 20))
-                TourCard(tour: tour)
-                    .frame(width: cardWidth)
-                    .offset(x: max(10, window.midX - cardWidth / 2),
-                            y: -(full.height - plan.panelTop + 8))
+                if plan.rail {
+                    // On the Duo the keys are at the side, so the card
+                    // sits at the foot of the window.
+                    TourCard(tour: tour)
+                        .frame(width: max(240, window.width + 20))
+                        .offset(x: max(10, window.minX - 10), y: -(insets.bottom + 14))
+                } else {
+                    let cardWidth = min(full.width - 20, max(240, window.width + 20))
+                    TourCard(tour: tour)
+                        .frame(width: cardWidth)
+                        .offset(x: max(10, window.midX - cardWidth / 2),
+                                y: -(full.height - plan.panelTop + 8))
+                }
             }
             .environment(\.tourKey, tour.step?.key)
             .ignoresSafeArea()
@@ -301,6 +325,8 @@ struct DeckView: View {
         var rail: Bool
         var railLeading: Bool
         var railWidth: CGFloat
+        /// On the Duo, the width of the solid side of the case.
+        var panelWidth: CGFloat = 0
     }
 
     /// The length of the cassette the window always shows, in millimetres of
@@ -319,6 +345,7 @@ struct DeckView: View {
         let railWidth = max(insets.leading, insets.trailing)
         let rail = railWidth >= 60
         let railLeading = rail && insets.leading > insets.trailing
+        if rail { return railLayout(full: full, insets: insets, railWidth: railWidth, leading: railLeading) }
 
         // The row of keys along the foot: six keys across the width
         let rowWidth = full.width - 2 * keysMargin
@@ -354,6 +381,31 @@ struct DeckView: View {
         return Layout(scale: scale, window: window, cassetteCenter: center,
                       panelTop: panelTop, keyHeight: keyHeight, contentLeft: left,
                       rail: rail, railLeading: railLeading, railWidth: railWidth)
+    }
+
+    /// The Duo's outer screen: the cassette as large as the screen allows,
+    /// in the middle of it, with the keys in the rail at the side.
+    private func railLayout(full: CGSize, insets: EdgeInsets, railWidth: CGFloat, leading: Bool) -> Layout {
+        // As big as the screen allows. The cassette may run a little past
+        // the edges, but never far enough to lose the label.
+        let long = max(full.width, full.height)
+        let short = min(full.width, full.height)
+        let fit = min(long / 100, short / 63)
+        let fill = max(long / 100, short / 63)
+        let scale = min(fill, fit * 1.04)
+        // The window shows the label strip and both reels; the guide
+        // rollers and the head opening stay under the casing, by the keys.
+        let left = full.width / 2 - 63 * scale / 2
+        let bottom = full.height / 2 + 100 * scale / 2
+        let window = CGRect(x: left + windowEdgeInset * scale, y: bottom - windowFarEnd * scale,
+                            width: windowMinWidth * scale, height: windowLength * scale)
+        let panelWidth = max(railWidth, leading ? window.minX - 6 : full.width - window.maxX - 6)
+        return Layout(scale: scale, window: window,
+                      cassetteCenter: CGPoint(x: full.width / 2, y: full.height / 2),
+                      panelTop: full.height, keyHeight: 0,
+                      contentLeft: 14 + (leading ? panelWidth : insets.leading),
+                      rail: true, railLeading: leading, railWidth: railWidth,
+                      panelWidth: panelWidth)
     }
 
     /// The cassette on end, head opening toward the keys, with the player's
@@ -407,8 +459,9 @@ struct DeckView: View {
                 if skin.hasStripes {
                     RetroStripes()
                         .frame(width: size.width, height: 30)
-                        // Just above the panel, clear of the song line under the window
-                        .position(x: size.width / 2, y: window.maxY + 48 + 15)
+                        // Low on the case, clear of the song line under the window
+                        .position(x: size.width / 2,
+                                  y: plan.rail ? min(size.height - 22, window.maxY + 92) : window.maxY + 48 + 15)
                         .allowsHitTesting(false)
                 }
 
@@ -473,6 +526,39 @@ struct DeckView: View {
                     engravingEdgeOffset: skin.engravingEdgeOffset)
     }
 
+    /// Six keys of one size in a column: play, stop, fast forward, rewind,
+    /// the tape library, and settings.
+    private func railKeys(height: CGFloat) -> some View {
+        VStack(spacing: keyGap) {
+            TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
+                          spacing: keyGap, onEject: openShelf)
+            TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
+                    height: height, showsLabel: false, corner: 17, symbolSize: 23,
+                    onDown: {
+                        Haptics.keyDown()
+                        showSettings = true
+                    })
+        }
+    }
+
+    /// The column of keys in the Duo's rail, starting below the camera and clock.
+    private func railKeyColumn(insets: EdgeInsets, leading: Bool) -> some View {
+        let width = max(insets.leading, insets.trailing)
+        let inner = max(0, width - railKeyWidth - railOuterMargin)
+        return GeometryReader { geo in
+            let room = geo.size.height - railStatusHeight - insets.bottom - 12
+            VStack(spacing: 0) {
+                Color.clear.frame(height: railStatusHeight)
+                railKeys(height: min(railKeyMaxHeight, max(36, (room - 5 * keyGap) / 6)))
+                Spacer(minLength: 0)
+            }
+            .frame(width: railKeyWidth)
+            .padding(.leading, leading ? railOuterMargin : inner)
+            .padding(.trailing, leading ? inner : railOuterMargin)
+        }
+        .frame(width: width)
+    }
+
     /// The word engraved beside the fader.
     private var volumeWord: some View {
         Text("VOLUME")
@@ -487,7 +573,7 @@ struct DeckView: View {
     /// keys, or the Duo's side column that carries the fader. Solid plastic,
     /// not see through, with a seam where it meets the clear part of the case.
     private func casePanel(seam: BowedPanel.Seam) -> some View {
-        let bow = seam == .top ? panelBow : 18
+        let bow = seam == .top ? panelBow : 26
         let edge = BowedPanel(bow: bow, seam: seam)
         let lit: UnitPoint = seam == .top ? .top : (seam == .leading ? .leading : .trailing)
         let lip: CGSize = switch seam {
