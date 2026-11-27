@@ -244,48 +244,56 @@ struct CassetteView: View {
     }
 }
 
-/// Tape pulled out of the cassette and left in a heap over it: loops of
-/// brown ribbon that start at the head opening in the foot of the shell.
-/// They are drawn out along their length as the deck chews, and drawn back
-/// the same way when the tape is wound in. Sizes are in millimetres.
+/// Tape pulled out of the cassette and left in a heap over it: many thin
+/// flat ribbons that start at the head opening in the foot of the shell and
+/// wander and kink across it. They are drawn out along their length as the
+/// deck chews, and drawn back the same way when the tape is wound in. Sizes
+/// are in millimetres.
 struct TapeTangle: View {
     let u: CGFloat
     /// Whether the tape is out.
     var out: Bool
 
-    private static let oxide = Color(red: 0.23, green: 0.15, blue: 0.10)
-    private static let sheen = Color(red: 0.62, green: 0.46, blue: 0.34)
+    private static let oxide = Color(red: 0.20, green: 0.13, blue: 0.09)
+    private static let sheen = Color(red: 0.66, green: 0.50, blue: 0.38)
 
-    /// Each strand leaves the head opening and wanders over the shell.
-    private static let strands: [[CGPoint]] = [
-        [CGPoint(x: 46, y: 60), CGPoint(x: 30, y: 44), CGPoint(x: 22, y: 20), CGPoint(x: 40, y: 12),
-         CGPoint(x: 52, y: 30), CGPoint(x: 34, y: 38), CGPoint(x: 26, y: 28), CGPoint(x: 44, y: 22),
-         CGPoint(x: 60, y: 36), CGPoint(x: 48, y: 50), CGPoint(x: 36, y: 46)],
-        [CGPoint(x: 54, y: 60), CGPoint(x: 70, y: 46), CGPoint(x: 84, y: 26), CGPoint(x: 66, y: 12),
-         CGPoint(x: 50, y: 24), CGPoint(x: 68, y: 36), CGPoint(x: 80, y: 30), CGPoint(x: 62, y: 20),
-         CGPoint(x: 46, y: 34), CGPoint(x: 58, y: 48), CGPoint(x: 72, y: 54)],
-        [CGPoint(x: 50, y: 61), CGPoint(x: 42, y: 40), CGPoint(x: 58, y: 16), CGPoint(x: 76, y: 22),
-         CGPoint(x: 64, y: 42), CGPoint(x: 40, y: 30), CGPoint(x: 28, y: 14), CGPoint(x: 18, y: 32),
-         CGPoint(x: 32, y: 52), CGPoint(x: 52, y: 44)],
-        [CGPoint(x: 49, y: 60), CGPoint(x: 62, y: 52), CGPoint(x: 86, y: 44), CGPoint(x: 78, y: 16),
-         CGPoint(x: 56, y: 28), CGPoint(x: 38, y: 18), CGPoint(x: 20, y: 40), CGPoint(x: 40, y: 56),
-         CGPoint(x: 66, y: 30)],
-    ]
+    /// Each strand leaves the head opening and wanders over the shell. The
+    /// same strands every time, so the heap does not jump between frames.
+    private static let strands: [[CGPoint]] = {
+        var seed: UInt64 = 0x5EED_CA55
+        func next() -> Double {
+            seed = seed &* 6364136223846793005 &+ 1442695040888963407
+            return Double((seed >> 33) % 10_000) / 10_000
+        }
+        return (0..<9).map { strand in
+            var points = [CGPoint(x: 44 + Double(strand) * 1.5, y: 61)]
+            var x = 50.0
+            var y = 50.0
+            for _ in 0..<13 {
+                // Long swings one way, then a short kink back
+                x = min(92, max(8, x + (next() - 0.5) * 62))
+                y = min(58, max(6, y + (next() - 0.55) * 44))
+                points.append(CGPoint(x: x, y: y))
+            }
+            return points
+        }
+    }()
 
     var body: some View {
         ZStack {
             ForEach(Self.strands.indices, id: \.self) { index in
-                let path = Self.curve(through: Self.strands[index], u: u)
-                // The later strands come out a little after the first
+                let path = Self.line(through: Self.strands[index], u: u)
                 let reach = out ? 1.0 : 0.0
+                // Tape is a flat ribbon about as wide as this, seen mostly
+                // on its face: square ends, sharp folds.
                 path.trim(from: 0, to: reach)
-                    .stroke(Self.oxide, style: StrokeStyle(lineWidth: 1.5 * u, lineCap: .round, lineJoin: .round))
-                    .shadow(color: .black.opacity(0.55), radius: 0.8 * u, y: 0.5 * u)
-                // Light along one edge of the ribbon, so it reads as glossy tape
+                    .stroke(Self.oxide, style: StrokeStyle(lineWidth: 0.62 * u, lineCap: .butt, lineJoin: .bevel))
+                    .shadow(color: .black.opacity(0.5), radius: 0.4 * u, y: 0.3 * u)
+                // Light along one edge, so it reads as glossy tape
                 path.trim(from: 0, to: reach)
-                    .stroke(Self.sheen.opacity(0.55),
-                            style: StrokeStyle(lineWidth: 0.28 * u, lineCap: .round, lineJoin: .round))
-                    .offset(x: -0.35 * u, y: -0.35 * u)
+                    .stroke(Self.sheen.opacity(0.6),
+                            style: StrokeStyle(lineWidth: 0.12 * u, lineCap: .butt, lineJoin: .bevel))
+                    .offset(x: -0.2 * u, y: -0.2 * u)
             }
         }
         .opacity(out ? 1 : 0)
@@ -293,16 +301,20 @@ struct TapeTangle: View {
         .accessibilityHidden(true)
     }
 
-    /// A smooth line through the points: each one is joined to the next by
-    /// a curve that passes through the middle of the gap.
-    private static func curve(through points: [CGPoint], u: CGFloat) -> Path {
+    /// A line through the points that bends gently along most of its way
+    /// and folds sharply at every third point, as creased tape does.
+    private static func line(through points: [CGPoint], u: CGFloat) -> Path {
         var path = Path()
         guard points.count > 2 else { return path }
         func scaled(_ point: CGPoint) -> CGPoint { CGPoint(x: point.x * u, y: point.y * u) }
         func middle(_ a: CGPoint, _ b: CGPoint) -> CGPoint { CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2) }
         path.move(to: scaled(points[0]))
         for index in 1..<points.count - 1 {
-            path.addQuadCurve(to: scaled(middle(points[index], points[index + 1])), control: scaled(points[index]))
+            if index % 3 == 0 {
+                path.addLine(to: scaled(points[index]))
+            } else {
+                path.addQuadCurve(to: scaled(middle(points[index], points[index + 1])), control: scaled(points[index]))
+            }
         }
         path.addLine(to: scaled(points[points.count - 1]))
         return path

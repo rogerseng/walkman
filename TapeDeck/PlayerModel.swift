@@ -76,6 +76,14 @@ final class PlayerModel: ObservableObject {
     /// set off by leaning on a reel.
     @Published private(set) var tapeEaten = false
 
+    /// The moment the tape is on its way out of the cassette or back in:
+    /// the reels race and nothing else can be done.
+    enum TapeChurn { case eating, winding }
+    @Published private(set) var tapeChurn: TapeChurn?
+
+    /// The tape is out, or on its way out or in: the keys do nothing.
+    var tapeJammed: Bool { tapeEaten || tapeChurn != nil }
+
     /// What to tell the listener when the tape has run out.
     var endOfSideNote: String? {
         guard hasTape, sideEnded else { return nil }
@@ -299,9 +307,10 @@ final class PlayerModel: ObservableObject {
                 elapsed = 0
                 progress = side.duration > 0 ? side.start(of: index) / side.duration : 0
                 setQueue(side: side, startAt: index)
-                pressFeedback()
+                // A song chosen from a list simply starts: no key goes
+                // down, and the tape does not slur up to speed.
                 promise(.playing)
-                startTape()
+                startTape(slur: false)
                 return
             }
         }
@@ -323,9 +332,14 @@ final class PlayerModel: ObservableObject {
         swapping = true
         lastKeyPress = Date()
         resetTransport()
+        // A song tapped in a list should simply start, so its tape goes in
+        // without the door, its sounds and their waits.
+        let quick = trackID != nil && autoPlay
         Task {
             defer { swapping = false }
-            if hasTape {
+            if hasTape, quick {
+                player.stop()
+            } else if hasTape {
                 sounds.play(.eject)
                 Haptics.door()
                 player.stop()
@@ -367,17 +381,21 @@ final class PlayerModel: ObservableObject {
                 duration = 0
                 lastEntryID = nil
                 setQueue(side: sides[first], startAt: startIndex)
-                sounds.play(.insert)
-                Haptics.seat()
-                Task {
-                    try? await Task.sleep(nanoseconds: 180_000_000)
-                    Haptics.door()
+                if !quick {
+                    sounds.play(.insert)
+                    Haptics.seat()
+                    Task {
+                        try? await Task.sleep(nanoseconds: 180_000_000)
+                        Haptics.door()
+                    }
                 }
                 withAnimation(.spring(response: 0.55, dampingFraction: 0.75)) { hasTape = true }
                 events.send(.inserted)
                 if autoPlay {
-                    await pause(seconds: 0.55)
-                    pressFeedback()
+                    if !quick {
+                        await pause(seconds: 0.55)
+                        pressFeedback()
+                    }
                     try await player.play()
                 } else {
                     waitingForLid = true
@@ -446,6 +464,7 @@ final class PlayerModel: ObservableObject {
     /// or run-down, a promise. Called whenever the tape itself changes.
     private func resetTransport() {
         tapeEaten = false
+        tapeChurn = nil
         seekTask?.cancel()
         seekTask = nil
         finishTask?.cancel()
@@ -489,7 +508,7 @@ final class PlayerModel: ObservableObject {
     /// from the start of the old one. A tape flipped at the very start of a
     /// side is treated as rewound, so the other side begins at its beginning.
     func flipTape() {
-        guard hasTape, !swapping, !tapeEaten, sides.count == 2 else { return }
+        guard hasTape, !swapping, !tapeJammed, sides.count == 2 else { return }
         let other = 1 - sideIndex
         guard !sides[other].isBlank else {
             pressFeedback()
@@ -552,7 +571,7 @@ final class PlayerModel: ObservableObject {
     func playKey() {
         pressFeedback()
         guard hasTape else { return }
-        if sideEnded || tapeEaten {
+        if sideEnded || tapeJammed {
             // End of the tape: the key will not stay down.
             Task {
                 await pause(seconds: 0.18)
@@ -586,11 +605,16 @@ final class PlayerModel: ObservableObject {
     /// The deck eats the tape: the music lurches and stops, and the tape
     /// spills out until it is wound back.
     func eatTape() {
-        guard hasTape, !swapping, !tapeEaten,
+        guard hasTape, !swapping, !tapeJammed,
               motion != .fastForward, motion != .rewind else { return }
         sounds.play(.tangle)
         Haptics.chew()
-        withAnimation(.easeOut(duration: 0.9)) { tapeEaten = true }
+        tapeChurn = .eating
+        withAnimation(.easeIn(duration: 1.2)) { tapeEaten = true }
+        Task {
+            await pause(seconds: 1.25)
+            if tapeChurn == .eating { tapeChurn = nil }
+        }
         let wasPlaying = motion == .playing
         promise(.paused)
         ramp { [self] in
@@ -607,10 +631,15 @@ final class PlayerModel: ObservableObject {
 
     /// Winds the spilled tape back into the cassette, ready to play again.
     func windTapeBack() {
-        guard tapeEaten else { return }
+        guard tapeEaten, tapeChurn == nil else { return }
         sounds.play(.windBack)
         Haptics.windBack()
-        withAnimation(.easeInOut(duration: 0.9)) { tapeEaten = false }
+        tapeChurn = .winding
+        withAnimation(.easeInOut(duration: 1.6)) { tapeEaten = false }
+        Task {
+            await pause(seconds: 1.65)
+            if tapeChurn == .winding { tapeChurn = nil }
+        }
     }
 
     /// A knock on the empty deck: there is no tape to press on.
@@ -665,10 +694,10 @@ final class PlayerModel: ObservableObject {
     }
 
     /// Plays, letting the tape run up to speed.
-    private func startTape() {
+    private func startTape(slur wanted: Bool = true) {
         ramp { [self] in
             do {
-                let slur = Prefs.isOn(Prefs.tapeRamp)
+                let slur = wanted && Prefs.isOn(Prefs.tapeRamp)
                 let from = player.playbackTime
                 try await player.play()
                 // Stop was pressed while the music was still starting.
@@ -686,7 +715,8 @@ final class PlayerModel: ObservableObject {
                     try await Task.sleep(nanoseconds: 25_000_000)
                     waited += 1
                 }
-                sounds.play(.motorUp)
+                // The motor is heard running down on stop, but not running
+                // up on play: over the start of a song it only got in the way.
                 for rate in Self.rampUp.dropFirst() {
                     try await Task.sleep(nanoseconds: 70_000_000)
                     setRate(rate)
@@ -761,7 +791,7 @@ final class PlayerModel: ObservableObject {
     /// Rewind and fast forward: a tap skips a song, a hold winds the tape.
     func seekKeyDown(forward: Bool) {
         pressFeedback()
-        guard hasTape, !swapping, !tapeEaten else { return }
+        guard hasTape, !swapping, !tapeJammed else { return }
         keyWound = false
         seekTask?.cancel()
         seekTask = Task {

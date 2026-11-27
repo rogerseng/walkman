@@ -96,7 +96,7 @@ struct DeckView: View {
                     .accessibilityAction(named: "Turn the tape over") { model.flipTape() }
 
                 // Lean on a reel and the deck eats the tape.
-                if model.hasTape, !model.tapeEaten {
+                if model.hasTape, !model.tapeJammed {
                     ForEach([-20.5, 20.5], id: \.self) { along in
                         Color.clear
                             .frame(width: 24 * plan.scale, height: 24 * plan.scale)
@@ -263,7 +263,7 @@ struct DeckView: View {
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: model.sideEnded)
             // The deck has eaten the tape: own up, and offer to wind it back
             .overlay(alignment: .topLeading) {
-                if model.hasTape, model.tapeEaten {
+                if model.hasTape, model.tapeEaten || model.tapeChurn == .winding {
                     TapeEatenCard()
                         .frame(width: window.width - 28)
                         .position(x: window.midX, y: window.minY + window.height * 0.74)
@@ -271,9 +271,9 @@ struct DeckView: View {
                 }
             }
             // The card waits for the tape to finish spilling, and goes at once.
-            .animation(model.tapeEaten ? .spring(response: 0.35, dampingFraction: 0.8).delay(1.0)
-                                       : .easeOut(duration: 0.15),
-                       value: model.tapeEaten)
+            .animation(model.tapeJammed ? .spring(response: 0.35, dampingFraction: 0.8).delay(1.3)
+                                        : .easeOut(duration: 0.15),
+                       value: model.tapeJammed)
             // The tour: the tape lit up when it is the thing to touch, and
             // the card saying what to do
             .overlay(alignment: .topLeading) {
@@ -513,7 +513,8 @@ struct DeckView: View {
                         .frame(width: size.width, height: 30)
                         // Low on the case, clear of the song line under the window
                         .position(x: size.width / 2,
-                                  y: plan.rail ? min(size.height - 22, window.maxY + 92) : window.maxY + 48 + 15)
+                                  // On the Duo they run along the very foot of the screen
+                                  y: plan.rail ? size.height - 15 : window.maxY + 48 + 15)
                         .allowsHitTesting(false)
                 }
 
@@ -723,7 +724,10 @@ struct DeckCassette: View {
                      // one has room for whatever is playing.
                      subtitle: model.printedLabel ? model.tapeSubtitle : model.trackLine,
                      progress: model.progress,
-                     motion: model.motion,
+                     // The reels race while the deck chews the tape or
+                     // it is wound back in
+                     motion: model.tapeChurn == .eating ? .fastForward
+                         : model.tapeChurn == .winding ? .rewind : model.motion,
                      side: model.sideLetter,
                      printed: model.printedLabel,
                      tint: model.labelColor.map { Color(cgColor: $0) },
@@ -1148,34 +1152,68 @@ struct EndOfSideCard: View {
     }
 }
 
+/// A small reel hub that turns, to show the tape being wound.
+struct WindingReel: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { timeline in
+            let turn = timeline.date.timeIntervalSinceReferenceDate * -540
+            ZStack {
+                Circle().strokeBorder(lineWidth: 3)
+                ForEach(0..<3, id: \.self) { spoke in
+                    Capsule().frame(width: 3.5, height: 11).offset(y: -7.5)
+                        .rotationEffect(.degrees(Double(spoke) * 120))
+                }
+                Circle().frame(width: 6, height: 6)
+            }
+            .rotationEffect(.degrees(reduceMotion ? 0 : turn))
+        }
+        .accessibilityLabel("Winding")
+    }
+}
+
 /// Shown in the tape window when the deck has chewed the tape.
 struct TapeEatenCard: View {
     @EnvironmentObject private var model: PlayerModel
     @Environment(\.playerTheme) private var theme
 
     var body: some View {
+        let winding = model.tapeChurn == .winding
         VStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundColor(theme.accentColor)
-            Text("The deck ate your tape")
-                .font(Typeface.display(20))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-            Text("It happens to the best decks. Wind it back in and carry on.")
-                .font(.system(size: 13))
-                .foregroundColor(.white.opacity(0.8))
-                .multilineTextAlignment(.center)
-            Button {
-                model.windTapeBack()
-            } label: {
-                Text("Wind it back in")
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 9)
+            if winding {
+                // A reel turning while the tape is drawn back in
+                WindingReel()
+                    .frame(width: 34, height: 34)
+                    .foregroundColor(theme.accentColor)
+                Text("Winding it back in")
+                    .font(Typeface.display(20))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+            } else {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(theme.accentColor)
+                Text("The deck ate your tape")
+                    .font(Typeface.display(20))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                Text("It happens to the best decks. Wind it back in and carry on.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                Button {
+                    model.windTapeBack()
+                } label: {
+                    Text("Wind it back in")
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 9)
+                }
+                .buttonStyle(PlainKeyButtonStyle())
+                .padding(.top, 2)
             }
-            .buttonStyle(PlainKeyButtonStyle())
-            .padding(.top, 2)
         }
+        .animation(.easeOut(duration: 0.15), value: winding)
         .padding(16)
         .frame(maxWidth: .infinity)
         .background(

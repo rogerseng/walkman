@@ -73,9 +73,9 @@ enum Haptics {
     static func windBack() {
         guard on else { return }
         Task { @MainActor in
-            for _ in 0..<8 {
-                light.impactOccurred(intensity: 0.7)
-                try? await Task.sleep(nanoseconds: 90_000_000)
+            for _ in 0..<14 {
+                light.impactOccurred(intensity: 0.6)
+                try? await Task.sleep(nanoseconds: 100_000_000)
             }
             rigid.impactOccurred(intensity: 0.8)
         }

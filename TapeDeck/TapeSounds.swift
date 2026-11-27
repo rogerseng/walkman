@@ -333,61 +333,72 @@ final class TapeSounds {
 
     /// The capstan motor changing speed: a whine and rumble whose pitch
     /// slides from one speed to another, fading in or out at the slow end.
-    /// The deck eating a tape: the motor labouring and lurching as the tape
-    /// wraps round the capstan, the crackle of tape crumpling, a squeal from
-    /// the pinch roller, and a clunk as the mechanism gives up.
+    /// The deck eating a tape. What is heard is mostly the music going
+    /// wrong: a held chord that wows, flutters and sinks as the tape snags.
+    /// Round it are the dry rustle of tape crumpling, the mechanism ticking
+    /// over faster and faster as it winds tape round the capstan, and the
+    /// clunk of it giving up.
     private static func tangle() -> [Float] {
-        let seconds = 1.25
+        let seconds = 1.35
         var s = silence(seconds)
-        var phase = 0.0
-        var squeal = 0.0
-        var low = 0.0
-        var crackle = 0.0
+        var phases = [0.0, 0.0, 0.0]
+        let chord = [196.0, 246.9, 293.7]
+        var rustle = 0.0
+        var smooth = 0.0
         for i in 0..<s.count {
             let t = Double(i) / rate
             let along = t / seconds
-            // The motor sags, with a flutter that gets wilder as it jams
-            let flutter = sin(2 * .pi * (5 + along * 9) * t) * (0.10 + along * 0.22)
-            let speed = max(0.12, 1 - along * 0.8 + flutter)
-            phase += 2 * .pi * 560 * speed / rate
-            squeal += 2 * .pi * (1900 + 700 * sin(2 * .pi * 11 * t)) * speed / rate
-            low += (Double.random(in: -1...1) - low) * 0.10
-            // Crumpling: sparse sharp ticks, thickest in the middle
-            if Double.random(in: 0...1) < 0.012 * sin(.pi * along) { crackle = Double.random(in: -1...1) }
-            crackle *= 0.86
-            let fade = min(1, (1 - along) * 9) * min(1, along * 60)
-            let squealLevel = 0.022 * max(0, sin(.pi * min(1, along * 1.6)))
-            s[i] = Float(fade * (sin(phase) * 0.05 + sin(phase * 0.5) * 0.04 + low * 0.14
-                                 + crackle * 0.30 + sin(squeal) * squealLevel))
+            // Speed: sinking, with a slow wow and a fast flutter that grow
+            let wow = sin(2 * .pi * 2.3 * t) * (0.06 + 0.20 * along)
+            let flutter = sin(2 * .pi * (9 + 14 * along) * t) * (0.02 + 0.10 * along)
+            let speed = max(0.15, 1 - 0.72 * along * along + wow + flutter)
+            var tone = 0.0
+            for note in 0..<3 {
+                phases[note] += 2 * .pi * chord[note] * speed / rate
+                tone += sin(phases[note]) + 0.3 * sin(phases[note] * 2)
+            }
+            // Rustle: noise through a low-pass, in gusts
+            rustle += (Double.random(in: -1...1) - rustle) * 0.35
+            let gust = 0.5 + 0.5 * sin(2 * .pi * 6.5 * t + sin(2 * .pi * 1.7 * t) * 3)
+            smooth += (gust * gust - smooth) * 0.01
+            let fade = min(1, (1 - along) * 7) * min(1, along * 50)
+            s[i] = Float(fade * (tone * 0.022 * (1 - 0.5 * along) + rustle * 0.20 * smooth * sin(.pi * along)))
         }
-        knock(&s, at: 0.0, freq: 180, decay: 40, noise: 0.8, gain: 0.35)
-        knock(&s, at: 1.02, freq: 90, decay: 26, noise: 0.9, gain: 0.7)
+        // The mechanism ticking over as it snags, closer and closer together
+        var at = 0.05
+        var gap = 0.16
+        while at < 1.05 {
+            knock(&s, at: at, freq: 1300, decay: 220, noise: 0.8, gain: 0.10)
+            at += gap
+            gap = max(0.035, gap * 0.84)
+        }
+        knock(&s, at: 1.12, freq: 85, decay: 24, noise: 0.9, gain: 0.75)
+        knock(&s, at: 1.17, freq: 260, decay: 60, noise: 0.5, gain: 0.25)
         return s
     }
 
-    /// Winding the spilled tape back in: a hand-turned ratchet that speeds
-    /// up, and a soft knock as the tape pulls taut.
+    /// Winding the spilled tape back in: the reel whirring up to speed, the
+    /// quick tick of its teeth, and a soft knock as the tape pulls taut.
     private static func windBack() -> [Float] {
-        let seconds = 1.0
+        let seconds = 1.7
         var s = silence(seconds)
         var low = 0.0
         var phase = 0.0
+        var tick = 0.0
         for i in 0..<s.count {
             let t = Double(i) / rate
             let along = t / seconds
-            phase += 2 * .pi * (300 + 520 * along) / rate
-            low += (Double.random(in: -1...1) - low) * 0.2
-            let fade = min(1, (1 - along) * 10) * min(1, along * 30)
-            s[i] = Float(fade * (sin(phase) * 0.03 + low * 0.07))
+            // Up to speed in the first third, then steady, then slowing
+            let speed = min(1, along * 3.2) * min(1, (1 - along) * 5 + 0.25)
+            phase += 2 * .pi * (240 + 560 * speed) / rate
+            tick += 2 * .pi * (14 + 46 * speed) / rate
+            low += (Double.random(in: -1...1) - low) * 0.22
+            let teeth = pow(max(0, sin(tick)), 14)
+            let fade = min(1, (1 - along) * 12) * min(1, along * 40)
+            s[i] = Float(fade * (sin(phase) * 0.028 + sin(phase * 2.01) * 0.010 + low * 0.085 * (0.4 + speed)
+                                 + teeth * low * 0.5))
         }
-        var at = 0.02
-        var gap = 0.11
-        while at < 0.85 {
-            knock(&s, at: at, freq: 900, decay: 160, noise: 0.5, gain: 0.16)
-            at += gap
-            gap = max(0.045, gap * 0.88)
-        }
-        knock(&s, at: 0.9, freq: 140, decay: 40, noise: 0.6, gain: 0.4)
+        knock(&s, at: 1.55, freq: 140, decay: 40, noise: 0.6, gain: 0.45)
         return s
     }
 

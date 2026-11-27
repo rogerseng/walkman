@@ -32,6 +32,7 @@ struct OpenTrayView: View {
 
     private var hint: String {
         if !model.hasTape { return "Pick a tape from the shelf" }
+        if model.tapeChurn == .winding { return "Winding the tape back in" }
         if model.tapeEaten { return "The deck ate your tape. It happens to the best decks." }
         if let note = model.endOfSideNote { return note }
         if !model.trackLine.isEmpty, model.motion == .playing || model.motion == .paused {
@@ -257,7 +258,7 @@ struct OpenTrayView: View {
                           anchor: .bottom, perspective: 0.55)
         .onTapGesture(count: 2) { model.flipTape() }
         .onTapGesture {
-            if model.tapeEaten {
+            if model.tapeJammed {
                 model.windTapeBack()
             } else if !model.hasTape {
                 // Nothing to press on: the door knocks and gives a little.
@@ -271,7 +272,7 @@ struct OpenTrayView: View {
         }
         // Lean on a reel and the deck eats the tape.
         .overlay {
-            if model.hasTape, !model.tapeEaten {
+            if model.hasTape, !model.tapeJammed {
                 HStack(spacing: 17 * u) {
                     ForEach(0..<2, id: \.self) { _ in
                         Color.clear
@@ -301,7 +302,8 @@ struct OpenTrayView: View {
                     .multilineTextAlignment(.center)
             } icon: {
                 if model.hasTape {
-                    Image(systemName: model.tapeEaten ? "exclamationmark.triangle.fill"
+                    Image(systemName: model.tapeChurn == .winding ? "arrow.triangle.2.circlepath"
+                          : model.tapeEaten ? "exclamationmark.triangle.fill"
                           : model.endOfSideNote == nil ? "music.note" : "arrow.triangle.2.circlepath")
                         .font(.system(size: 13, weight: .bold))
                 }
@@ -311,9 +313,11 @@ struct OpenTrayView: View {
             }
 
             // The MP3 player's display has a bar of its own.
-            if model.hasTape, model.duration > 0, !model.tapeEaten, !isMP3 { timeline }
+            if model.hasTape, model.duration > 0, !model.tapeJammed, !isMP3 { timeline }
 
-            if model.hasTape, model.tapeEaten {
+            if model.hasTape, model.tapeChurn == .winding {
+                WindingReel().frame(width: 30, height: 30).foregroundColor(theme.accentColor)
+            } else if model.hasTape, model.tapeEaten {
                 Button {
                     model.windTapeBack()
                 } label: {
@@ -480,8 +484,8 @@ struct OpenTrayView: View {
 }
 
 /// The boombox's speaker: a perforated grille over a cone, in a trim ring.
-/// The cone pumps in and out in time while a tape plays, hard on the beat
-/// and lightly between beats, and the whole speaker shakes a touch with it. It is for show: the
+/// The cone moves a little in time with the song's tempo while a tape
+/// plays: a small push on each beat, and nothing more. It is for show: the
 /// app cannot hear what the music service plays.
 private struct Speaker: View {
     let skin: Skin
@@ -512,8 +516,7 @@ private struct Speaker: View {
                                                  endRadius: size * 0.14))
                             .frame(width: size * 0.26, height: size * 0.26)
                     }
-                    .scaleEffect(1 + 0.07 * kick)
-                    .brightness(0.05 * kick)
+                    .scaleEffect(1 + 0.028 * kick)
                 }
                 // Grille: rows of holes punched in the skin's panel colour
                 Canvas { context, canvas in
@@ -558,14 +561,13 @@ private struct Speaker: View {
         .accessibilityHidden(true)
     }
 
-    /// How far out the cone is, from 0 to 1: a hard push on each beat and a
-    /// lighter one halfway to the next.
+    /// How far out the cone is, from 0 to 1: out on each beat of the
+    /// song's tempo, and settling back before the next.
     static func kick(at date: Date, tempo: Double, moving: Bool) -> Double {
         guard moving else { return 0 }
         let beat = date.timeIntervalSinceReferenceDate * tempo / 60
         let phase = beat - floor(beat)
-        let off = phase < 0.5 ? 1.0 : phase - 0.5
-        return min(1, exp(-phase * 6) + 0.4 * exp(-off * 9))
+        return exp(-phase * 5)
     }
 
     /// The whole speaker swelling a little with each push of the cone.
@@ -575,7 +577,7 @@ private struct Speaker: View {
 
         func body(content: Content) -> some View {
             TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !playing)) { timeline in
-                content.scaleEffect(1 + 0.018 * Speaker.kick(at: timeline.date, tempo: tempo, moving: playing))
+                content.scaleEffect(1 + 0.004 * Speaker.kick(at: timeline.date, tempo: tempo, moving: playing))
             }
         }
     }
