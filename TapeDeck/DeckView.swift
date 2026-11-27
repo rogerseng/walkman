@@ -474,7 +474,7 @@ struct TapeKey: View {
     @State private var pressed = false
 
     /// How far the key moves when pressed.
-    private let travel: CGFloat = 5
+    private let travel: CGFloat = 8
 
     var body: some View {
         let down = pressed || latched
@@ -493,7 +493,7 @@ struct TapeKey: View {
         .frame(maxWidth: .infinity)
         // The face is shorter than the key, leaving its side showing below.
         .frame(height: height - travel)
-        .background(KeyCap(corner: corner, colors: keyColors(down: down)))
+        .background(KeyCap(corner: corner, colors: keyColors(down: down), sunk: down))
         // Pressed, the face sinks until the side is hidden.
         .offset(y: down ? travel - 1 : 0)
         .frame(height: height, alignment: .top)
@@ -546,12 +546,12 @@ struct TapeKey: View {
         if accent {
             // The play key: plain pale plastic, so it stands out without colour
             return down
-                ? [Color(white: 0.74), Color(white: 0.64)]
+                ? [Color(white: 0.58), Color(white: 0.50)]
                 : [Color(white: 0.92), Color(white: 0.74)]
         }
         // Dark plastic, like the panel the keys sit in
         return down
-            ? [Color(white: 0.30), Color(white: 0.22)]
+            ? [Color(white: 0.22), Color(white: 0.16)]
             : [Color(white: 0.41), Color(white: 0.28)]
     }
 }
@@ -561,6 +561,9 @@ struct TapeKey: View {
 private struct KeyCap: View {
     let corner: CGFloat
     let colors: [Color]
+    /// Pressed in: the face sits down inside its well, so the well's upper
+    /// wall throws a shadow across it and its top edge is no longer lit.
+    var sunk = false
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: corner)
@@ -572,10 +575,20 @@ private struct KeyCap: View {
                 .fill(LinearGradient(colors: [Color.black.opacity(0.14), .clear, Color.white.opacity(0.09)],
                                      startPoint: .top, endPoint: .bottom))
                 .padding(5)
-            shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.62), Color.white.opacity(0.08),
+            shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(sunk ? 0.10 : 0.62),
+                                                       Color.white.opacity(0.08),
                                                        Color.black.opacity(0.32)],
                                               startPoint: .top, endPoint: .bottom),
                                lineWidth: 1.2)
+            if sunk {
+                shape.fill(LinearGradient(stops: [
+                    .init(color: Color.black.opacity(0.60), location: 0),
+                    .init(color: Color.black.opacity(0.22), location: 0.22),
+                    .init(color: .clear, location: 0.55)
+                ], startPoint: .top, endPoint: .bottom))
+                // The sides of the well shade the edges too
+                shape.strokeBorder(Color.black.opacity(0.35), lineWidth: 3).blur(radius: 2).clipShape(shape)
+            }
         }
     }
 }
