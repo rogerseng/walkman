@@ -62,49 +62,46 @@ struct OpenTrayView: View {
     private var uprightPlayer: some View {
         GeometryReader { geo in
             let width = geo.size.width
-            let keyHeight: CGFloat = 84
-            // The handle stands in the space beside the clock, above the
-            // safe area, so it costs the player no room.
-            let handleHeight = max(64, geo.safeAreaInsets.top)
-            // The tape is the thing to look at: the door is as wide as the
-            // case allows, and the speakers take what is left under it.
-            let doorWidth = min(width - 40, 640, (geo.size.height * 0.52 - 26) / 0.63)
+            let height = geo.size.height
+            let side: CGFloat = 26
+            let keysHeight: CGFloat = 104
+            // From the top: speaker, the strip of small controls, the tape,
+            // what is playing, and the keys. The tape gets all the height
+            // the rest can spare.
+            let grilleHeight = min(150, max(100, height * 0.15))
+            let fixed = grilleHeight + 44 + 74 + (keysHeight + 44) + 5 * 12
+            let doorWidth = min(width - side * 2 - 8, 640, (height - fixed - 26) / 0.63)
             let doorHeight = doorWidth * 0.63 + 26
             VStack(spacing: 12) {
-                topStrip
+                SpeakerGrille(colors: skin.isWheel ? skin.wheelBody : skin.panel,
+                              playing: model.motion == .playing, tempo: model.beatsPerMinute)
+                    .frame(height: grilleHeight)
+                    .modifier(Recess(corner: 12, depth: 0.7))
+                controlStrip
+                    .frame(height: 44)
                 if isMP3 {
                     playerScreen(width: doorWidth, height: doorHeight)
                 } else {
                     door(width: doorWidth, height: doorHeight)
                 }
                 nowPlaying
-                // A speaker either side of the volume fader
-                HStack(spacing: 14) {
-                    Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
-                    VolumeFader(volume: volume, playing: model.motion == .playing,
-                                tempo: model.beatsPerMinute,
-                                engraving: skin.engraving, engravingEdge: skin.engravingEdge,
-                                engravingEdgeOffset: skin.engravingEdgeOffset)
-                        .frame(width: 64)
-                        .padding(.vertical, 6)
-                    Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
-                }
-                .padding(.horizontal, 6)
-                .padding(.bottom, 4)
-                uprightKeys(height: keyHeight, below: geo.safeAreaInsets.bottom)
+                    .frame(maxHeight: .infinity)
+                keyTrough(height: keysHeight)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 10)
-            .frame(width: width, height: geo.size.height)
-            .background(
-                ZStack(alignment: .top) {
-                    bodyShell(railWidth: 0, seam: false)
-                    CarryHandle(skin: skin)
-                        .frame(width: min(320, width * 0.46), height: max(40, handleHeight - 40))
-                        .padding(.top, 22)
-                }
-                .ignoresSafeArea()
-            )
+            .padding(.horizontal, side)
+            .padding(.top, 6)
+            .padding(.bottom, 8)
+            .frame(width: width, height: height)
+            .background(recorderCase(top: geo.safeAreaInsets.top).ignoresSafeArea())
+            // The maker's name, moulded in beside the clock
+            .overlay(alignment: .topLeading) {
+                Wordmark(size: 22)
+                    .foregroundColor(skin.mark.opacity(1))
+                    .shadow(color: skin.engravingEdge.opacity(0.6), radius: 0.3, y: skin.engravingEdgeOffset)
+                    .padding(.leading, side + 4)
+                    .offset(y: -geo.safeAreaInsets.top / 2 - 12)
+                    .accessibilityHidden(true)
+            }
         }
         // Keeps the system volume control in the window so the fader can set it.
         .background(
@@ -122,34 +119,121 @@ struct OpenTrayView: View {
         }
     }
 
-    /// The closed phone's keys in a row: play, stop, fast forward, rewind,
-    /// the music library, and settings. They are set into a panel that is
-    /// the whole foot of the case, from edge to edge and down to the bottom
-    /// of the screen, as on the closed phone.
-    private func uprightKeys(height: CGFloat, below: CGFloat) -> some View {
-        TransportKeys(vertical: false, keyHeight: height, bare: true, big: true, spacing: 12,
-                      onSettings: { showSettings = true },
-                      onEject: { showShelf = true })
-            .padding(.top, 16)
-            .padding(.bottom, max(10, 18 - below))
-            .frame(maxWidth: .infinity)
-            .background(
-                ZStack(alignment: .top) {
-                    LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
-                                   startPoint: .top, endPoint: .bottom)
-                    if isMP3 { Color.black.opacity(0.22) }
-                    PlasticGrain(strength: 0.5)
-                    // The seam where the panel meets the body
-                    VStack(spacing: 0) {
-                        Rectangle().fill(Color.black.opacity(0.75)).frame(height: 2)
-                        Rectangle().fill(Color.white.opacity(0.16)).frame(height: 1)
-                    }
+    /// The recorder's case: a slab of the skin's plastic with a rolled edge
+    /// all round, lit from the top left.
+    private func recorderCase(top: CGFloat) -> some View {
+        let edge = RoundedRectangle(cornerRadius: 44)
+        return ZStack {
+            Color.black
+            LinearGradient(colors: bodyColors, startPoint: .topLeading, endPoint: .bottomTrailing)
+            PlasticGrain(strength: 0.5)
+            LinearGradient(colors: [Color.white.opacity(0.12), .clear, Color.black.opacity(0.30)],
+                           startPoint: .top, endPoint: .bottom)
+            // The rolled edge: a band that turns away from the light
+            edge.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.30), Color.white.opacity(0.04),
+                                                      Color.black.opacity(0.55)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 9)
+                .blur(radius: 3)
+            // A parting line just inside it, where the two halves of the
+            // case meet
+            edge.inset(by: 12)
+                .strokeBorder(LinearGradient(colors: [Color.black.opacity(0.7), Color.white.opacity(0.16)],
+                                             startPoint: .top, endPoint: .bottom), lineWidth: 1.2)
+        }
+    }
+
+    /// The narrow strip between the speaker and the tape: which side is up,
+    /// the lamp, and the volume laid on its side.
+    private var controlStrip: some View {
+        HStack(spacing: 12) {
+            Text(model.hasTape ? "SIDE \(model.sideLetter)" : (isMP3 ? "MP3 PLAYER" : "CASSETTE DECK"))
+                .font(Typeface.displayFixed(10))
+                .tracking(1.6)
+                .foregroundColor(skin.engraving)
+                .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
+            Circle()
+                .fill(model.motion == .playing ? theme.accentColor : Color.black.opacity(0.6))
+                .frame(width: 9, height: 9)
+                .overlay(Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 1))
+                .shadow(color: model.motion == .playing ? theme.accentColor : .clear, radius: 5)
+            Spacer(minLength: 8)
+            Text("VOLUME")
+                .font(Typeface.displayFixed(8))
+                .tracking(1.6)
+                .foregroundColor(skin.engraving)
+                .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
+            // Laid on its side: the loud end is on the right.
+            GeometryReader { room in
+                VolumeFader(volume: volume, playing: model.motion == .playing,
+                            tempo: model.beatsPerMinute,
+                            engraving: skin.engraving, engravingEdge: skin.engravingEdge,
+                            engravingEdgeOffset: skin.engravingEdgeOffset)
+                    .frame(width: 44, height: room.size.width)
+                    .rotationEffect(.degrees(90))
+                    .frame(width: room.size.width, height: room.size.height)
+            }
+            .frame(maxWidth: 300)
+        }
+        .padding(.horizontal, 6)
+    }
+
+    /// The keys: play, stop, fast forward, rewind, the music library and
+    /// settings, side by side in a trough cut into the foot of the case,
+    /// with what each one does lettered on the ledge above it.
+    private func keyTrough(height: CGFloat) -> some View {
+        let keys: [(symbol: String, word: String)] = [
+            ("play.fill", "PLAY"), ("stop.fill", "STOP"), ("forward.fill", "F.FWD"),
+            ("backward.fill", "REW"), (BeamedNotes.symbol, "MUSIC"), ("gearshape.fill", "SET UP")
+        ]
+        return VStack(spacing: 0) {
+            // The lettered ledge
+            HStack(spacing: 3) {
+                ForEach(keys, id: \.word) { key in
+                    Text(key.word)
+                        .font(Typeface.displayFixed(9.5))
+                        .tracking(1.2)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity)
                 }
-                // Out to the edges of the screen and down past the safe area
-                .padding(.horizontal, -20)
-                .padding(.bottom, -below)
-                .shadow(color: .black.opacity(0.45), radius: 8, y: -3)
-            )
+            }
+            .foregroundColor(Color.white.opacity(0.82))
+            .frame(height: 22)
+            .background(Color.black.opacity(0.72))
+            .accessibilityHidden(true)
+            // The keys, shoulder to shoulder
+            HStack(alignment: .bottom, spacing: 3) {
+                PianoKey(symbol: "play.fill", label: "Play", accent: true,
+                         latched: model.motion == .playing, height: height,
+                         onDown: { model.playKey() })
+                PianoKey(symbol: "stop.fill", label: "Stop",
+                         latched: model.hasTape && (model.motion == .paused || model.motion == .stopped),
+                         height: height, onDown: { model.stopKey() })
+                PianoKey(symbol: "forward.fill", label: "Fast forward",
+                         latched: model.motion == .fastForward, height: height,
+                         onDown: { model.seekKeyDown(forward: true) },
+                         onUp: { model.seekKeyUp(forward: true) })
+                PianoKey(symbol: "backward.fill", label: "Rewind",
+                         latched: model.motion == .rewind, height: height,
+                         onDown: { model.seekKeyDown(forward: false) },
+                         onUp: { model.seekKeyUp(forward: false) })
+                PianoKey(symbol: BeamedNotes.symbol, label: "Music library", height: height,
+                         onDown: {
+                             model.ejectKey(removeTape: false)
+                             showShelf = true
+                         })
+                PianoKey(symbol: "gearshape.fill", label: "Settings", dark: true, height: height,
+                         onDown: {
+                             Haptics.keyDown()
+                             showSettings = true
+                         })
+            }
+            .padding(.horizontal, 5)
+            .padding(.top, 8)
+            .padding(.bottom, 5)
+            .background(Color(white: 0.02))
+        }
+        .modifier(Recess(corner: 9, depth: 1))
     }
 
     // MARK: Beside the shelf
@@ -609,40 +693,6 @@ struct OpenTrayView: View {
             try? await Task.sleep(nanoseconds: 650_000_000)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { doorOpen = false }
         }
-    }
-}
-
-/// The boombox's carrying handle: a hand hole cut clean through the top of
-/// the case, dark inside, with the wall of the cut catching the light along
-/// its lower lip.
-private struct CarryHandle: View {
-    let skin: Skin
-
-    var body: some View {
-        GeometryReader { geo in
-            let slot = RoundedRectangle(cornerRadius: min(22, geo.size.height * 0.4))
-            ZStack {
-                // Through the hole: the dark behind the case
-                slot.fill(LinearGradient(colors: [Color.black, Color(white: 0.07)],
-                                         startPoint: .top, endPoint: .bottom))
-                // The case has thickness: its upper wall is in shadow
-                slot.strokeBorder(Color.black.opacity(0.9), lineWidth: 10)
-                    .blur(radius: 6)
-                    .offset(y: 5)
-                    .clipShape(slot)
-                // and its lower wall faces the light
-                slot.strokeBorder(LinearGradient(colors: [.clear, .clear, Color.white.opacity(0.22)],
-                                                 startPoint: .top, endPoint: .bottom), lineWidth: 3)
-                // The edge of the cut, dark above and lit below
-                slot.strokeBorder(LinearGradient(colors: [Color.black.opacity(0.85), Color.white.opacity(0.28)],
-                                                 startPoint: .top, endPoint: .bottom), lineWidth: 1.2)
-            }
-            // A soft roll of the case round the hole
-            .background(
-                slot.stroke(Color.white.opacity(0.10), lineWidth: 2).blur(radius: 1.5).offset(y: 1.5)
-            )
-        }
-        .accessibilityHidden(true)
     }
 }
 
