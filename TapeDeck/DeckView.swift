@@ -411,17 +411,19 @@ struct ClearButtonStyle: ButtonStyle {
     }
 }
 
-struct OrangeButtonStyle: ButtonStyle {
+/// A plain light button, for the few places that need an ordinary one.
+struct PlainKeyButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 14, weight: .bold))
-            .foregroundColor(.white)
+            .foregroundColor(Color(white: 0.10))
             .background(
-                RoundedRectangle(cornerRadius: 7)
-                    .fill(Color(red: 0.96, green: 0.48, blue: 0.13))
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(LinearGradient(colors: [Color(white: 0.96), Color(white: 0.76)],
+                                         startPoint: .top, endPoint: .bottom))
                     .brightness(configuration.isPressed ? -0.15 : 0)
             )
-            .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Color.black.opacity(0.35), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Color.black.opacity(0.35), lineWidth: 1))
             .offset(y: configuration.isPressed ? 2 : 0)
     }
 }

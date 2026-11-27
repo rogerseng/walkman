@@ -34,7 +34,7 @@ struct ShelfView: View {
             }
             .navigationTitle("Tape Shelf")
             .navigationBarTitleDisplayMode(.inline)
-            .background(Color(red: 0.13, green: 0.10, blue: 0.08).ignoresSafeArea())
+            .background(Color(white: 0.05).ignoresSafeArea())
         }
     }
 
@@ -96,7 +96,7 @@ struct ShelfView: View {
             Button(action: action) {
                 Text(button).padding(.horizontal, 18).padding(.vertical, 10)
             }
-            .buttonStyle(OrangeButtonStyle())
+            .buttonStyle(PlainKeyButtonStyle())
         }
         .foregroundColor(.white)
         .padding(32)
@@ -104,56 +104,65 @@ struct ShelfView: View {
     }
 }
 
-/// A cassette seen edge on, as it sits on a shelf.
+/// A cassette in its case, seen edge on as it sits on a shelf: a paper spine
+/// card behind clear plastic, in greys and off-white like the rest of the app.
 struct TapeSpine: View {
     let tape: Tape
 
-    private static let stripes: [Color] = [
-        Color(red: 0.96, green: 0.48, blue: 0.13),
-        Color(red: 0.89, green: 0.24, blue: 0.16),
-        Color(red: 0.97, green: 0.76, blue: 0.19),
-        Color(red: 0.20, green: 0.55, blue: 0.60),
-        Color(red: 0.30, green: 0.40, blue: 0.75),
-        Color(red: 0.45, green: 0.62, blue: 0.30)
+    private static let bands: [Color] = [
+        Color(white: 0.16), Color(white: 0.28), Color(white: 0.40), Color(white: 0.52), Color(white: 0.66)
     ]
+    private let ink = Color(red: 0.07, green: 0.10, blue: 0.33)
 
-    /// The same tape always gets the same stripe.
-    private var stripe: Color {
+    /// The same tape always gets the same shade of band.
+    private var band: Color {
         let sum = tape.id.unicodeScalars.reduce(0) { ($0 + Int($1.value)) % 9973 }
-        return Self.stripes[sum % Self.stripes.count]
+        return Self.bands[sum % Self.bands.count]
     }
 
     var body: some View {
         HStack(spacing: 10) {
-            stripe.frame(width: 10)
+            band.frame(width: 8)
             Group {
                 if let artwork = tape.artwork {
                     ArtworkImage(artwork, width: 40, height: 40)
                 } else {
                     Image(systemName: "music.note")
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(Color(white: 0.45))
                         .frame(width: 40, height: 40)
-                        .background(Color(white: 0.85))
+                        .background(Color(white: 0.82))
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 3))
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text(tape.title)
-                    .font(.custom("MarkerFelt-Wide", size: 17))
-                    .foregroundColor(Color(red: 0.10, green: 0.12, blue: 0.35))
+                    .font(.custom("BradleyHandITCTT-Bold", size: 18))
+                    .foregroundColor(ink.opacity(0.92))
                 Text(tape.subtitle)
                     .font(.system(size: 12))
-                    .foregroundColor(Color(white: 0.35))
+                    .foregroundColor(Color(white: 0.38))
             }
             .lineLimit(1)
             Spacer(minLength: 0)
-            stripe.frame(width: 4)
+            Text("90")
+                .font(.system(size: 13, weight: .light))
+                .foregroundColor(Color(white: 0.45))
         }
-        .padding(.trailing, 10)
+        .padding(.trailing, 12)
         .frame(height: 52)
-        .background(Color(red: 0.95, green: 0.91, blue: 0.81))
+        .background(
+            LinearGradient(colors: [Color(red: 0.96, green: 0.95, blue: 0.92),
+                                    Color(red: 0.89, green: 0.88, blue: 0.84)],
+                           startPoint: .top, endPoint: .bottom)
+        )
+        // Light on the clear case over the card
+        .overlay(
+            LinearGradient(colors: [Color.white.opacity(0.35), .clear, Color.black.opacity(0.08)],
+                           startPoint: .top, endPoint: .bottom)
+                .allowsHitTesting(false)
+        )
         .clipShape(RoundedRectangle(cornerRadius: 5))
-        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.black.opacity(0.4), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
         .contentShape(Rectangle())
     }
 }
