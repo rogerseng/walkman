@@ -375,6 +375,8 @@ struct TransportKeys: View {
     /// True where eject should take the tape out; false where it only opens
     /// the shelf to pick another.
     var ejectRemovesTape = false
+    /// If set, a settings key is added at the end.
+    var onSettings: (() -> Void)?
     var onEject: () -> Void = {}
 
     var body: some View {
@@ -414,6 +416,14 @@ struct TransportKeys: View {
                         model.ejectKey(removeTape: ejectRemovesTape)
                         onEject()
                     })
+            if let onSettings {
+                TapeKey(symbol: "gearshape.fill", label: "Settings",
+                        height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
+                        onDown: {
+                            Haptics.keyDown()
+                            onSettings()
+                        })
+            }
         }
         .padding(bare ? 0 : 6)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(bare ? 0 : 0.28)))

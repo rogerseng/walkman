@@ -1,9 +1,11 @@
 import SwiftUI
 
 /// The open phone's right half: the chosen tape lying in the tray, waiting for
-/// the phone to be closed. The keys are here too, for screens that cannot fold.
+/// the phone to be closed. The keys are here too, the same ones as on the
+/// closed phone, for screens that cannot fold.
 struct OpenTrayView: View {
     @EnvironmentObject private var model: PlayerModel
+    @State private var showSettings = false
 
     private var hint: String {
         if !model.hasTape { return "Choose a tape" }
@@ -49,7 +51,11 @@ struct OpenTrayView: View {
                 }
                 .buttonStyle(PlainKeyButtonStyle())
             }
-            TransportKeys(vertical: false, ejectRemovesTape: true)
+            // The same keys as the closed phone, laid in a row: play/pause,
+            // fast forward, rewind, eject and settings.
+            TransportKeys(vertical: false, keyHeight: 82, bare: true, big: true, spacing: 12,
+                          ejectRemovesTape: true, onSettings: { showSettings = true })
+                .frame(maxWidth: 5 * 66 + 4 * 12)
         }
         .padding(20)
         .background(
@@ -57,5 +63,8 @@ struct OpenTrayView: View {
                            center: .center, startRadius: 20, endRadius: 520)
                 .ignoresSafeArea()
         )
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
     }
 }
