@@ -29,7 +29,7 @@
 
 **The MP3 player.** It was redesigned so it does not look like an iPod: a jog dial with no buttons on it, separate keys, an amber display, and Cassety's own case colours. That removes the obvious reason for a rejection but does not guarantee approval. Do not call it an iPod, or compare it to one, anywhere in the listing.
 
-**Click-wheel skins.** Apple has removed apps whose players looked like the iPod. The two click-wheel skins are Cassety's own drawing and do not use the iPod name or Apple's graphics, but the resemblance is the point of them. They are switched off for the store build. To include them, set `includesClickWheel` to true in `Skin.swift`. Doing so raises the chance of rejection.
+**Click-wheel skins.** Apple has removed apps whose players looked like the iPod. The two click-wheel skins are Cassety's own drawing and do not use the iPod name or Apple's graphics, but the resemblance is the point of them. They are left out of the build you archive for the App Store automatically, and included when you run the app from Xcode onto your own phone. Before uploading, check the skin list in the archived build shows only Smoke and Yellow.
 
 **Other companies' names.** Do not use "Walkman", "iPod", "Maxell" or similar in the name, subtitle, screenshots or description. The listing text here avoids them.
 

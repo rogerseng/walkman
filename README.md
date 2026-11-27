@@ -40,7 +40,7 @@ The colour of the case, for either player:
 
 On a pale skin a dark plate sits behind the Duo's clock so it stays readable. Skins apply to the closed screen. A new colour is one more case in `Skin.swift`.
 
-Two more skins, a black and a silver click-wheel player, are in the code but switched off (`includesClickWheel` in `Skin.swift`). They resemble the iPod closely enough to risk rejection from the App Store, so they are for personal builds only.
+Two more skins, a black and a silver click-wheel player, are for your own phone only. They resemble the iPod closely enough to risk rejection from the App Store. They appear in the skin list when the app is run from Xcode onto a device (a Debug build) and are left out of the build archived for the App Store (a Release build). The switch is `includesClickWheel` in `Skin.swift`.
 
 ## Settings
 

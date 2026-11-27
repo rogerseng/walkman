@@ -16,9 +16,17 @@ enum Skin: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     /// Whether the click-wheel skins are offered. They are built and working,
-    /// but left out of the App Store build: Apple has removed apps whose
-    /// players resembled the iPod. Set this to true to bring them back.
-    static let includesClickWheel = false
+    /// but Apple has removed apps whose players resembled the iPod, so they
+    /// must not go to the App Store. They are on in a build run straight from
+    /// Xcode onto your own phone (Debug) and off in the build that is archived
+    /// and uploaded for sale (Release).
+    static let includesClickWheel: Bool = {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }()
 
     /// The skins a person can choose from.
     static var offered: [Skin] {
