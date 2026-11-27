@@ -73,7 +73,8 @@ struct VolumeFader: View {
     @ObservedObject var volume: SystemVolume
     @State private var lastStep = -1
 
-    private let capHeight: CGFloat = 28
+    private let capHeight: CGFloat = 22
+    private let capWidth: CGFloat = 38
     private let steps = 16.0
 
     var body: some View {
@@ -107,9 +108,10 @@ struct VolumeFader: View {
                                          startPoint: .top, endPoint: .bottom))
                     .overlay(Rectangle().fill(Color(white: 0.15)).frame(height: 1.5))
                     .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.black.opacity(0.5), lineWidth: 0.75))
-                    .frame(width: 30, height: capHeight)
+                    .frame(width: capWidth, height: capHeight)
                     .shadow(color: .black.opacity(0.55), radius: 3, y: 2)
-                    .offset(x: 3, y: capTop)
+                    // Centred on the groove
+                    .offset(y: capTop)
                     .frame(maxWidth: .infinity)
             }
             .contentShape(Rectangle())

@@ -86,8 +86,8 @@ struct DeckView: View {
             // Volume: on the solid panel, level with the window and as tall as it
             .overlay(alignment: .topLeading) {
                 VolumeFader(volume: volume)
-                    .frame(width: 40, height: window.height)
-                    .offset(x: railLeading ? panelWidth - 66 : full.width - panelWidth + 26, y: window.minY)
+                    .frame(width: 48, height: window.height)
+                    .offset(x: railLeading ? panelWidth - 70 : full.width - panelWidth + 22, y: window.minY)
             }
             .ignoresSafeArea()
         }
@@ -107,7 +107,7 @@ struct DeckView: View {
     /// The part of the cassette the window shows, in millimetres of its
     /// 100 x 63 shell: the label strip and both reels. Everything else, the
     /// ends, the guide rollers and the head opening, is under the casing.
-    private let windowOnCassette = CGRect(x: 19, y: 5.5, width: 62, height: 35.5)
+    private let windowOnCassette = CGRect(x: 19, y: 5.5, width: 62, height: 33.5)
 
     /// The cassette filling the whole screen (on end when the screen is
     /// taller than wide, head opening toward the keys), with the player's
