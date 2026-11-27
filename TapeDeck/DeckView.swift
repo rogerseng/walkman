@@ -384,8 +384,9 @@ struct TransportKeys: View {
         let labels = !vertical && !big
         layout {
             if big {
-                // Down and lit while the tape plays; press again to pause.
-                TapeKey(symbol: model.motion == .playing ? "pause.fill" : "play.fill",
+                // One key marked with both symbols, as on a real deck. It
+                // never changes its face: down means playing, up means not.
+                TapeKey(symbol: "playpause.fill",
                         label: model.motion == .playing ? "Pause" : "Play",
                         accent: true, latched: model.motion == .playing,
                         height: keyHeight, showsLabel: false, corner: corner, symbolSize: symbol,
