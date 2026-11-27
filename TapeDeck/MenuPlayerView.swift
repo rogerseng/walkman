@@ -433,25 +433,18 @@ struct MenuPlayerView: View {
             }
             .shadow(color: edge, radius: 0.3, y: pale ? 0.8 : -0.8)
 
-            // The gap round the middle button
+            // The middle button sits flush with the wheel, not proud of it:
+            // an even face with a fine seam round it, shadowed along the top
+            // of the seam and lit along the bottom.
             Circle()
-                .fill(Color.black.opacity(pale ? 0.35 : 0.75))
-                .frame(width: diameter * 0.385, height: diameter * 0.385)
-                .blur(radius: 1.2)
-            // The middle button: a shallow dome
-            Circle()
-                .fill(RadialGradient(colors: [skin.wheelCentre[0], skin.wheelCentre[1]],
-                                     center: UnitPoint(x: 0.36, y: 0.30), startRadius: 0,
-                                     endRadius: diameter * 0.24))
+                .fill(LinearGradient(colors: skin.wheelCentre, startPoint: .top, endPoint: .bottom))
                 .overlay(
-                    Circle().strokeBorder(LinearGradient(colors: [Color.white.opacity(pale ? 0.95 : 0.35),
-                                                                  Color.black.opacity(pale ? 0.30 : 0.7)],
+                    Circle().strokeBorder(LinearGradient(colors: [Color.black.opacity(pale ? 0.38 : 0.85),
+                                                                  Color.white.opacity(pale ? 0.95 : 0.22)],
                                                          startPoint: .top, endPoint: .bottom), lineWidth: 1.2)
                 )
                 .frame(width: diameter * 0.36, height: diameter * 0.36)
-                .shadow(color: .black.opacity(pale ? 0.25 : 0.5), radius: 2.5, y: 1.5)
-                // Pressed, it sinks and darkens
-                .scaleEffect(zone == .centre ? 0.975 : 1)
+                // Pressed, it darkens
                 .brightness(zone == .centre ? -0.08 : 0)
         }
         .foregroundColor(skin.wheelLettering)

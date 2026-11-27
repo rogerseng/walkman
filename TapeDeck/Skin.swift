@@ -122,8 +122,8 @@ enum Skin: String, CaseIterable, Identifiable {
     /// The button in the middle of the wheel.
     var wheelCentre: [Color] {
         self == .wheelSilver
-            ? [Color(white: 0.97), Color(white: 0.72)]
-            : [Color(white: 0.22), Color(white: 0.05)]
+            ? [Color(white: 0.90), Color(white: 0.84)]
+            : [Color(white: 0.15), Color(white: 0.11)]
     }
 
     /// For the picker in settings.
