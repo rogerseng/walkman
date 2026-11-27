@@ -4,6 +4,20 @@ import SwiftUI
 /// end: a slab of moulded plastic with a speaker grille at the top, the
 /// cassette door under it, and a row of piano keys in a trough at the foot.
 
+/// Where the iPhone Duo's column of keys sits. The closed phone and the open
+/// phone held sideways both use these, so the keys stay under the thumb in
+/// the same place when the phone is folded or unfolded.
+enum DuoRail {
+    /// Height of each key, and the gap between them.
+    static let keyHeight: CGFloat = 66
+    static let gap: CGFloat = 10
+    /// From the bottom of the screen to the bottom of the last key.
+    static let bottomGap: CGFloat = 35
+    /// From the right edge of the screen to the keys, and their width.
+    static let outerMargin: CGFloat = 15
+    static let keyWidth: CGFloat = 66
+}
+
 /// A hollow cut into the case: dark inside, with the wall above it in shadow
 /// and the lip below it catching the light.
 struct Recess: ViewModifier {

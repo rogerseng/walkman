@@ -685,13 +685,16 @@ struct DeckView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 16)
                 } else {
-                    Color.clear.frame(height: statusHeight)
+                    // Fixed size and fixed distance from the foot, shared
+                    // with the open phone, so the keys do not move when the
+                    // phone is unfolded.
+                    Spacer(minLength: statusHeight)
                 }
-                railKeys(height: keyHeight)
+                railKeys(height: fromFoot ? keyHeight : DuoRail.keyHeight)
                 if fromFoot {
                     Color.clear.frame(height: foot)
                 } else {
-                    Spacer(minLength: 0)
+                    Color.clear.frame(height: DuoRail.bottomGap)
                 }
             }
             .frame(width: railKeyWidth)

@@ -448,8 +448,7 @@ struct OpenTrayView: View {
             .clipped()
             .overlay(alignment: .topTrailing) {
                 if rail {
-                    keyRail(height: geo.size.height,
-                            statusHeight: max(0, railStatusHeight - geo.safeAreaInsets.top))
+                    keyRail(height: geo.size.height, bottomInset: geo.safeAreaInsets.bottom)
                         // Out of the safe area and into the rail
                         .offset(x: railWidth - railOuterMargin)
                 }
@@ -457,6 +456,9 @@ struct OpenTrayView: View {
             .background(bodyShell(railWidth: rail ? railWidth : 0).ignoresSafeArea())
         }
         .onChange(of: model.hasTape) { _, _ in swingDoor() }
+        .fullScreenCover(isPresented: $showSettings) {
+            SettingsView()
+        }
     }
 
     // MARK: Parts
@@ -470,19 +472,26 @@ struct OpenTrayView: View {
     /// much panel on their left as on their right.
     private let railPanelReach: CGFloat = 12
 
-    /// The column of keys in the rail: play, stop, fast forward, rewind and
-    /// eject. Settings is on the shelf.
-    private func keyRail(height: CGFloat, statusHeight: CGFloat) -> some View {
-        let gap: CGFloat = 10
-        let room = height - statusHeight - 12
-        let keyHeight = min(84, max(36, (room - 4 * gap) / 5))
-        return VStack(spacing: 0) {
-            Color.clear.frame(height: statusHeight)
-            TransportKeys(vertical: true, keyHeight: keyHeight, bare: true, big: true, spacing: gap,
-                          ejectRemovesTape: true)
+    /// The column of keys in the rail: play, stop, fast forward, rewind,
+    /// eject and settings. Six keys of the same size and at the same height
+    /// from the foot as on the closed phone, so they stay put under the
+    /// thumb when the phone is unfolded.
+    private func keyRail(height: CGFloat, bottomInset: CGFloat) -> some View {
+        VStack(spacing: DuoRail.gap) {
             Spacer(minLength: 0)
+            TransportKeys(vertical: true, keyHeight: DuoRail.keyHeight, bare: true, big: true,
+                          spacing: DuoRail.gap, ejectRemovesTape: true)
+            TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
+                    height: DuoRail.keyHeight, showsLabel: false, corner: 17, symbolSize: 23,
+                    onDown: {
+                        model.keyClick()
+                        TransportKeys.afterKeyGoesDown { showSettings = true }
+                    })
         }
-        .frame(width: railKeyWidth, height: height)
+        .frame(width: DuoRail.keyWidth, height: height)
+        // This frame ends at the safe area; the keys end the same distance
+        // from the screen's foot as on the closed phone.
+        .offset(y: bottomInset - DuoRail.bottomGap)
     }
 
     /// The solid panel the keys stand on, down the right edge.
