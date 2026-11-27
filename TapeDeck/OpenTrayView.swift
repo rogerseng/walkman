@@ -2,7 +2,9 @@ import SwiftUI
 
 /// The open phone's right half: a boombox in the colours of the chosen skin.
 /// From the top: the maker's name and a power lamp, the cassette door with
-/// the tape behind its window, what is playing, the keys, and the speaker.
+/// the tape behind its window, what is playing and how far through it is, and
+/// the speakers. The keys stand in a column down the right, on a panel of
+/// their own under the clock, as they do on the closed phone.
 /// The door swings open and the tape slides out or in whenever a tape is
 /// ejected or put in.
 struct OpenTrayView: View {
@@ -28,15 +30,19 @@ struct OpenTrayView: View {
     var body: some View {
         GeometryReader { geo in
             let width = geo.size.width
-            // The door takes about a third of the height at most, so the
-            // keys and speakers always have room under it.
-            let doorWidth = min(width - 36, 420, (geo.size.height * 0.36 - 26) / 0.63)
+            // The Duo keeps a rail clear down the right for its camera and
+            // clock. The keys go in it, below them.
+            let railWidth = geo.safeAreaInsets.trailing
+            let rail = railWidth >= 60
+            // The door takes part of the height at most, so the speakers
+            // (and the keys, where they sit below) always have room.
+            let doorWidth = min(width - 36, 420, (geo.size.height * (rail ? 0.42 : 0.36) - 26) / 0.63)
             let doorHeight = doorWidth * 0.63 + 26
             VStack(spacing: 14) {
                 topStrip
                 door(width: doorWidth, height: doorHeight)
                 nowPlaying
-                keyBed
+                if !rail { keyBed }
                 // A pair of speakers where there is the width for them, one
                 // large one where the space is tall
                 GeometryReader { room in
@@ -55,15 +61,70 @@ struct OpenTrayView: View {
             .padding(.top, 14)
             .padding(.bottom, 16)
             .frame(width: width, height: geo.size.height)
+            .overlay(alignment: .topTrailing) {
+                if rail {
+                    keyRail(height: geo.size.height,
+                            statusHeight: max(0, railStatusHeight - geo.safeAreaInsets.top))
+                        // Out of the safe area and into the rail
+                        .offset(x: railWidth - railOuterMargin)
+                }
+            }
+            .background(bodyShell(railWidth: rail ? railWidth : 0).ignoresSafeArea())
         }
-        .background(bodyShell.ignoresSafeArea())
         .onChange(of: model.hasTape) { _, _ in swingDoor() }
     }
 
     // MARK: Parts
 
+    /// Height kept clear at the top of the rail for the camera, clock and
+    /// status icons, measured from the top of the screen.
+    private let railStatusHeight: CGFloat = 116
+    private let railKeyWidth: CGFloat = 66
+    private let railOuterMargin: CGFloat = 15
+
+    /// The column of keys in the rail: play, stop, fast forward, rewind and
+    /// eject. Settings is on the shelf.
+    private func keyRail(height: CGFloat, statusHeight: CGFloat) -> some View {
+        let gap: CGFloat = 10
+        let room = height - statusHeight - 12
+        let keyHeight = min(84, max(36, (room - 4 * gap) / 5))
+        return VStack(spacing: 0) {
+            Color.clear.frame(height: statusHeight)
+            TransportKeys(vertical: true, keyHeight: keyHeight, bare: true, big: true, spacing: gap,
+                          ejectRemovesTape: true)
+            Spacer(minLength: 0)
+        }
+        .frame(width: railKeyWidth, height: height)
+    }
+
+    /// The solid panel the keys stand on, down the right edge.
+    private func keyPanel(width: CGFloat) -> some View {
+        ZStack(alignment: .topTrailing) {
+            LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
+                           startPoint: .top, endPoint: .bottom)
+            PlasticGrain(strength: 0.5)
+            // The seam where the panel meets the body
+            HStack(spacing: 0) {
+                Rectangle().fill(Color.black.opacity(0.75)).frame(width: 2)
+                Rectangle().fill(Color.white.opacity(0.16)).frame(width: 1)
+                Spacer(minLength: 0)
+            }
+            // On a pale case, a dark plate behind the clock and status
+            // icons, which the system draws in white.
+            if skin.needsStatusPlate {
+                RoundedRectangle(cornerRadius: 26)
+                    .fill(Color.black.opacity(0.78))
+                    .frame(width: railKeyWidth, height: railStatusHeight - 16)
+                    .padding(.trailing, railOuterMargin)
+                    .padding(.top, 8)
+            }
+        }
+        .frame(width: width)
+        .shadow(color: .black.opacity(0.5), radius: 8, x: -3)
+    }
+
     /// The moulded body: the skin's case colour, grain, and light from above.
-    private var bodyShell: some View {
+    private func bodyShell(railWidth: CGFloat) -> some View {
         ZStack {
             Color.black
             LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.casing,
@@ -76,6 +137,10 @@ struct OpenTrayView: View {
                 Rectangle().fill(Color.black.opacity(0.7)).frame(width: 2)
                 Rectangle().fill(Color.white.opacity(0.18)).frame(width: 1)
                 Spacer()
+            }
+            if railWidth > 0 {
+                keyPanel(width: railWidth + 4)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
     }
@@ -177,6 +242,8 @@ struct OpenTrayView: View {
             .foregroundColor(skin.note)
             .frame(maxWidth: .infinity, minHeight: 36)
 
+            if model.hasTape, model.duration > 0 { timeline }
+
             if model.hasTape, model.canFlip {
                 Button {
                     model.flipTape()
@@ -188,6 +255,36 @@ struct OpenTrayView: View {
                 .buttonStyle(PlainKeyButtonStyle())
             }
         }
+    }
+
+    /// How far through the song the tape is: a bar, with the time gone and
+    /// the time left under its ends.
+    private var timeline: some View {
+        let done = min(1, max(0, model.elapsed / model.duration))
+        return VStack(spacing: 5) {
+            GeometryReader { bar in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.black.opacity(0.45))
+                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+                    Capsule()
+                        .fill(theme.accentColor)
+                        .frame(width: max(6, bar.size.width * CGFloat(done)))
+                        .shadow(color: theme.accentColor.opacity(0.6), radius: 4)
+                }
+            }
+            .frame(height: 6)
+            HStack {
+                Text(TransportKeys.clock(model.elapsed))
+                Spacer()
+                Text("-" + TransportKeys.clock(max(0, model.duration - model.elapsed)))
+            }
+            .font(.system(size: 11, weight: .semibold).monospacedDigit())
+            .foregroundColor(skin.note.opacity(0.85))
+        }
+        .frame(maxWidth: 360)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Song position")
+        .accessibilityValue("\(TransportKeys.clock(model.elapsed)) of \(TransportKeys.clock(model.duration))")
     }
 
     /// The keys, set in a recessed bed of the skin's panel colour: play,
@@ -224,7 +321,8 @@ struct OpenTrayView: View {
 }
 
 /// The boombox's speaker: a perforated grille over a cone, in a trim ring.
-/// The cone moves a little in time while a tape plays. It is for show: the
+/// The cone pumps in and out in time while a tape plays, hard on the beat
+/// and lightly between beats, and the whole speaker shakes a touch with it. It is for show: the
 /// app cannot hear what the music service plays.
 private struct Speaker: View {
     let skin: Skin
@@ -242,10 +340,8 @@ private struct Speaker: View {
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
                 Circle().fill(Color(white: 0.06)).padding(size * 0.035)
                 // The cone, seen through the grille
-                TimelineView(.animation(minimumInterval: 1.0 / 20.0, paused: !playing || reduceMotion)) { timeline in
-                    let time = timeline.date.timeIntervalSinceReferenceDate
-                    let beat = time * tempo / 60
-                    let kick = playing && !reduceMotion ? exp(-(beat - floor(beat)) * 5) : 0
+                TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !playing || reduceMotion)) { timeline in
+                    let kick = Self.kick(at: timeline.date, tempo: tempo, moving: playing && !reduceMotion)
                     ZStack {
                         Circle()
                             .fill(RadialGradient(colors: [Color(white: 0.20), Color(white: 0.09), Color(white: 0.16)],
@@ -257,7 +353,8 @@ private struct Speaker: View {
                                                  endRadius: size * 0.14))
                             .frame(width: size * 0.26, height: size * 0.26)
                     }
-                    .scaleEffect(1 + 0.012 * kick)
+                    .scaleEffect(1 + 0.07 * kick)
+                    .brightness(0.05 * kick)
                 }
                 // Grille: rows of holes punched in the skin's panel colour
                 Canvas { context, canvas in
@@ -296,8 +393,31 @@ private struct Speaker: View {
             }
             .frame(width: size, height: size)
             .shadow(color: .black.opacity(0.55), radius: 8, y: 5)
+            .modifier(Thump(playing: playing && !reduceMotion, tempo: tempo))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .accessibilityHidden(true)
+    }
+
+    /// How far out the cone is, from 0 to 1: a hard push on each beat and a
+    /// lighter one halfway to the next.
+    static func kick(at date: Date, tempo: Double, moving: Bool) -> Double {
+        guard moving else { return 0 }
+        let beat = date.timeIntervalSinceReferenceDate * tempo / 60
+        let phase = beat - floor(beat)
+        let off = phase < 0.5 ? 1.0 : phase - 0.5
+        return min(1, exp(-phase * 6) + 0.4 * exp(-off * 9))
+    }
+
+    /// The whole speaker swelling a little with each push of the cone.
+    private struct Thump: ViewModifier {
+        let playing: Bool
+        let tempo: Double
+
+        func body(content: Content) -> some View {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !playing)) { timeline in
+                content.scaleEffect(1 + 0.018 * Speaker.kick(at: timeline.date, tempo: tempo, moving: playing))
+            }
+        }
     }
 }
