@@ -234,7 +234,7 @@ struct MenuPlayerView: View {
         let inner = max(0, width - railKeyWidth - railOuterMargin)
         return VStack(spacing: keyGap) {
             if !rail { Spacer(minLength: 0) }
-            TapeKey(symbol: "arrow.uturn.backward", label: "Back",
+            TapeKey(symbol: "arrow.uturn.backward", label: "Back", dark: true,
                     height: keyHeight, showsLabel: false, corner: 17, symbolSize: 21,
                     onDown: { back() })
             TapeKey(symbol: "playpause.fill", label: model.motion == .playing ? "Pause" : "Play",
