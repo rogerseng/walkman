@@ -16,6 +16,8 @@ struct SettingsView: View {
     @AppStorage(Prefs.autoFlip) private var autoFlipOn = false
     @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
+    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.introSeen) private var introSeen = true
 
     @State private var backup = BackupDocument(data: Data())
     @State private var savingBackup = false
@@ -33,6 +35,24 @@ struct SettingsView: View {
                     Text("Sound")
                 } footer: {
                     Text("Deck sounds are the key clunks, the door and the motor while winding. Hiss is the soft noise under the music. They play over the music and are not silenced by the mute switch.")
+                }
+
+                Section("Skin") {
+                    ForEach(Skin.allCases) { skin in
+                        Button {
+                            Haptics.detent()
+                            skinName = skin.rawValue
+                        } label: {
+                            HStack(spacing: 12) {
+                                SkinSwatch(skin: skin, chosen: skinName == skin.rawValue)
+                                Text(skin.name).foregroundColor(.primary)
+                                Spacer()
+                                if skinName == skin.rawValue {
+                                    Image(systemName: "checkmark").foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Section {
@@ -102,6 +122,10 @@ struct SettingsView: View {
                     Label("Tap fast forward or rewind to skip a song. Hold to wind the tape.", systemImage: "forward.fill")
                     Label("Double-tap the tape to turn it over.", systemImage: "arrow.triangle.2.circlepath")
                     Label("Open the phone to choose a tape, then close it to start playing.", systemImage: "rectangle.portrait.on.rectangle.portrait")
+                    Button("Show the introduction again") {
+                        dismiss()
+                        introSeen = false
+                    }
                 }
 
                 Section {

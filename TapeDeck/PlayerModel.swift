@@ -229,7 +229,11 @@ final class PlayerModel: ObservableObject {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
-        return try? encoder.encode(Backup(library: library, settings: settings))
+        var choices: [String: String] = [:]
+        for key in CloudSync.syncedChoices {
+            choices[key] = UserDefaults.standard.string(forKey: key)
+        }
+        return try? encoder.encode(Backup(library: library, settings: settings, choices: choices))
     }
 
     /// Restores from a backup file. Settings are set to what the backup holds.
@@ -240,6 +244,9 @@ final class PlayerModel: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
         let backup = try decoder.decode(Backup.self, from: data)
         for (key, value) in backup.settings where CloudSync.syncedPrefs.contains(key) {
+            UserDefaults.standard.set(value, forKey: key)
+        }
+        for (key, value) in backup.choices ?? [:] where CloudSync.syncedChoices.contains(key) {
             UserDefaults.standard.set(value, forKey: key)
         }
         let sounds = Prefs.isOn(Prefs.sounds)

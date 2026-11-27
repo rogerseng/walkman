@@ -13,6 +13,10 @@ enum Prefs {
     static let lockScreenTape = "lockScreenTapeOn"
     /// Kept on each device separately, so one can opt out without the others.
     static let iCloudSync = "iCloudSyncOn"
+    /// Which skin the case wears: a `Skin` raw value.
+    static let skin = "skin"
+    /// Set once the introduction has been seen.
+    static let introSeen = "introSeen"
 
     static func isOn(_ key: String) -> Bool {
         UserDefaults.standard.object(forKey: key) as? Bool ?? (key != autoFlip)

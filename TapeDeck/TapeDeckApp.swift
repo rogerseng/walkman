@@ -21,6 +21,7 @@ struct TapeDeckApp: App {
 struct ContentView: View {
     @EnvironmentObject private var model: PlayerModel
     @State private var showShelf = false
+    @AppStorage(Prefs.introSeen) private var introSeen = false
     @Environment(\.horizontalSizeClass) private var horizontalSize
     @Environment(\.verticalSizeClass) private var verticalSize
 
@@ -48,11 +49,19 @@ struct ContentView: View {
                 if wasOpen, !isOpen { model.lidClosed() }
             }
         }
+        // The introduction, the first time the app is opened
+        .fullScreenCover(isPresented: introShown) {
+            OnboardingView(done: { introSeen = true })
+        }
         .alert("Cassety", isPresented: errorShown) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(model.errorMessage ?? "")
         }
+    }
+
+    private var introShown: Binding<Bool> {
+        Binding(get: { !introSeen }, set: { if !$0 { introSeen = true } })
     }
 
     private var errorShown: Binding<Bool> {

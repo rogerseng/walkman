@@ -73,6 +73,10 @@ struct VolumeFader: View {
     @ObservedObject var volume: SystemVolume
     /// A tape is playing, so the level lights should move.
     var playing = false
+    /// Colour of the tick marks, and of the edge that makes them look cut in.
+    var engraving = Color.white.opacity(0.55)
+    var engravingEdge = Color.black.opacity(0.8)
+    var engravingEdgeOffset: CGFloat = -0.75
     @State private var lastStep = -1
     @AppStorage(Prefs.levelLights) private var lightsOn = true
 
@@ -89,9 +93,9 @@ struct VolumeFader: View {
                 VStack(spacing: 0) {
                     ForEach(0..<11, id: \.self) { tick in
                         Rectangle()
-                            .fill(Color.white.opacity(tick % 5 == 0 ? 0.6 : 0.32))
+                            .fill(engraving.opacity(tick % 5 == 0 ? 1 : 0.55))
                             .frame(width: tick % 5 == 0 ? 9 : 5, height: 1)
-                            .shadow(color: .black.opacity(0.8), radius: 0, y: -0.75)
+                            .shadow(color: engravingEdge, radius: 0, y: engravingEdgeOffset)
                         if tick < 10 { Spacer(minLength: 0) }
                     }
                 }

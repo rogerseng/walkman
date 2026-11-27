@@ -19,6 +19,9 @@ final class CloudSync {
     static let syncedPrefs = [Prefs.sounds, Prefs.hiss, Prefs.haptics, Prefs.glare, Prefs.levelLights,
                               Prefs.playOnClose, Prefs.autoFlip, Prefs.lockScreenTape]
 
+    /// Settings that are words rather than switches.
+    static let syncedChoices = [Prefs.skin]
+
     var isSignedIn: Bool { FileManager.default.ubiquityIdentityToken != nil }
     var isOn: Bool { Prefs.isOn(Prefs.iCloudSync) }
 
@@ -77,6 +80,12 @@ final class CloudSync {
                 UserDefaults.standard.set(remote, forKey: key)
             }
         }
+        for key in Self.syncedChoices {
+            guard let remote = store.string(forKey: key) else { continue }
+            if UserDefaults.standard.string(forKey: key) != remote {
+                UserDefaults.standard.set(remote, forKey: key)
+            }
+        }
     }
 
     /// Sends this device's settings to iCloud, where they differ.
@@ -86,6 +95,13 @@ final class CloudSync {
         for key in Self.syncedPrefs {
             let local = Prefs.isOn(key)
             if store.object(forKey: key) as? Bool != local {
+                store.set(local, forKey: key)
+                changed = true
+            }
+        }
+        for key in Self.syncedChoices {
+            guard let local = UserDefaults.standard.string(forKey: key) else { continue }
+            if store.string(forKey: key) != local {
                 store.set(local, forKey: key)
                 changed = true
             }
@@ -103,6 +119,8 @@ struct Backup: Codable {
     var created = Date()
     var library: MixtapeLibrary
     var settings: [String: Bool]
+    /// Settings that are words, such as the skin. Absent from older backups.
+    var choices: [String: String]?
 }
 
 /// A backup as a document the system can save to, or open from, Files,

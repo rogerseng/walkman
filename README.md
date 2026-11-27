@@ -18,6 +18,19 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 * Lock screen tape: while a tape is in the deck, a Live Activity shows the same clear cassette on the lock screen (and its reels in the Dynamic Island) with previous, play / pause and next keys. The hubs step round once a second, because iOS does not allow free running animation there. A tape left paused for ten minutes is taken off the lock screen.
 * Tape deck sounds: key clunks, door and eject, tape hiss while playing, motor whir while winding. They are generated in code and mix over the music. The speaker button on the deck turns them off. They are not muted by the silent switch, because the app has to hold a playback audio session to stay awake behind the lock screen.
 
+## First run
+
+The first time it opens, Cassety shows a four page introduction: what it is, how the deck works, connecting Apple Music, and a few starting choices (iCloud sync, the lock screen tape, and the skin). It can be skipped, and shown again from Settings.
+
+## Skins
+
+Two cases to choose from, in Settings or the introduction. The cassette, keys and fader cap are the same in both.
+
+* Smoke: dark smoked plastic that shows the tape dimly through the casing.
+* Yellow: bright, nearly solid yellow, with dark engraved lettering and a dark plate behind the Duo's clock so it stays readable.
+
+The skin applies to the closed screen. A new skin is one more case in `Skin.swift`.
+
 ## Settings
 
 Opened from the black key at the foot of the column.
@@ -82,6 +95,8 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `Haptics.swift` | The taps for keys, door, fader and winding |
 | `SettingsView.swift` | The settings screen |
 | `Prefs.swift` | The stored settings and their defaults |
+| `Skin.swift` | The colours of each case skin |
+| `OnboardingView.swift` | The first-run introduction |
 | `CloudSync.swift` | iCloud sync of mixtapes and settings, and the backup file format |
 | `VolumeFader.swift` | The vertical volume fader and its link to the system volume |
 | `ShelfView.swift` | The tape shelf and search |

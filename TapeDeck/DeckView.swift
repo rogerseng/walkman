@@ -16,7 +16,10 @@ struct DeckView: View {
     /// The phone's volume, which the fader on the panel sets.
     @StateObject private var volume = SystemVolume()
     @State private var showSettings = false
+    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
     var openShelf: () -> Void
+
+    private var skin: Skin { Skin(rawValue: skinName) ?? .smoke }
 
     /// Width of the key column on phones that have no side rail.
     private let stripWidth: CGFloat = 78
@@ -66,13 +69,24 @@ struct DeckView: View {
                     casePanel(seamOnLeading: !railLeading)
                         .frame(width: panelWidth)
                         .frame(maxWidth: .infinity, alignment: railLeading ? .leading : .trailing)
+                    // On a pale case, a dark plate behind the Duo's clock and
+                    // status icons, which the system draws in white.
+                    if rail, skin.needsStatusPlate {
+                        RoundedRectangle(cornerRadius: 26)
+                            .fill(Color.black.opacity(0.78))
+                            .frame(width: railKeyWidth, height: 140)
+                            .padding(railLeading ? .leading : .trailing, railOuterMargin)
+                            .padding(.top, 16)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity,
+                                   alignment: railLeading ? .topLeading : .topTrailing)
+                    }
                 }
             )
             // The maker's name, moulded faintly into the top corner of the case
             .overlay(alignment: .topLeading) {
                 Wordmark()
-                    .foregroundColor(Color.white.opacity(0.22))
-                    .shadow(color: .black.opacity(0.6), radius: 0.3, y: -0.7)
+                    .foregroundColor(skin.mark)
+                    .shadow(color: skin.engravingEdge.opacity(0.6), radius: 0.3, y: skin.engravingEdgeOffset)
                     .offset(x: 22 + (railLeading ? panelWidth : insets.leading), y: insets.top + 16)
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
@@ -86,7 +100,7 @@ struct DeckView: View {
                         .font(.system(size: 11, weight: .semibold))
                         .lineLimit(2)
                         .multilineTextAlignment(.center)
-                        .foregroundColor(.white.opacity(0.85))
+                        .foregroundColor(skin.note)
                         .frame(width: window.width)
                         .offset(x: window.minX, y: window.maxY + 14)
                         .allowsHitTesting(false)
@@ -95,15 +109,17 @@ struct DeckView: View {
             // Volume: on the solid panel, level with the window and as tall as it
             .overlay(alignment: .topLeading) {
                 let faderX = railLeading ? panelWidth - 70 : full.width - panelWidth + 22
-                VolumeFader(volume: volume, playing: model.motion == .playing)
+                VolumeFader(volume: volume, playing: model.motion == .playing,
+                            engraving: skin.engraving, engravingEdge: skin.engravingEdge,
+                            engravingEdgeOffset: skin.engravingEdgeOffset)
                     .frame(width: 48, height: window.height)
                     .offset(x: faderX, y: window.minY)
                 // Engraved under the fader
                 Text("VOLUME")
                     .font(.system(size: 6.5, weight: .bold))
                     .tracking(1.6)
-                    .foregroundColor(Color.white.opacity(0.5))
-                    .shadow(color: .black.opacity(0.8), radius: 0.3, y: -0.7)
+                    .foregroundColor(skin.engraving)
+                    .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
                     .frame(width: 48)
                     .offset(x: faderX, y: window.maxY + 9)
                     .accessibilityHidden(true)
@@ -157,9 +173,7 @@ struct DeckView: View {
                     path.addRect(CGRect(origin: .zero, size: size))
                     path.addRoundedRect(in: window, cornerSize: CGSize(width: 20, height: 20))
                 }
-                .fill(LinearGradient(colors: [Color(white: 0.16).opacity(0.86),
-                                              Color(white: 0.08).opacity(0.86),
-                                              Color(white: 0.05).opacity(0.86)],
+                .fill(LinearGradient(colors: skin.casing,
                                      startPoint: .topLeading, endPoint: .bottomTrailing),
                       style: FillStyle(eoFill: true))
 
@@ -289,8 +303,7 @@ struct DeckView: View {
     private func casePanel(seamOnLeading: Bool) -> some View {
         let edge = BowedPanel(bow: 26, bowOnLeading: seamOnLeading)
         return ZStack {
-            edge.fill(LinearGradient(colors: [Color(white: 0.20), Color(white: 0.13), Color(white: 0.09)],
-                                     startPoint: .top, endPoint: .bottom))
+            edge.fill(LinearGradient(colors: skin.panel, startPoint: .top, endPoint: .bottom))
             edge.fill(LinearGradient(colors: [Color.white.opacity(0.07), .clear],
                                      startPoint: seamOnLeading ? .leading : .trailing,
                                      endPoint: .center))
