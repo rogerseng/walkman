@@ -111,16 +111,6 @@ struct CassetteView: View {
             .overlay(Circle().strokeBorder(lettering, lineWidth: 0.26 * u))
             .position(x: 22.6 * u, y: 8.4 * u)
 
-        // The maker's name, in the small print a tape has under its label
-        Text("MADE BY ROGER SENG")
-            .font(.system(size: 1.45 * u, weight: .semibold))
-            .tracking(0.35 * u)
-            .foregroundColor(Color.white.opacity(0.34))
-            .lineLimit(1)
-            .fixedSize()
-            .position(x: 32.5 * u, y: 16.7 * u)
-            .accessibilityHidden(true)
-
         if showPrint {
             // Album title and artist, in the same marker as every tape name
             Text(title.isEmpty ? " " : title)
