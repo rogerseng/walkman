@@ -51,11 +51,11 @@ struct OpenTrayView: View {
                 }
                 .buttonStyle(PlainKeyButtonStyle())
             }
-            // The same keys as the closed phone, laid in a row: play/pause,
+            // The same keys as the closed phone, laid in a row: play, stop,
             // fast forward, rewind, eject and settings.
             TransportKeys(vertical: false, keyHeight: 82, bare: true, big: true, spacing: 12,
                           ejectRemovesTape: true, onSettings: { showSettings = true })
-                .frame(maxWidth: 5 * 66 + 4 * 12)
+                .frame(maxWidth: 6 * 66 + 5 * 12)
         }
         .padding(20)
         .background(

@@ -25,7 +25,7 @@ struct DeckView: View {
     private let railKeyWidth: CGFloat = 66
     private let railOuterMargin: CGFloat = 15
     private let bigKeyHeight: CGFloat = 84
-    private let keyGap: CGFloat = 12
+    private let keyGap: CGFloat = 10
     /// Height kept clear at the top of the rail for the camera, clock and
     /// status icons. Measured from a Duo screenshot, where the status pill
     /// ends about 154 points down; not a published figure.
@@ -255,7 +255,7 @@ struct DeckView: View {
 
     // MARK: Keys
 
-    /// Five keys of one size: play/pause, fast forward, rewind, the tape
+    /// Six keys of one size: play, stop, fast forward, rewind, the tape
     /// library, and settings.
     private func keys(height: CGFloat) -> some View {
         VStack(spacing: keyGap) {
@@ -271,7 +271,7 @@ struct DeckView: View {
     }
 
     private func keyHeight(room: CGFloat) -> CGFloat {
-        min(bigKeyHeight, max(40, (room - 4 * keyGap) / 5))
+        min(bigKeyHeight, max(36, (room - 5 * keyGap) / 6))
     }
 
     /// The side of the player that carries the volume fader and the keys:
@@ -381,14 +381,14 @@ struct DeckCassette: View {
 }
 
 /// The transport keys, in a column for the closed phone or a row for the open
-/// one. There is no stop key: pause stops the music and keeps your place.
+/// one. Stop holds the tape where it is, so pressing play carries on from there.
 struct TransportKeys: View {
     @EnvironmentObject private var model: PlayerModel
     var vertical: Bool
     var keyHeight: CGFloat = 62
     /// Without the tray behind the keys, for places that supply their own.
     var bare = false
-    /// Four large rounded keys, with play and pause sharing one.
+    /// Large rounded keys, with play and stop as a pair of latching keys.
     var big = false
     var spacing: CGFloat = 6
     /// True where eject should take the tape out; false where it only opens
@@ -405,13 +405,16 @@ struct TransportKeys: View {
         let labels = !vertical && !big
         layout {
             if big {
-                // One key marked with both symbols, as on a real deck. It
-                // never changes its face: down means playing, up means not.
-                TapeKey(symbol: "playpause.fill",
-                        label: model.motion == .playing ? "Pause" : "Play",
+                // Play and stop work as a pair: pressing one in lets the
+                // other out, so one of them is always down while a tape is in.
+                TapeKey(symbol: "play.fill", label: "Play",
                         accent: true, latched: model.motion == .playing,
                         height: keyHeight, showsLabel: false, corner: corner, symbolSize: symbol,
-                        onDown: { model.playPauseKey() })
+                        onDown: { model.playKey() })
+                TapeKey(symbol: "stop.fill", label: "Stop",
+                        latched: model.hasTape && (model.motion == .paused || model.motion == .stopped),
+                        height: keyHeight, showsLabel: false, corner: corner, symbolSize: symbol,
+                        onDown: { model.stopKey() })
             } else {
                 TapeKey(symbol: "play.fill", label: "PLAY", accent: true, latched: model.motion == .playing,
                         height: keyHeight, showsLabel: labels, onDown: { model.playKey() })

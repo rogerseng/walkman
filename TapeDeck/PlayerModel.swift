@@ -381,7 +381,20 @@ final class PlayerModel: ObservableObject {
             }
             return
         }
-        run { try await self.player.play() }
+        run {
+            try await self.player.play()
+            self.refresh()
+        }
+    }
+
+    /// Stops the tape where it is. Play carries on from the same place.
+    func stopKey() {
+        pressFeedback()
+        guard hasTape else { return }
+        if motion != .paused, motion != .stopped {
+            player.pause()
+            refresh()
+        }
     }
 
     /// One key for both: pauses while playing, plays otherwise.
