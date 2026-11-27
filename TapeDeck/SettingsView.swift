@@ -201,6 +201,16 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(ShelfBackground())
+            // Where there is no rail, Done is in the title bar, which does
+            // not scroll away: plain to see and always in reach.
+            .toolbar {
+                if !hasRail {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Done") { dismiss() }
+                            .fontWeight(.semibold)
+                    }
+                }
+            }
             .confirmationDialog("Disconnect Apple Music?", isPresented: $disconnecting, titleVisibility: .visible) {
                 Button("Open Settings") { openSystemSettings() }
                 Button("Cancel", role: .cancel) {}
@@ -213,11 +223,12 @@ struct SettingsView: View {
                 Text(backupNote ?? "")
             }
         }
-        // Done stays put however far the page is scrolled: in the Duo's
-        // rail under the clock, or along the foot on other phones.
+        // On the Duo, Done sits in the rail under the clock and stays put
+        // however far the page is scrolled.
         .overlay {
             GeometryReader { geo in
                 let rail = geo.safeAreaInsets.trailing
+                Color.clear.onChange(of: rail >= 60, initial: true) { _, has in hasRail = has }
                 if rail >= 60 {
                     doneKey
                         .frame(width: min(72, rail - 12))
@@ -227,35 +238,10 @@ struct SettingsView: View {
                 }
             }
         }
-        // The open phone held upright has room at the top: a small key
-        // there, level with the title.
-        .overlay(alignment: .topLeading) {
-            if wide {
-                GeometryReader { geo in
-                    if geo.safeAreaInsets.trailing < 60 {
-                        doneKey
-                            .frame(width: 84)
-                            .padding(.leading, 18)
-                            // Up into the title bar, level with the title
-                            .offset(y: -min(64, geo.safeAreaInsets.top - 26))
-                    }
-                }
-            }
-        }
-        .safeAreaInset(edge: .bottom) {
-            if !wide {
-                GeometryReader { geo in
-                    if geo.safeAreaInsets.trailing < 60 {
-                        doneKey
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 20)
-                    }
-                }
-                .frame(height: 52)
-            }
-        }
     }
 
+    /// The Duo's rail is on screen, and Done sits in it.
+    @State private var hasRail = false
     @Environment(\.horizontalSizeClass) private var horizontalSize
     /// A wide screen: the open folding phone.
     private var wide: Bool { horizontalSize == .regular }
