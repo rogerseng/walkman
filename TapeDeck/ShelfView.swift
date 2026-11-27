@@ -86,6 +86,31 @@ struct ShelfView: View {
         })
     }
 
+    #if DEBUG
+    /// Everything that can be learned about why a search failed, for the
+    /// note shown in builds run from Xcode.
+    private static func diagnosis(of error: Error) async -> String {
+        let plain = error as NSError
+        var parts = ["\(type(of: error)).\(error)", "\(plain.domain) \(plain.code)"]
+        if let under = plain.userInfo[NSUnderlyingErrorKey] as? NSError {
+            parts.append("under: \(under.domain) \(under.code) \(under.localizedDescription)")
+        }
+        do {
+            _ = try await MusicDataRequest.tokenProvider.developerToken(options: .ignoreCache)
+            parts.append("app token ok")
+        } catch {
+            let token = error as NSError
+            parts.append("app token failed: \(type(of: error)).\(error) \(token.domain) \(token.code)")
+        }
+        if let subscription = try? await MusicSubscription.current {
+            parts.append("catalog play \(subscription.canPlayCatalogContent)")
+        } else {
+            parts.append("subscription unknown")
+        }
+        return parts.joined(separator: " | ")
+    }
+    #endif
+
     private var isSearching: Bool { !term.trimmingCharacters(in: .whitespaces).isEmpty }
 
     private var shelf: some View {
@@ -142,7 +167,16 @@ struct ShelfView: View {
             // Wait for a pause in typing before searching.
             do { try await Task.sleep(nanoseconds: 400_000_000) } catch { return }
             do {
-                let found = try await SearchFindings.look(for: wanted, in: scope)
+                var found: SearchFindings
+                do {
+                    found = try await SearchFindings.look(for: wanted, in: scope)
+                } catch where scope == .catalog && !Task.isCancelled {
+                    // Apple Music needs a token for the app, and a failed
+                    // try at one is remembered. Ask for a fresh one and
+                    // search once more before giving up.
+                    _ = try? await MusicDataRequest.tokenProvider.developerToken(options: .ignoreCache)
+                    found = try await SearchFindings.look(for: wanted, in: scope)
+                }
                 guard !Task.isCancelled else { return }
                 findings = found
                 resultsScope = scope
@@ -156,7 +190,7 @@ struct ShelfView: View {
                                                    ? "Apple Music could not be searched."
                                                    : "Your library could not be searched.")
                     #if DEBUG
-                    note += " [\(String(reflecting: error))]"
+                    note += " [\(await Self.diagnosis(of: error))]"
                     #endif
                     var fallback = SearchFindings()
                     if scope == .catalog, let mine = try? await SearchFindings.look(for: wanted, in: .library) {

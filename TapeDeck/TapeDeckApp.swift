@@ -48,14 +48,18 @@ struct ContentView: View {
         GeometryReader { geo in
             // The Duo's inner display is regular in both directions (reported
             // as 669 x 951 or 626 x 890 points); its outer one is compact.
+            // Measured with the safe areas put back, so the keyboard coming
+            // up (which takes height away) does not change the answer.
+            let whole = CGSize(width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
+                               height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
             let open = (horizontalSize == .regular && verticalSize == .regular)
-                || (geo.size.width >= 600 && geo.size.height >= 500)
+                || (whole.width >= 600 && whole.height >= 500)
             Group {
                 // The MP3 player is itself on the open phone too, with its
                 // display and its dial or wheel, not the tape deck's keys.
                 let wheel = Skin.includesClickWheel && Skin(rawValue: skinName)?.isWheel == true
                 let menuPlayer = wheel || player == "mp3"
-                if open, geo.size.height > geo.size.width {
+                if open, whole.height > whole.width {
                     // The open phone held upright: the player has the whole
                     // screen to itself, and the shelf is a key away.
                     if menuPlayer {
