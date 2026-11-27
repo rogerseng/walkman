@@ -87,6 +87,8 @@ final class PlayerModel: ObservableObject {
     private var promised: (motion: TapeMotion, since: Date)?
     /// The motor running the tape up to speed or down to a stop.
     private var rampTask: Task<Void, Never>?
+    /// True while the motor is changing speed, so nothing else resets it.
+    private var ramping = false
     private var seekTask: Task<Void, Never>?
     /// Winding the tape by hand: where it has got to on the side, and
     /// whether to carry on playing when the key is let go.
@@ -512,6 +514,8 @@ final class PlayerModel: ObservableObject {
     private func startTape() {
         rampTask?.cancel()
         rampTask = Task {
+            ramping = true
+            defer { ramping = false }
             do {
                 if Prefs.isOn(Prefs.tapeRamp) {
                     player.state.playbackRate = Self.rampUp[0]
@@ -537,6 +541,8 @@ final class PlayerModel: ObservableObject {
     private func stopTape() {
         rampTask?.cancel()
         rampTask = Task {
+            ramping = true
+            defer { ramping = false }
             if Prefs.isOn(Prefs.tapeRamp), player.state.playbackStatus == .playing {
                 sounds.play(.motorDown)
                 for rate in Self.rampDown {
@@ -544,8 +550,10 @@ final class PlayerModel: ObservableObject {
                     do { try await Task.sleep(nanoseconds: 70_000_000) } catch { break }
                 }
             }
+            // Setting the rate on a paused player starts it again, so the
+            // rate is left as it is here and put back to normal only once
+            // the music is playing again (see `refresh`).
             player.pause()
-            player.state.playbackRate = 1
             refresh()
         }
     }
@@ -790,6 +798,11 @@ final class PlayerModel: ObservableObject {
             @unknown default: newMotion = .stopped
             }
         }
+        // Music started by any other route after a run-down plays at full speed.
+        if !ramping, player.state.playbackStatus == .playing, player.state.playbackRate < 0.99 {
+            player.state.playbackRate = 1
+        }
+
         // A key's promise holds until the player agrees, or for two seconds
         // if it never does.
         if let promised {
