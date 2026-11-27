@@ -20,12 +20,32 @@ enum AppleMusicDirect {
         var all: [Item] = []
         while let path = next, all.count < most,
               let url = URL(string: "https://api.music.apple.com" + path) {
-            let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
+            let response = try await reply(from: url)
             let page = try JSONDecoder().decode(Page<Item>.self, from: response.data)
             all += page.data
             next = page.data.isEmpty ? nil : page.next
         }
         return all
+    }
+
+    /// Asks for a page, and asks again if the answer fails or comes back
+    /// with nothing in it: the service does that now and then, and a
+    /// second try a moment later usually gets through.
+    static func reply(from url: URL, tries: Int = 3) async throws -> MusicDataResponse {
+        var failure: Error = URLError(.badServerResponse)
+        for attempt in 0..<tries {
+            if attempt > 0 { try await Task.sleep(nanoseconds: 450_000_000) }
+            do {
+                let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
+                if !response.data.isEmpty { return response }
+                failure = SearchFindings.EmptyReply(status: response.urlResponse.statusCode, url: url.absoluteString)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                failure = error
+            }
+        }
+        throw failure
     }
 
     /// Library items have ids of their own ("l.", "p.", "i." and a code);

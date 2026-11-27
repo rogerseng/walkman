@@ -307,6 +307,8 @@ struct CollectionDetail: View {
     @State private var tracks: [Track] = []
     @State private var loading = true
     @State private var failed = false
+    /// Counts the tries at loading, so Try again can start another.
+    @State private var attempt = 0
     /// How many of the songs are on side A; the rest are on side B.
     @State private var sideACount: Int?
     /// Set when the tape is turned over, until the list has caught up.
@@ -360,6 +362,15 @@ struct CollectionDetail: View {
                 Text("The songs could not be loaded. Check your connection and try again.")
                     .foregroundColor(.secondary)
                     .listRowBackground(Color.clear)
+                Button("Try again") {
+                    failed = false
+                    loading = true
+                    attempt += 1
+                }
+                .buttonStyle(PlainKeyButtonStyle())
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             }
             ForEach(Array(tracks.enumerated()), id: \.element.id) { number, track in
                 // Where each side of the tape begins
@@ -444,7 +455,7 @@ struct CollectionDetail: View {
             }
         }
         }
-        .task {
+        .task(id: attempt) {
             guard tracks.isEmpty else { return }
             do {
                 switch tape {
@@ -504,6 +515,8 @@ struct CollectionDetail: View {
 struct ArtistDetail: View {
     let artist: Artist
     let source: MusicPropertySource
+    /// Counts the tries at loading, so Try again can start another.
+    @State private var attempt = 0
     @State private var albums: [Album] = []
     @State private var loading = true
     @State private var failed = false
@@ -514,6 +527,17 @@ struct ArtistDetail: View {
                 ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
             } else if albums.isEmpty {
                 Text(failed ? "The albums could not be loaded. Check your connection and try again." : "No albums found.").foregroundColor(.secondary).listRowBackground(Color.clear)
+                if failed {
+                    Button("Try again") {
+                        failed = false
+                        loading = true
+                        attempt += 1
+                    }
+                    .buttonStyle(PlainKeyButtonStyle())
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                }
             }
             if !albums.isEmpty {
                 Section {
@@ -526,7 +550,7 @@ struct ArtistDetail: View {
             }
         }
         .shelfList(artist.name)
-        .task {
+        .task(id: attempt) {
             guard albums.isEmpty else { return }
             do {
                 albums = try await PlayerModel.albums(of: artist, source: source).sorted {
@@ -629,13 +653,11 @@ extension SearchFindings {
                             URLQueryItem(name: "types", value: "artists,albums,playlists,songs"),
                             URLQueryItem(name: "limit", value: "10")]
         guard let url = parts.url else { throw URLError(.badURL) }
-        let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
-        var answer = Direct(status: response.urlResponse.statusCode, bytes: response.data.count)
         // A reply with nothing in it is a failure, not "no results": a
-        // search that finds nothing still answers with an empty page.
-        guard !response.data.isEmpty else {
-            throw EmptyReply(status: answer.status, url: url.absoluteString)
-        }
+        // search that finds nothing still answers with an empty page. The
+        // request is tried again before that is given up on.
+        let response = try await AppleMusicDirect.reply(from: url)
+        var answer = Direct(status: response.urlResponse.statusCode, bytes: response.data.count)
         let page = try JSONDecoder().decode(Page.self, from: response.data)
         answer.findings = SearchFindings(artists: Array(page.results.artists ?? []),
                                          albums: Array(page.results.albums ?? []),
