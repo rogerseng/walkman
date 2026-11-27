@@ -66,9 +66,11 @@ struct OpenTrayView: View {
             // The handle stands in the space beside the clock, above the
             // safe area, so it costs the player no room.
             let handleHeight = max(64, geo.safeAreaInsets.top)
-            let doorWidth = min(width - 56, 560, (geo.size.height * 0.40 - 26) / 0.63)
+            // The tape is the thing to look at: the door is as wide as the
+            // case allows, and the speakers take what is left under it.
+            let doorWidth = min(width - 40, 640, (geo.size.height * 0.52 - 26) / 0.63)
             let doorHeight = doorWidth * 0.63 + 26
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 topStrip
                 if isMP3 {
                     playerScreen(width: doorWidth, height: doorHeight)
@@ -88,11 +90,11 @@ struct OpenTrayView: View {
                     Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
                 }
                 .padding(.horizontal, 6)
-                uprightKeys(height: keyHeight)
+                .padding(.bottom, 4)
+                uprightKeys(height: keyHeight, below: geo.safeAreaInsets.bottom)
             }
-            .padding(.horizontal, 22)
+            .padding(.horizontal, 20)
             .padding(.top, 10)
-            .padding(.bottom, 14)
             .frame(width: width, height: geo.size.height)
             .background(
                 ZStack(alignment: .top) {
@@ -120,27 +122,33 @@ struct OpenTrayView: View {
         }
     }
 
-    /// The closed phone's keys, in a row in their bed: play, stop, fast
-    /// forward, rewind, the music library, and settings.
-    private func uprightKeys(height: CGFloat) -> some View {
+    /// The closed phone's keys in a row: play, stop, fast forward, rewind,
+    /// the music library, and settings. They are set into a panel that is
+    /// the whole foot of the case, from edge to edge and down to the bottom
+    /// of the screen, as on the closed phone.
+    private func uprightKeys(height: CGFloat, below: CGFloat) -> some View {
         TransportKeys(vertical: false, keyHeight: height, bare: true, big: true, spacing: 12,
                       onSettings: { showSettings = true },
                       onEject: { showShelf = true })
-            .frame(maxWidth: 6 * 84 + 5 * 12)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .padding(.top, 16)
+            .padding(.bottom, max(10, 18 - below))
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
-                                         startPoint: .top, endPoint: .bottom))
-                    .overlay(Color.black.opacity(isMP3 ? 0.22 : 0).clipShape(RoundedRectangle(cornerRadius: 18)))
-                    .overlay(PlasticGrain(strength: 0.5).clipShape(RoundedRectangle(cornerRadius: 18)))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18)
-                            .strokeBorder(LinearGradient(colors: [Color.black.opacity(0.8), Color.white.opacity(0.22)],
-                                                         startPoint: .top, endPoint: .bottom), lineWidth: 1.5)
-                    )
+                ZStack(alignment: .top) {
+                    LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
+                                   startPoint: .top, endPoint: .bottom)
+                    if isMP3 { Color.black.opacity(0.22) }
+                    PlasticGrain(strength: 0.5)
+                    // The seam where the panel meets the body
+                    VStack(spacing: 0) {
+                        Rectangle().fill(Color.black.opacity(0.75)).frame(height: 2)
+                        Rectangle().fill(Color.white.opacity(0.16)).frame(height: 1)
+                    }
+                }
+                // Out to the edges of the screen and down past the safe area
+                .padding(.horizontal, -20)
+                .padding(.bottom, -below)
+                .shadow(color: .black.opacity(0.45), radius: 8, y: -3)
             )
     }
 
