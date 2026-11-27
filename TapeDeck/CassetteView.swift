@@ -41,6 +41,9 @@ struct CassetteView: View {
     var tint: Color?
     /// The colour the cover art suggests for lettering on `tint`.
     var printColor: Color?
+    /// Sitting in a deck: the deck's drive spindles show through the clear
+    /// hubs and turn with them.
+    var onSpindles = false
 
     @State private var spin = SpinState()
 
@@ -226,7 +229,36 @@ struct CassetteView: View {
                 .interpolation(.high)
                 .frame(width: 2 * hubRadius * u, height: 2 * hubRadius * u)
                 .rotationEffect(.radians(angle))
+            // The deck's spindle, up through the middle of the hub and
+            // driving it round
+            if onSpindles {
+                DriveSpindle(u: u)
+                    .rotationEffect(.radians(angle))
+            }
         }
         .frame(width: size, height: size)
+    }
+}
+
+/// One of the deck's two drive spindles: a metal boss with three prongs that
+/// catch the teeth inside a cassette's hub. Sizes are in millimetres; `u` is
+/// points per millimetre.
+struct DriveSpindle: View {
+    let u: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle().fill(LinearGradient(colors: [Color(white: 0.62), Color(white: 0.22)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            ForEach(0..<3, id: \.self) { prong in
+                Capsule().fill(Color(white: 0.80))
+                    .frame(width: 1.6 * u, height: 4.4 * u)
+                    .offset(y: -3.4 * u)
+                    .rotationEffect(.degrees(Double(prong) * 120))
+            }
+            Circle().fill(Color(white: 0.12)).frame(width: 2.4 * u, height: 2.4 * u)
+        }
+        .frame(width: 8 * u, height: 8 * u)
+        .shadow(color: .black.opacity(0.5), radius: 0.6 * u, y: 0.3 * u)
     }
 }

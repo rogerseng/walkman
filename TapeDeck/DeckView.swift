@@ -281,18 +281,8 @@ struct DeckView: View {
     /// The well with nothing in it: the two drive spindles and a prompt.
     private func emptyWell(upright: Bool, length: CGFloat) -> some View {
         let u = length / 100
-        let spindle = ZStack {
-            Circle().fill(LinearGradient(colors: [Color(white: 0.55), Color(white: 0.2)],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-            ForEach(0..<3, id: \.self) { prong in
-                Capsule().fill(Color(white: 0.75))
-                    .frame(width: 1.6 * u, height: 4.4 * u)
-                    .offset(y: -3.4 * u)
-                    .rotationEffect(.degrees(Double(prong) * 120))
-            }
-            Circle().fill(Color(white: 0.12)).frame(width: 2.4 * u, height: 2.4 * u)
-        }
-        .frame(width: 8 * u, height: 8 * u)
+        // Faint in the empty well; they show properly once a tape is on them.
+        let spindle = DriveSpindle(u: u).opacity(0.28)
         let layout = upright ? AnyLayout(VStackLayout(spacing: 33 * u)) : AnyLayout(HStackLayout(spacing: 33 * u))
         return ZStack {
             layout {
@@ -468,7 +458,8 @@ struct DeckCassette: View {
                      side: model.sideLetter,
                      printed: model.printedLabel,
                      tint: model.labelColor.map { Color(cgColor: $0) },
-                     printColor: model.printColor.map { Color(cgColor: $0) })
+                     printColor: model.printColor.map { Color(cgColor: $0) },
+                     onSpindles: true)
     }
 }
 
