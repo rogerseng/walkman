@@ -132,30 +132,31 @@ struct CassetteView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.45)
                 .frame(width: textWidth * u, height: 5.0 * u, alignment: .leading)
-                .position(x: textX * u, y: 6.4 * u)
+                .position(x: textX * u, y: 6.9 * u)
             Text(subtitle.isEmpty ? " " : subtitle)
-                .font(Typeface.markerFixed(2.9 * u))
+                .font(Typeface.markerFixed(3.3 * u))
                 .foregroundColor(lettering.opacity(0.85))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-                .frame(width: textWidth * u, height: 3.6 * u, alignment: .leading)
-                .position(x: textX * u, y: 10.7 * u)
+                .frame(width: textWidth * u, height: 4.0 * u, alignment: .leading)
+                .position(x: textX * u, y: 10.6 * u)
         } else {
-            // Handwriting on the paper label's ruled lines
+            // Handwriting on the paper label's ruled lines: each line of
+            // writing sits down on its rule, so the two read as a pair
             Text(title.isEmpty ? " " : title)
                 .font(Typeface.markerFixed(4.5 * u))
                 .foregroundColor(ink.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .frame(width: textWidth * u, height: 5.0 * u, alignment: .bottomLeading)
-                .position(x: textX * u, y: 6.3 * u)
+                .position(x: textX * u, y: 6.95 * u)
             Text(subtitle.isEmpty ? " " : subtitle)
-                .font(Typeface.markerFixed(3.0 * u))
+                .font(Typeface.markerFixed(3.5 * u))
                 .foregroundColor(ink.opacity(0.80))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-                .frame(width: textWidth * u, height: 3.6 * u, alignment: .bottomLeading)
-                .position(x: textX * u, y: 10.8 * u)
+                .frame(width: textWidth * u, height: 4.0 * u, alignment: .bottomLeading)
+                .position(x: textX * u, y: 10.75 * u)
         }
     }
 
