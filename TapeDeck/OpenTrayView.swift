@@ -332,11 +332,25 @@ struct OpenTrayView: View {
             let doorHeight = doorWidth * 0.63 + 26
             VStack(spacing: 14) {
                 topStrip
-                if isMP3 {
-                    playerScreen(width: doorWidth, height: doorHeight)
-                } else {
-                    door(width: doorWidth, height: doorHeight)
+                Group {
+                    if isMP3 {
+                        playerScreen(width: doorWidth, height: doorHeight)
+                    } else {
+                        door(width: doorWidth, height: doorHeight)
+                    }
                 }
+                // The deck has eaten the tape: own up in a card over it,
+                // with the way to wind it back
+                .overlay {
+                    if model.hasTape, model.tapeEaten || model.tapeChurn == .winding {
+                        TapeEatenCard()
+                            .frame(width: min(320, doorWidth - 40))
+                            .transition(.scale(scale: 0.9).combined(with: .opacity))
+                    }
+                }
+                .animation(model.tapeJammed ? .spring(response: 0.35, dampingFraction: 0.8).delay(1.3)
+                                            : .easeOut(duration: 0.15),
+                           value: model.tapeJammed)
                 nowPlaying
                 if !rail { keyBed }
                 // The speaker: the same punched plate as on the upright
@@ -617,19 +631,9 @@ struct OpenTrayView: View {
             // The MP3 player's display has a bar of its own.
             if model.hasTape, model.duration > 0, !model.tapeJammed, !isMP3 { timeline }
 
-            if model.hasTape, model.tapeChurn == .winding {
-                WindingReel().frame(width: 30, height: 30).foregroundColor(theme.accentColor)
-            } else if model.hasTape, model.tapeEaten {
-                Button {
-                    model.windTapeBack()
-                } label: {
-                    Text("Wind it back in")
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                }
-                .buttonStyle(PlainKeyButtonStyle())
-            }
         }
+        // The card over the tape says it all while the tape is out.
+        .opacity(model.tapeJammed ? 0 : 1)
     }
 
     /// The MP3 player's display, in the colours it has on the closed phone:
