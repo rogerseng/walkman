@@ -261,7 +261,7 @@ struct DeckView: View {
         VStack(spacing: keyGap) {
             TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
                           spacing: keyGap, onEject: openShelf)
-            TapeKey(symbol: "gearshape.fill", label: "Settings",
+            TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
                     height: height, showsLabel: false, corner: 17, symbolSize: 23,
                     onDown: {
                         Haptics.keyDown()
@@ -431,15 +431,16 @@ struct TransportKeys: View {
                     onUp: { model.seekKeyUp(forward: false) })
             // On the closed phone this key opens the tape library; where it
             // takes the tape out, it is an eject key.
-            TapeKey(symbol: ejectRemovesTape ? "eject.fill" : "music.note.list",
-                    label: ejectRemovesTape ? "EJECT" : "Tape library",
+            // The two-note mark is the one Apple Music itself goes by.
+            TapeKey(symbol: ejectRemovesTape ? "eject.fill" : "music.note",
+                    label: ejectRemovesTape ? "EJECT" : "Apple Music library",
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: {
                         model.ejectKey(removeTape: ejectRemovesTape)
                         onEject()
                     })
             if let onSettings {
-                TapeKey(symbol: "gearshape.fill", label: "Settings",
+                TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
                         height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                         onDown: {
                             Haptics.keyDown()
@@ -463,6 +464,8 @@ struct TapeKey: View {
     var symbol: String
     var label: String
     var accent = false
+    /// A black key, for one that should sit apart from the transport keys.
+    var dark = false
     var latched = false
     var height: CGFloat = 62
     var showsLabel = true
@@ -486,9 +489,8 @@ struct TapeKey: View {
         }
         // The symbol is engraved and filled with paint, so it has a thin
         // edge of shadow or light where the cut catches it.
-        .foregroundColor(accent ? Color(white: 0.12) : Color(white: 0.94))
-        .shadow(color: accent ? Color.white.opacity(0.65) : Color.black.opacity(0.75),
-                radius: 0.4, y: accent ? 0.8 : -0.8)
+        .foregroundColor(Color(white: 0.96))
+        .shadow(color: Color.black.opacity(accent ? 0.45 : 0.75), radius: 0.4, y: -0.8)
         .padding(.horizontal, 2)
         .frame(maxWidth: .infinity)
         // The face is shorter than the key, leaving its side showing below.
@@ -500,9 +502,7 @@ struct TapeKey: View {
         .background(
             // The side of the key
             RoundedRectangle(cornerRadius: corner)
-                .fill(LinearGradient(colors: accent ? [Color(white: 0.55), Color(white: 0.36)]
-                                                    : [Color(white: 0.17), Color(white: 0.09)],
-                                     startPoint: .top, endPoint: .bottom))
+                .fill(LinearGradient(colors: wallColors, startPoint: .top, endPoint: .bottom))
                 .shadow(color: .black.opacity(down ? 0.25 : 0.6), radius: down ? 1.5 : 4, y: down ? 1 : 4)
         )
         .background(
@@ -542,14 +542,25 @@ struct TapeKey: View {
         }
     }
 
+    private var wallColors: [Color] {
+        if accent { return [Color(red: 0.62, green: 0.27, blue: 0.05), Color(red: 0.40, green: 0.16, blue: 0.02)] }
+        if dark { return [Color(white: 0.05), Color(white: 0.02)] }
+        return [Color(white: 0.17), Color(white: 0.09)]
+    }
+
     private func keyColors(down: Bool) -> [Color] {
         if accent {
-            // The play key: plain pale plastic, so it stands out without colour
+            // The play key: orange, as on the decks this is modelled on
             return down
-                ? [Color(white: 0.58), Color(white: 0.50)]
-                : [Color(white: 0.92), Color(white: 0.74)]
+                ? [Color(red: 0.66, green: 0.28, blue: 0.05), Color(red: 0.55, green: 0.22, blue: 0.03)]
+                : [Color(red: 0.99, green: 0.56, blue: 0.18), Color(red: 0.88, green: 0.40, blue: 0.08)]
         }
-        // Dark plastic, like the panel the keys sit in
+        if dark {
+            return down
+                ? [Color(white: 0.06), Color(white: 0.03)]
+                : [Color(white: 0.15), Color(white: 0.08)]
+        }
+        // Dark grey plastic, like the panel the keys sit in
         return down
             ? [Color(white: 0.22), Color(white: 0.16)]
             : [Color(white: 0.41), Color(white: 0.28)]
