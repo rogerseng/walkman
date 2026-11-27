@@ -22,6 +22,7 @@ struct ContentView: View {
     @EnvironmentObject private var model: PlayerModel
     @State private var showShelf = false
     @AppStorage(Prefs.introSeen) private var introSeen = false
+    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
     @Environment(\.horizontalSizeClass) private var horizontalSize
     @Environment(\.verticalSizeClass) private var verticalSize
 
@@ -38,6 +39,9 @@ struct ContentView: View {
                             .frame(width: geo.size.width * 0.5)
                         OpenTrayView()
                     }
+                } else if Skin(rawValue: skinName)?.isWheel == true {
+                    // The click-wheel skins have their own menus for choosing music.
+                    WheelPlayerView()
                 } else {
                     DeckView(openShelf: { showShelf = true })
                         .sheet(isPresented: $showShelf) {

@@ -24,12 +24,24 @@ The first time it opens, Cassety shows a four page introduction: what it is, how
 
 ## Skins
 
-Two cases to choose from, in Settings or the introduction. The cassette, keys and fader cap are the same in both.
+Four to choose from, in Settings or the introduction.
+
+Cassette players, which differ in the colour of the case:
 
 * Smoke: dark smoked plastic that shows the tape dimly through the casing.
-* Yellow: bright, nearly solid yellow, with dark engraved lettering and a dark plate behind the Duo's clock so it stays readable.
+* Yellow: bright, nearly solid yellow, with dark engraved lettering.
 
-The skin applies to the closed screen. A new skin is one more case in `Skin.swift`.
+Click-wheel players, in black or silver, which replace the deck with a small screen and a wheel:
+
+* Run a thumb round the wheel to scroll a menu. While a song is showing, the wheel changes the volume.
+* The middle button chooses the highlighted line, or plays and pauses while a song is showing.
+* The top of the wheel is MENU, which goes back a level. The bottom is play/pause.
+* The left and right of the wheel are previous and next. Hold either to wind the tape.
+* Menus: Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape and Settings.
+
+Underneath, a click-wheel skin is the same tape deck: tapes still have two sides, run out and need flipping, and mixtapes work the same. The skins are in that style but are Cassety's own design. They do not use the iPod name, the Apple logo or Apple's screen graphics.
+
+On pale skins a dark plate sits behind the Duo's clock so it stays readable. Skins apply to the closed screen. A new cassette player colour is one more case in `Skin.swift`.
 
 ## Settings
 
@@ -95,7 +107,8 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `Haptics.swift` | The taps for keys, door, fader and winding |
 | `SettingsView.swift` | The settings screen |
 | `Prefs.swift` | The stored settings and their defaults |
-| `Skin.swift` | The colours of each case skin |
+| `Skin.swift` | The skins and their colours |
+| `WheelPlayerView.swift` | The click-wheel player: its screen, menus and wheel |
 | `OnboardingView.swift` | The first-run introduction |
 | `CloudSync.swift` | iCloud sync of mixtapes and settings, and the backup file format |
 | `VolumeFader.swift` | The vertical volume fader and its link to the system volume |

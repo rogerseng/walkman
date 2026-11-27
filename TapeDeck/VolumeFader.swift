@@ -59,7 +59,7 @@ final class SystemVolume: ObservableObject {
 
 /// Keeps the system volume view in the window, where it has to be to work,
 /// without showing it.
-private struct VolumeHost: UIViewRepresentable {
+struct VolumeHost: UIViewRepresentable {
     let view: MPVolumeView
 
     func makeUIView(context: Context) -> MPVolumeView { view }

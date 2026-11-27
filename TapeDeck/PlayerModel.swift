@@ -25,6 +25,8 @@ final class PlayerModel: ObservableObject {
     @Published private(set) var printedLabel = false
     @Published private(set) var labelColor: CGColor?
     @Published private(set) var printColor: CGColor?
+    /// The cover art of the tape in the deck, if it has any.
+    @Published private(set) var tapeArtwork: Artwork?
     /// 0 for side A, 1 for side B.
     @Published private(set) var sideIndex = 0
     /// How far through the current side the tape is, 0...1. This is what the
@@ -301,6 +303,7 @@ final class PlayerModel: ObservableObject {
                 printedLabel = tape.hasPrintedLabel
                 labelColor = tape.labelColor
                 printColor = tape.printColor
+                tapeArtwork = tape.artwork
                 trackTitle = ""
                 trackArtist = tape.subtitle
                 elapsed = 0
@@ -383,6 +386,7 @@ final class PlayerModel: ObservableObject {
         tapeSubtitle = ""
         labelColor = nil
         printColor = nil
+        tapeArtwork = nil
         trackTitle = ""
         trackArtist = ""
         elapsed = 0
@@ -592,6 +596,15 @@ final class PlayerModel: ObservableObject {
             }
             refresh()
         }
+    }
+
+    /// The press turned out not to be a press (on the click wheel, the thumb
+    /// moved on round). Nothing is skipped; a wind in progress is ended.
+    func seekKeyCancel() {
+        seekTask?.cancel()
+        seekTask = nil
+        if winding { finishWinding() }
+        keyWound = false
     }
 
     func seekKeyUp(forward: Bool) {
