@@ -30,7 +30,7 @@ A theme is what the closed phone looks like: which player it is and what colour 
 | --- | --- |
 | Tape deck, Black | The cassette and its reels behind a window in dark smoked plastic, with the volume fader and keys beside it. |
 | Tape deck, Yellow | The same in bright yellow with dark engraved lettering. |
-| Tape deck, Blue | Blue painted metal with a silver side for the keys and an orange play key. |
+| Tape deck, Blue | Blue painted metal with a silver side for the keys and a red play key. |
 | Tape deck, Retro 80s | Eighties neon: deep purple, a glowing pink and cyan window, a hot pink play key and a band of stripes. |
 | MP3 player, Black | A display of menus and a white jog dial, in dark plastic. |
 | MP3 player, Retro 80s | The same in purple, with cyan lettering on the display and a pink highlight. |

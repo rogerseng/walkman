@@ -10,8 +10,8 @@ enum Skin: String, CaseIterable, Identifiable {
     case yellow
     /// Eighties neon: deep purple with hot pink and cyan, and a band of stripes.
     case neon
-    /// Cassette player in blue painted metal with a silver side, like the
-    /// first pocket stereos of 1979.
+    /// Cassette player in blue painted metal with a silver side and a red
+    /// play key.
     case blue
     /// Click-wheel player in black.
     case wheelBlack
@@ -118,24 +118,30 @@ enum Skin: String, CaseIterable, Identifiable {
     static let hotPink = Color(red: 1.0, green: 0.24, blue: 0.64)
     static let cyan = Color(red: 0.30, green: 0.94, blue: 1.0)
 
-    /// The play key: orange, or hot pink on the neon skin. Face when up,
-    /// face when pressed in, and the side of the key.
+    /// The play key: orange, hot pink on the neon skin, or red on the blue
+    /// one. Face when up, face when pressed in, and the side of the key.
     var accentUp: [Color] {
-        self == .neon
-            ? [Color(red: 1.0, green: 0.40, blue: 0.74), Color(red: 0.92, green: 0.14, blue: 0.54)]
-            : [Color(red: 0.99, green: 0.56, blue: 0.18), Color(red: 0.88, green: 0.40, blue: 0.08)]
+        switch self {
+        case .neon: return [Color(red: 1.0, green: 0.40, blue: 0.74), Color(red: 0.92, green: 0.14, blue: 0.54)]
+        case .blue: return [Color(red: 0.95, green: 0.27, blue: 0.24), Color(red: 0.80, green: 0.13, blue: 0.13)]
+        default: return [Color(red: 0.99, green: 0.56, blue: 0.18), Color(red: 0.88, green: 0.40, blue: 0.08)]
+        }
     }
 
     var accentDown: [Color] {
-        self == .neon
-            ? [Color(red: 0.62, green: 0.08, blue: 0.37), Color(red: 0.50, green: 0.05, blue: 0.30)]
-            : [Color(red: 0.66, green: 0.28, blue: 0.05), Color(red: 0.55, green: 0.22, blue: 0.03)]
+        switch self {
+        case .neon: return [Color(red: 0.62, green: 0.08, blue: 0.37), Color(red: 0.50, green: 0.05, blue: 0.30)]
+        case .blue: return [Color(red: 0.58, green: 0.09, blue: 0.09), Color(red: 0.46, green: 0.06, blue: 0.06)]
+        default: return [Color(red: 0.66, green: 0.28, blue: 0.05), Color(red: 0.55, green: 0.22, blue: 0.03)]
+        }
     }
 
     var accentWall: [Color] {
-        self == .neon
-            ? [Color(red: 0.56, green: 0.06, blue: 0.33), Color(red: 0.32, green: 0.03, blue: 0.20)]
-            : [Color(red: 0.62, green: 0.27, blue: 0.05), Color(red: 0.40, green: 0.16, blue: 0.02)]
+        switch self {
+        case .neon: return [Color(red: 0.56, green: 0.06, blue: 0.33), Color(red: 0.32, green: 0.03, blue: 0.20)]
+        case .blue: return [Color(red: 0.55, green: 0.08, blue: 0.08), Color(red: 0.34, green: 0.04, blue: 0.04)]
+        default: return [Color(red: 0.62, green: 0.27, blue: 0.05), Color(red: 0.40, green: 0.16, blue: 0.02)]
+        }
     }
 
     /// The cut edge of the tape window, from its top left round to its
@@ -276,8 +282,8 @@ extension Skin {
         case .blue:
             return PlayerTheme(background: [0.04, 0.07, 0.15],
                                dusk: [[0.04, 0.07, 0.15], [0.12, 0.20, 0.36], [0.30, 0.42, 0.62]],
-                               accent: Self.orange, secondary: [0.80, 0.86, 0.94],
-                               accentInk: Self.darkInk)
+                               accent: [0.95, 0.30, 0.27], secondary: [0.80, 0.86, 0.94],
+                               accentInk: [0.10, 0.01, 0.01])
         case .wheelSilver:
             return PlayerTheme(background: [0.07, 0.07, 0.08],
                                dusk: [[0.07, 0.07, 0.08], [0.20, 0.20, 0.22], [0.45, 0.46, 0.50]],
