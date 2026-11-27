@@ -262,17 +262,17 @@ final class PlayerModel: ObservableObject {
         }
     }
 
-    /// Stops the tape. Pressed again while stopped, it ejects.
-    /// Returns true when the tape was ejected.
-    func stopKey() -> Bool {
-        pressFeedback()
-        guard hasTape else { return true }
-        if motion == .stopped {
+    /// The eject key. On the closed phone it only opens the shelf, so the
+    /// music carries on until another tape is chosen. Where `removeTape` is
+    /// set it takes the tape out.
+    func ejectKey(removeTape: Bool) {
+        lastKeyPress = Date()
+        if removeTape, hasTape {
             eject()
-            return true
+        } else {
+            sounds.play(.keyDown)
+            Haptics.keyDown()
         }
-        player.stop()
-        return false
     }
 
     /// Rewind and fast forward: a tap skips a track, a hold winds the tape.

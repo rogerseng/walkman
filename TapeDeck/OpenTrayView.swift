@@ -38,7 +38,7 @@ struct OpenTrayView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .foregroundColor(.white.opacity(0.85))
-            TransportKeys(vertical: false)
+            TransportKeys(vertical: false, ejectRemovesTape: true)
         }
         .padding(20)
         .background(

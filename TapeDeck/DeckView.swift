@@ -33,24 +33,20 @@ struct DeckView: View {
             let insets = geo.safeAreaInsets
             let rail = max(insets.leading, insets.trailing) >= 60
             let railLeading = rail && insets.leading > insets.trailing
+            let full = CGSize(width: geo.size.width + insets.leading + insets.trailing,
+                              height: geo.size.height + insets.top + insets.bottom)
+            let window = windowRect(in: full)
             HStack(spacing: 0) {
-                if railLeading {
-                    keyColumn(insets: insets, rail: true, leading: true)
-                    fader(insets: insets, rail: true)
-                }
+                if railLeading { keyColumn(insets: insets, rail: true, leading: true) }
                 // The face itself is drawn in the background, full screen.
                 Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if !model.hasTape { openShelf() }
                     }
-                if !railLeading {
-                    fader(insets: insets, rail: rail)
-                    keyColumn(insets: insets, rail: rail, leading: false)
-                }
+                if !railLeading { keyColumn(insets: insets, rail: rail, leading: false) }
             }
-            .frame(width: geo.size.width + insets.leading + insets.trailing,
-                   height: geo.size.height + insets.top + insets.bottom)
+            .frame(width: full.width, height: full.height)
             .background(
                 ZStack {
                     Color(white: 0.03)
@@ -58,6 +54,12 @@ struct DeckView: View {
                     clearCase
                 }
             )
+            // Volume: beside the window and exactly as tall as it is
+            .overlay(alignment: .topLeading) {
+                VolumeColumn()
+                    .frame(width: 40, height: window.height)
+                    .offset(x: railLeading ? window.minX - 52 : window.maxX + 12, y: window.minY)
+            }
             .ignoresSafeArea()
         }
     }
@@ -76,14 +78,8 @@ struct DeckView: View {
         GeometryReader { geo in
             let size = geo.size
             let upright = size.height > size.width
-            let long = upright ? size.height : size.width
-            let short = upright ? size.width : size.height
-            // As big as the screen allows. It may run a little past the
-            // edges, but never far enough to lose the label.
-            let fit = min(long / 100, short / 63)
-            let fill = max(long / 100, short / 63)
-            let scale = min(fill, fit * 1.04)
-            let window = windowRect(in: size, upright: upright, scale: scale)
+            let scale = tapeScale(in: size)
+            let window = windowRect(in: size)
             let opening = RoundedRectangle(cornerRadius: 20)
             ZStack {
                 if model.hasTape {
@@ -130,8 +126,21 @@ struct DeckView: View {
         }
     }
 
+    /// How many points one millimetre of cassette takes: as big as the screen
+    /// allows. The cassette may run a little past the edges, but never far
+    /// enough to lose the label.
+    private func tapeScale(in size: CGSize) -> CGFloat {
+        let long = max(size.width, size.height)
+        let short = min(size.width, size.height)
+        let fit = min(long / 100, short / 63)
+        let fill = max(long / 100, short / 63)
+        return min(fill, fit * 1.04)
+    }
+
     /// Where `windowOnCassette` lands on screen.
-    private func windowRect(in size: CGSize, upright: Bool, scale: CGFloat) -> CGRect {
+    private func windowRect(in size: CGSize) -> CGRect {
+        let upright = size.height > size.width
+        let scale = tapeScale(in: size)
         let w = windowOnCassette
         if upright {
             // Turned a quarter turn: the cassette's top edge is at the left
@@ -192,54 +201,14 @@ struct DeckView: View {
 
     // MARK: Keys
 
-    /// Four big transport keys (play and pause share one), then two small
-    /// ones side by side: sound effects and the tape shelf.
+    /// Four big keys: play/pause, fast forward, rewind and eject.
     private func keys(height: CGFloat) -> some View {
-        VStack(spacing: 14) {
-            TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
-                          spacing: keyGap, onEject: openShelf)
-            HStack(spacing: 6) {
-                TapeKey(symbol: model.soundEffectsOn ? "speaker.wave.2.fill" : "speaker.slash.fill",
-                        label: model.soundEffectsOn ? "Tape sound effects on" : "Tape sound effects off",
-                        height: smallKeyHeight, showsLabel: false, corner: 10, symbolSize: 13,
-                        onDown: {
-                            Haptics.keyDown()
-                            model.soundEffectsOn.toggle()
-                        })
-                TapeKey(symbol: "square.stack.3d.up.fill", label: "Tape shelf",
-                        height: smallKeyHeight, showsLabel: false, corner: 10, symbolSize: 13,
-                        onDown: {
-                            Haptics.keyDown()
-                            openShelf()
-                        })
-            }
-        }
+        TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
+                      spacing: keyGap, onEject: openShelf)
     }
-
-    private let smallKeyHeight: CGFloat = 34
-    /// Room the small keys and the gap above them take in the column.
-    private var smallKeysRoom: CGFloat { 14 + smallKeyHeight }
 
     private func keyHeight(room: CGFloat) -> CGFloat {
-        min(bigKeyHeight, max(40, (room - smallKeysRoom - 3 * keyGap) / 4))
-    }
-
-    /// The volume fader, standing beside the keys and as tall as they are.
-    private func fader(insets: EdgeInsets, rail: Bool) -> some View {
-        GeometryReader { geo in
-            let top = rail ? railStatusHeight : insets.top + 12
-            let bottom = insets.bottom + 12
-            let room = geo.size.height - top - bottom
-            let column = 4 * keyHeight(room: room) + 3 * keyGap + smallKeysRoom
-            VStack(spacing: 0) {
-                if !rail { Spacer(minLength: 0) }
-                VolumeFader().frame(height: min(column, max(60, room)))
-                Spacer(minLength: 0)
-            }
-            .padding(.top, top)
-            .padding(.bottom, bottom)
-        }
-        .frame(width: 40)
+        min(bigKeyHeight, max(40, (room - 3 * keyGap) / 4))
     }
 
     /// The column of keys. In the Duo's rail it starts below the camera and
@@ -281,7 +250,8 @@ struct DeckView: View {
     }
 }
 
-/// The five keys, in a column for the closed phone or a row for the open one.
+/// The transport keys, in a column for the closed phone or a row for the open
+/// one. There is no stop key: pause stops the music and keeps your place.
 struct TransportKeys: View {
     @EnvironmentObject private var model: PlayerModel
     var vertical: Bool
@@ -291,6 +261,9 @@ struct TransportKeys: View {
     /// Four large rounded keys, with play and pause sharing one.
     var big = false
     var spacing: CGFloat = 6
+    /// True where eject should take the tape out; false where it only opens
+    /// the shelf to pick another.
+    var ejectRemovesTape = false
     var onEject: () -> Void = {}
 
     var body: some View {
@@ -320,9 +293,12 @@ struct TransportKeys: View {
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: { model.seekKeyDown(forward: false) },
                     onUp: { model.seekKeyUp(forward: false) })
-            TapeKey(symbol: "eject.fill", label: "STOP/EJECT",
+            TapeKey(symbol: "eject.fill", label: "EJECT",
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
-                    onDown: { if model.stopKey() { onEject() } })
+                    onDown: {
+                        model.ejectKey(removeTape: ejectRemovesTape)
+                        onEject()
+                    })
         }
         .padding(bare ? 0 : 6)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(bare ? 0 : 0.28)))

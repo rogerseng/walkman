@@ -14,6 +14,19 @@ final class SystemVolume: ObservableObject {
 
     private var observation: NSKeyValueObservation?
     private var lastSet = Date.distantPast
+    private var levelBeforeMute = 0.5
+
+    var isMuted: Bool { level <= 0.001 }
+
+    /// Drops the volume to nothing, or puts it back where it was.
+    func toggleMute() {
+        if isMuted {
+            set(max(levelBeforeMute, 1.0 / 16))
+        } else {
+            levelBeforeMute = level
+            set(0)
+        }
+    }
 
     init() {
         let session = AVAudioSession.sharedInstance()
@@ -57,7 +70,7 @@ private struct VolumeHost: UIViewRepresentable {
 /// cap you slide. Up is louder. It clicks under the thumb as it passes each
 /// step, and it follows the phone's volume buttons.
 struct VolumeFader: View {
-    @StateObject private var volume = SystemVolume()
+    @ObservedObject var volume: SystemVolume
     @State private var lastStep = -1
 
     private let capHeight: CGFloat = 28
@@ -128,6 +141,25 @@ struct VolumeFader: View {
             case .decrement: volume.set(volume.level - 1 / steps)
             @unknown default: break
             }
+        }
+    }
+}
+
+/// The fader with a mute key under it.
+struct VolumeColumn: View {
+    @StateObject private var volume = SystemVolume()
+
+    var body: some View {
+        VStack(spacing: 10) {
+            VolumeFader(volume: volume)
+            TapeKey(symbol: volume.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
+                    label: volume.isMuted ? "Unmute" : "Mute",
+                    latched: volume.isMuted,
+                    height: 34, showsLabel: false, corner: 10, symbolSize: 13,
+                    onDown: {
+                        Haptics.keyDown()
+                        volume.toggleMute()
+                    })
         }
     }
 }
