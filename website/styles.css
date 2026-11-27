@@ -60,8 +60,8 @@ a.button:hover { background: #fff; color: var(--night); }
 
 /* Pictures of the app */
 .shot { margin: 0; text-align: center; }
-.shot img { display: block; width: 100%; max-width: 290px; height: auto; margin: 0 auto; border-radius: 28px; border: 8px solid var(--night); }
-.shot.wide img { max-width: 100%; border-radius: 20px; }
+.shot img { display: block; width: 100%; max-width: 330px; height: auto; margin: 0 auto; }
+.shot.wide img { max-width: 100%; }
 .shot figcaption { margin-top: 14px; font: 15px/1.2 "Righteous", sans-serif; color: var(--text); letter-spacing: 0.5px; }
 
 /* Sections step through the bands */
@@ -89,7 +89,7 @@ p.intro { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .pair h2:not(:first-child) { margin-top: 34px; }
 
 .shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 26px; justify-items: center; }
-.shots .shot img { border-color: var(--indigo); }
+.row-title { margin: 30px 0 10px; font: 400 22px/1.2 "Righteous", sans-serif; color: var(--orange); }
 
 /* Text pages: plain and easy to read, on one flat sheet */
 .page { padding: 34px 0 70px; }

@@ -28,12 +28,12 @@ A theme is what the closed phone looks like: which player it is and what colour 
 
 | Theme | What it is |
 | --- | --- |
-| Tape player, Smoke | The cassette and its reels behind a window in dark smoked plastic, with the volume fader and keys beside it. |
+| Tape player, Black | The cassette and its reels behind a window in dark smoked plastic, with the volume fader and keys beside it. |
 | Tape player, Yellow | The same in bright yellow with dark engraved lettering. |
-| Tape player, Neon | Eighties neon: deep purple, a glowing pink and cyan window, a hot pink play key and a band of stripes. |
-| MP3 player, Smoke | A display of menus and a metal jog dial, in dark plastic. |
+| Tape player, Retro 80s | Eighties neon: deep purple, a glowing pink and cyan window, a hot pink play key and a band of stripes. |
+| MP3 player, Black | A display of menus and a metal jog dial, in dark plastic. |
 | MP3 player, Yellow | The same in yellow. |
-| MP3 player, Neon | The same in purple, with cyan lettering on the display and a pink highlight. |
+| MP3 player, Retro 80s | The same in purple, with cyan lettering on the display and a pink highlight. |
 | Click wheel, Black | A screen above a click wheel. Xcode builds only. |
 | Click wheel, Silver | The same in silver with a white wheel. Xcode builds only. |
 

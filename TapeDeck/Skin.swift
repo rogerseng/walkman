@@ -45,9 +45,9 @@ enum Skin: String, CaseIterable, Identifiable {
 
     var name: String {
         switch self {
-        case .smoke: return "Smoke cassette player"
+        case .smoke: return "Black cassette player"
         case .yellow: return "Yellow cassette player"
-        case .neon: return "Neon cassette player"
+        case .neon: return "Retro 80s cassette player"
         case .wheelBlack: return "Black click wheel"
         case .wheelSilver: return "Silver click wheel"
         }

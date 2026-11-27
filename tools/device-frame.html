@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- Puts a picture of the app inside a drawing of a folding phone, for the
+     website. ?img=<file url>&w=&h= are the screen size in points;
+     ?open=1 draws the phone unfolded. Rendered by Playwright with a
+     transparent background. This is a drawing, not Apple's artwork. -->
+<body style="margin:0;background:transparent"><script>
+const q=new URLSearchParams(location.search),w=+q.get('w'),h=+q.get('h'),open=q.get('open'),img=q.get('img');
+const b=open?16:13,pad=26,r=open?44:52;
+const ti='linear-gradient(135deg,#4a4d57,#1f2128 30%,#2c2e36 60%,#15161b)';
+let html=`<div id="f" style="position:relative;display:inline-block;padding:${pad}px ${pad+6}px ${pad}px ${pad+(open?6:14)}px">
+<div style="position:relative;padding:${b}px;border-radius:${r+b}px;background:${ti};box-shadow:0 18px 30px rgba(10,4,30,.45),inset 0 0 0 2px rgba(255,255,255,.14),inset 0 0 0 4px #0b0b0e">
+${open?'':`<div style="position:absolute;left:-12px;top:${r}px;bottom:${r}px;width:16px;border-radius:9px 0 0 9px;background:linear-gradient(90deg,#3a3c44,#6b6e78 45%,#2b2d34);box-shadow:inset 0 0 0 1px rgba(0,0,0,.5)"></div>`}
+<div style="position:absolute;right:-5px;top:${h*.26}px;width:5px;height:${open?70:84}px;border-radius:0 3px 3px 0;background:#3c3e46"></div>
+<div style="position:absolute;right:-5px;top:${h*.26+(open?86:102)}px;width:5px;height:44px;border-radius:0 3px 3px 0;background:#3c3e46"></div>
+<div style="position:relative;width:${w}px;height:${h}px;border-radius:${r}px;overflow:hidden;background:#000">
+<img src="${img}" style="display:block;width:${w}px;height:${h}px">
+${open?`<div style="position:absolute;left:50%;top:0;bottom:0;width:26px;margin-left:-13px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.16) 40%,rgba(255,255,255,.07) 55%,transparent)"></div>`:''}
+<div style="position:absolute;inset:0;border-radius:${r}px;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.6)"></div>
+</div></div></div>`;
+document.body.innerHTML=html;
+</script></body>
