@@ -164,7 +164,7 @@ struct DeckView: View {
     /// 100 x 63 shell: the label strip and both reels, and most of the shell
     /// at either end of them, out to the corner screws. The guide rollers
     /// and the head opening stay under the casing, next to the keys.
-    private let windowOnCassette = CGRect(x: 11, y: 2.5, width: 78, height: 36.5)
+    private let windowOnCassette = CGRect(x: 17, y: 2.5, width: 72, height: 36.5)
 
     /// The cassette filling the whole screen (on end when the screen is
     /// taller than wide, head opening toward the keys), with the player's

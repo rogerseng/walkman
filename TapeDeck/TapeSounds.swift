@@ -59,7 +59,7 @@ final class TapeSounds {
         effects[.eject] = buffer(Self.eject())
         effects[.insert] = buffer(Self.insert())
         effects[.motorUp] = buffer(Self.motor(from: 0.35, to: 1.0, seconds: 0.36))
-        effects[.motorDown] = buffer(Self.motor(from: 1.0, to: 0.3, seconds: 0.4))
+        effects[.motorDown] = buffer(Self.motor(from: 1.0, to: 0.3, seconds: 0.34))
         // Start the engine now, so the first key press is heard at once
         // rather than after the engine spins up.
         _ = start()

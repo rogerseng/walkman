@@ -517,12 +517,20 @@ final class PlayerModel: ObservableObject {
             ramping = true
             defer { ramping = false }
             do {
-                if Prefs.isOn(Prefs.tapeRamp) {
-                    player.state.playbackRate = Self.rampUp[0]
-                    sounds.play(.motorUp)
-                }
+                let ramp = Prefs.isOn(Prefs.tapeRamp)
+                if ramp { player.state.playbackRate = Self.rampUp[0] }
+                let from = player.playbackTime
                 try await player.play()
-                if Prefs.isOn(Prefs.tapeRamp) {
+                if ramp {
+                    // Apple Music can take a moment to start after play()
+                    // returns. Wait until the tape is really moving, so the
+                    // motor is heard together with the music, not before it.
+                    var waited = 0
+                    while player.playbackTime <= from + 0.02, waited < 40 {
+                        try await Task.sleep(nanoseconds: 25_000_000)
+                        waited += 1
+                    }
+                    sounds.play(.motorUp)
                     for rate in Self.rampUp.dropFirst() {
                         try await Task.sleep(nanoseconds: 70_000_000)
                         player.state.playbackRate = rate
@@ -544,10 +552,13 @@ final class PlayerModel: ObservableObject {
             ramping = true
             defer { ramping = false }
             if Prefs.isOn(Prefs.tapeRamp), player.state.playbackStatus == .playing {
-                sounds.play(.motorDown)
-                for rate in Self.rampDown {
+                // The music reaches the speaker a little after the player
+                // is told to slow, so the motor sound waits for the first
+                // step to be heard, and the tape stops as the sound ends.
+                for (step, rate) in Self.rampDown.enumerated() {
                     player.state.playbackRate = rate
-                    do { try await Task.sleep(nanoseconds: 70_000_000) } catch { break }
+                    if step == 1 { sounds.play(.motorDown) }
+                    do { try await Task.sleep(nanoseconds: 80_000_000) } catch { break }
                 }
             }
             // Setting the rate on a paused player starts it again, so the
