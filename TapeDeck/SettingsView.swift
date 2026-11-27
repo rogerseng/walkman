@@ -178,14 +178,46 @@ struct SettingsView: View {
             } message: {
                 Text(backupNote ?? "")
             }
-            .toolbar {
-                // On the Duo the trailing items sit in the rail, under the
-                // clock and status icons.
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
+        }
+        // Done stays put however far the page is scrolled: in the Duo's
+        // rail under the clock, or along the foot on other phones.
+        .overlay {
+            GeometryReader { geo in
+                let rail = geo.safeAreaInsets.trailing
+                if rail >= 60 {
+                    doneKey
+                        .frame(width: 66)
+                        .position(x: geo.size.width + rail - 15 - 33,
+                                  // The clock takes less of the rail on the open phone
+                                  y: (geo.size.width > geo.size.height ? 122 : 180) - geo.safeAreaInsets.top + 24)
                 }
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            GeometryReader { geo in
+                if geo.safeAreaInsets.trailing < 60 {
+                    doneKey
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 20)
+                }
+            }
+            .frame(height: 52)
+            .allowsHitTesting(true)
+        }
+    }
+
+    /// The key that closes Settings.
+    private var doneKey: some View {
+        Button {
+            dismiss()
+        } label: {
+            Text("Done")
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+        }
+        .buttonStyle(PlainKeyButtonStyle())
     }
 
     private var backupNoteShown: Binding<Bool> {

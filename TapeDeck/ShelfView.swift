@@ -20,6 +20,11 @@ struct ShelfView: View {
     @State private var scope = SearchScope.catalog
     @State private var findings = SearchFindings()
     @State private var searching = false
+    /// Said above the results when Apple Music could not be searched.
+    @State private var searchNote: String?
+    /// Where the results on show came from, which is the library when a
+    /// search of Apple Music fell back to it.
+    @State private var resultsScope = SearchScope.catalog
     @State private var recent: [Album] = []
     @State private var showSettings = false
     @State private var showCurrent = false
@@ -86,12 +91,18 @@ struct ShelfView: View {
     private var shelf: some View {
         List {
             if isSearching {
+                if let searchNote {
+                    Label(searchNote, systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .listRowBackground(Color.clear)
+                }
                 if findings.isEmpty {
                     Text(searching ? "Searching…" : "No results.")
                         .foregroundColor(.secondary)
                         .listRowBackground(Color.clear)
                 }
-                SearchResultsSections(findings: findings, scope: scope)
+                SearchResultsSections(findings: findings, scope: resultsScope)
             } else {
                 Section {
                     ForEach(LibraryCategory.allCases) { category in
@@ -124,6 +135,7 @@ struct ShelfView: View {
             let wanted = term.trimmingCharacters(in: .whitespaces)
             guard !wanted.isEmpty else {
                 findings = SearchFindings()
+                searchNote = nil
                 return
             }
             searching = true
@@ -133,10 +145,28 @@ struct ShelfView: View {
                 let found = try await SearchFindings.look(for: wanted, in: scope)
                 guard !Task.isCancelled else { return }
                 findings = found
+                resultsScope = scope
+                searchNote = nil
             } catch {
                 if !Task.isCancelled {
-                    findings = SearchFindings()
-                    model.errorMessage = await model.explain(error, doing: "Search failed.")
+                    // Apple Music could not be searched. Say so above the
+                    // results, not in an alert over every letter typed, and
+                    // show what the library has under the same words.
+                    var note = await model.explain(error, doing: scope == .catalog
+                                                   ? "Apple Music could not be searched."
+                                                   : "Your library could not be searched.")
+                    #if DEBUG
+                    note += " [\(String(reflecting: error))]"
+                    #endif
+                    var fallback = SearchFindings()
+                    if scope == .catalog, let mine = try? await SearchFindings.look(for: wanted, in: .library) {
+                        fallback = mine
+                        if !mine.isEmpty { note += " These are from your library." }
+                    }
+                    guard !Task.isCancelled else { return }
+                    findings = fallback
+                    resultsScope = .library
+                    searchNote = note
                 }
             }
             searching = false

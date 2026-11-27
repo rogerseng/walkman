@@ -97,7 +97,7 @@ struct MenuPlayerView: View {
     }
 
     /// The colours of the display.
-    private struct Display {
+    struct Display {
         var paper: Color
         var ink: Color
         var barTop: Color
@@ -110,7 +110,11 @@ struct MenuPlayerView: View {
         var glow: Color
     }
 
-    private var display: Display {
+    private var display: Display { Self.display(jog: jog, skin: skin) }
+
+    /// The display's colours for a player and its skin. The open phone
+    /// shows the same display.
+    static func display(jog: Bool, skin: Skin) -> Display {
         let amber = Color(red: 1.0, green: 0.70, blue: 0.20)
         if jog, skin == .neon {
             // Cyan lettering with a hot pink highlight
@@ -390,6 +394,11 @@ struct MenuPlayerView: View {
             .frame(width: width, height: geo.size.height)
             .background(
                 ZStack {
+                  // On the Duo the body stops where the rail begins, so the
+                  // player is as even as it would be in the hand: the rail
+                  // is the dark beside it, and the body rounds away into it.
+                  Color(white: 0.02)
+                  ZStack {
                     LinearGradient(colors: skin.wheelBody, startPoint: .top, endPoint: .bottom)
                     // Brushed metal: fine lines along the grain
                     Canvas { context, size in
@@ -407,7 +416,25 @@ struct MenuPlayerView: View {
                     LinearGradient(colors: [Color.white.opacity(0.14), .clear, Color.black.opacity(0.20)],
                                    startPoint: .top, endPoint: .bottom)
                     GlassShimmer(strength: 0.45)
-                    statusPlate(rail: rail, leading: railLeading)
+                    if rail {
+                        // The rounded shoulder beside the rail
+                        LinearGradient(colors: [.clear, Color.black.opacity(0.28), Color.black.opacity(0.78)],
+                                       startPoint: railLeading ? .trailing : .leading,
+                                       endPoint: railLeading ? .leading : .trailing)
+                            .frame(width: 46)
+                            .frame(maxWidth: .infinity, alignment: railLeading ? .leading : .trailing)
+                    }
+                  }
+                  .padding(railLeading ? .leading : .trailing, rail ? max(insets.leading, insets.trailing) - 6 : 0)
+                  if rail {
+                      // The shadow the body throws across the rail
+                      LinearGradient(colors: [Color.black.opacity(0.0), Color.black.opacity(0.9)],
+                                     startPoint: railLeading ? .trailing : .leading,
+                                     endPoint: railLeading ? .leading : .trailing)
+                          .frame(width: max(insets.leading, insets.trailing) - 6)
+                          .frame(maxWidth: .infinity, alignment: railLeading ? .leading : .trailing)
+                          .blendMode(.multiply)
+                  }
                 }
                 .ignoresSafeArea()
             )

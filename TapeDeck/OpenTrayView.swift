@@ -17,8 +17,18 @@ struct OpenTrayView: View {
     @State private var doorOpen = false
     /// Flashes when the empty door is pressed.
     @State private var doorKnocked = false
+    /// The height the speakers have with the keyboard down. They keep it
+    /// when the keyboard comes up, and the door gives way instead.
+    @State private var speakerRest: CGFloat = 0
 
     private var skin: Skin { Theme.current(player: player, skinName: skinName).skin }
+    /// The MP3 player is chosen: the open phone wears its case and shows
+    /// its display where the tape deck has its cassette door.
+    private var isMP3: Bool { player == "mp3" || skin.isWheel }
+    /// The case colours of whichever player is chosen.
+    private var bodyColors: [Color] {
+        skin.isWheel ? skin.wheelBody : (isMP3 ? skin.panel : skin.casing)
+    }
 
     private var hint: String {
         if !model.hasTape { return "Pick a tape from the shelf" }
@@ -39,17 +49,26 @@ struct OpenTrayView: View {
             let rail = railWidth >= 60
             // The door takes part of the height at most, so the speakers
             // (and the keys, where they sit below) always have room.
-            let doorWidth = min(width - 36, 420, (geo.size.height * (rail ? 0.42 : 0.36) - 26) / 0.63)
+            // With the keyboard up there is far less height. The door
+            // shrinks to about half of what is left; the speakers keep
+            // their size, and the keyboard slides up over their feet.
+            let squeezed = geo.safeAreaInsets.bottom > 120 && speakerRest > 0
+            let doorWidth = min(width - 36 - (rail ? 12 : 0), 420,
+                                (geo.size.height * (squeezed ? 0.5 : rail ? 0.42 : 0.36) - 26) / 0.63)
             let doorHeight = doorWidth * 0.63 + 26
             VStack(spacing: 14) {
                 topStrip
-                door(width: doorWidth, height: doorHeight)
+                if isMP3 {
+                    playerScreen(width: doorWidth, height: doorHeight)
+                } else {
+                    door(width: doorWidth, height: doorHeight)
+                }
                 nowPlaying
                 if !rail { keyBed }
                 // A pair of speakers where there is the width for them, one
                 // large one where the space is tall
                 GeometryReader { room in
-                    let pair = room.size.width > room.size.height * 1.5
+                    let pair = room.size.width > room.size.height * 1.15
                     HStack(spacing: 18) {
                         Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
                         if pair {
@@ -57,13 +76,21 @@ struct OpenTrayView: View {
                         }
                     }
                     .frame(width: room.size.width, height: room.size.height)
+                    .onChange(of: room.size.height, initial: true) { _, height in
+                        if geo.safeAreaInsets.bottom <= 120 { speakerRest = height }
+                    }
                 }
+                .frame(height: squeezed ? speakerRest : nil)
                 .padding(.horizontal, 6)
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, 16)
+            // Clear of the panel the keys stand on, which comes a little
+            // way in from the rail
+            .padding(.trailing, rail ? 16 + railPanelReach : 16)
             .padding(.top, 14)
             .padding(.bottom, 16)
-            .frame(width: width, height: geo.size.height)
+            .frame(width: width, height: geo.size.height, alignment: .top)
+            .clipped()
             .overlay(alignment: .topTrailing) {
                 if rail {
                     keyRail(height: geo.size.height,
@@ -84,6 +111,9 @@ struct OpenTrayView: View {
     private let railStatusHeight: CGFloat = 116
     private let railKeyWidth: CGFloat = 66
     private let railOuterMargin: CGFloat = 15
+    /// How far the key panel comes in past the rail, so the keys have as
+    /// much panel on their left as on their right.
+    private let railPanelReach: CGFloat = 12
 
     /// The column of keys in the rail: play, stop, fast forward, rewind and
     /// eject. Settings is on the shelf.
@@ -105,6 +135,9 @@ struct OpenTrayView: View {
         ZStack(alignment: .topTrailing) {
             LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
                            startPoint: .top, endPoint: .bottom)
+            // Where the body is already the panel colour, the panel is
+            // a shade darker so it still reads as a part of its own.
+            if isMP3 { Color.black.opacity(0.22) }
             PlasticGrain(strength: 0.5)
             // The seam where the panel meets the body
             HStack(spacing: 0) {
@@ -130,8 +163,7 @@ struct OpenTrayView: View {
     private func bodyShell(railWidth: CGFloat) -> some View {
         ZStack {
             Color.black
-            LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.casing,
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            LinearGradient(colors: bodyColors, startPoint: .topLeading, endPoint: .bottomTrailing)
             PlasticGrain(strength: 0.5)
             LinearGradient(colors: [Color.white.opacity(0.10), .clear, Color.black.opacity(0.25)],
                            startPoint: .top, endPoint: .bottom)
@@ -142,7 +174,7 @@ struct OpenTrayView: View {
                 Spacer()
             }
             if railWidth > 0 {
-                keyPanel(width: railWidth + 4)
+                keyPanel(width: railWidth + railPanelReach)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
@@ -154,7 +186,7 @@ struct OpenTrayView: View {
                 .foregroundColor(skin.mark.opacity(1))
                 .shadow(color: skin.engravingEdge.opacity(0.6), radius: 0.3, y: skin.engravingEdgeOffset)
             Spacer(minLength: 0)
-            Text(model.hasTape ? "SIDE \(model.sideLetter)" : "CASSETTE DECK")
+            Text(model.hasTape ? "SIDE \(model.sideLetter)" : (isMP3 ? "MP3 PLAYER" : "CASSETTE DECK"))
                 .font(Typeface.displayFixed(9))
                 .tracking(1.6)
                 .foregroundColor(skin.engraving)
@@ -260,6 +292,8 @@ struct OpenTrayView: View {
     /// What is playing, and the way to turn the tape over.
     private var nowPlaying: some View {
         VStack(spacing: 8) {
+            // The MP3 player's display already names the song.
+            if !(isMP3 && hint == model.trackLine) {
             Label {
                 Text(hint)
                     .font(.system(size: 14, weight: .semibold))
@@ -274,8 +308,10 @@ struct OpenTrayView: View {
             }
             .foregroundColor(skin.note)
             .frame(maxWidth: .infinity, minHeight: 36)
+            }
 
-            if model.hasTape, model.duration > 0, !model.tapeEaten { timeline }
+            // The MP3 player's display has a bar of its own.
+            if model.hasTape, model.duration > 0, !model.tapeEaten, !isMP3 { timeline }
 
             if model.hasTape, model.tapeEaten {
                 Button {
@@ -297,6 +333,87 @@ struct OpenTrayView: View {
                 .buttonStyle(PlainKeyButtonStyle())
             }
         }
+    }
+
+    /// The MP3 player's display, in the colours it has on the closed phone:
+    /// what is playing, whose it is, the tape it is on, and how far through.
+    private func playerScreen(width: CGFloat, height: CGFloat) -> some View {
+        let look = MenuPlayerView.display(jog: !skin.isWheel, skin: skin)
+        let shape = RoundedRectangle(cornerRadius: 14)
+        let done = model.duration > 0 ? min(1, max(0, model.elapsed / model.duration)) : 0
+        return VStack(spacing: 0) {
+            // Title bar
+            HStack {
+                Text(model.hasTape ? "Now Playing" : "Cassety")
+                    .font(.system(size: 13, weight: .bold))
+                Spacer(minLength: 0)
+                Image(systemName: model.motion == .playing ? "play.fill" : "pause.fill")
+                    .font(.system(size: 11, weight: .bold))
+                    .opacity(model.hasTape ? 1 : 0)
+            }
+            .foregroundColor(look.barInk)
+            .padding(.horizontal, 12)
+            .frame(height: 28)
+            .background(LinearGradient(colors: [look.barTop, look.barBottom], startPoint: .top, endPoint: .bottom))
+
+            VStack(alignment: .leading, spacing: 4) {
+                if model.hasTape {
+                    Text(model.trackTitle.isEmpty ? model.tapeTitle : model.trackTitle)
+                        .font(.system(size: 19, weight: .bold))
+                        .lineLimit(2)
+                    Text(model.trackArtist)
+                        .font(.system(size: 14, weight: .semibold))
+                        .lineLimit(1)
+                    Text(model.tapeTitle)
+                        .font(Typeface.markerFixed(15))
+                        .lineLimit(1)
+                        .opacity(0.7)
+                    Spacer(minLength: 4)
+                    GeometryReader { bar in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(look.track)
+                            Capsule().fill(look.litBottom).frame(width: bar.size.width * CGFloat(done))
+                        }
+                    }
+                    .frame(height: 8)
+                    HStack {
+                        Text(TransportKeys.clock(model.elapsed))
+                        Spacer()
+                        Text("Side \(model.sideLetter)")
+                        Spacer()
+                        Text("-" + TransportKeys.clock(max(0, model.duration - model.elapsed)))
+                    }
+                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                    .opacity(0.85)
+                } else {
+                    Spacer(minLength: 0)
+                    Text("No tape")
+                        .font(.system(size: 19, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                    Text("Pick one from the shelf")
+                        .font(.system(size: 13, weight: .semibold))
+                        .opacity(0.7)
+                        .frame(maxWidth: .infinity)
+                    Spacer(minLength: 0)
+                }
+            }
+            .foregroundColor(look.ink)
+            .shadow(color: look.glow, radius: 4)
+            .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .background(look.paper)
+        .clipShape(shape)
+        // The bezel the display sits in
+        .overlay(shape.strokeBorder(Color.black.opacity(0.9), lineWidth: 5))
+        .overlay(shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.3)],
+                                                   startPoint: .top, endPoint: .bottom), lineWidth: 1))
+        .frame(width: width, height: height)
+        .shadow(color: .black.opacity(0.6), radius: 8, y: 5)
+        .onTapGesture(count: 2) { model.flipTape() }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(model.hasTape ? "\(model.trackTitle), \(model.trackArtist)" : "No tape")
+        .accessibilityAction(named: "Turn the tape over") { model.flipTape() }
     }
 
     /// How far through the song the tape is: a bar, with the time gone and
