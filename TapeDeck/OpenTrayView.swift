@@ -15,11 +15,14 @@ struct OpenTrayView: View {
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     /// The door stands open while a tape is on its way in or out.
     @State private var doorOpen = false
+    /// Flashes when the empty door is pressed.
+    @State private var doorKnocked = false
 
     private var skin: Skin { Theme.current(player: player, skinName: skinName).skin }
 
     private var hint: String {
         if !model.hasTape { return "Pick a tape from the shelf" }
+        if model.tapeEaten { return "The deck ate your tape. It happens to the best decks." }
         if let note = model.endOfSideNote { return note }
         if !model.trackLine.isEmpty, model.motion == .playing || model.motion == .paused {
             return model.trackLine
@@ -179,7 +182,8 @@ struct OpenTrayView: View {
                     Image(systemName: "eject.fill").font(.system(size: 22))
                     Text("NO TAPE").font(Typeface.display(15)).tracking(3)
                 }
-                .foregroundColor(Color.white.opacity(0.5))
+                .foregroundColor(Color.white.opacity(doorKnocked ? 0.95 : 0.5))
+                .scaleEffect(doorKnocked ? 0.92 : 1)
                 .offset(y: 12 * u)
                 .transition(.opacity)
             }
@@ -220,6 +224,34 @@ struct OpenTrayView: View {
         .rotation3DEffect(.degrees(doorOpen ? -24 : 0), axis: (x: 1, y: 0, z: 0),
                           anchor: .bottom, perspective: 0.55)
         .onTapGesture(count: 2) { model.flipTape() }
+        .onTapGesture {
+            if model.tapeEaten {
+                model.windTapeBack()
+            } else if !model.hasTape {
+                // Nothing to press on: the door knocks and gives a little.
+                model.knockEmptyDeck()
+                withAnimation(.easeOut(duration: 0.08)) { doorKnocked = true }
+                Task {
+                    try? await Task.sleep(nanoseconds: 160_000_000)
+                    withAnimation(.easeOut(duration: 0.2)) { doorKnocked = false }
+                }
+            }
+        }
+        // Lean on a reel and the deck eats the tape.
+        .overlay {
+            if model.hasTape, !model.tapeEaten {
+                HStack(spacing: 17 * u) {
+                    ForEach(0..<2, id: \.self) { _ in
+                        Color.clear
+                            .frame(width: 24 * u, height: 24 * u)
+                            .contentShape(Circle())
+                            .onTapGesture(count: 2) { model.flipTape() }
+                            .onLongPressGesture(minimumDuration: 0.7) { model.eatTape() }
+                    }
+                }
+                .offset(y: -3 * u)
+            }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(model.hasTape ? "\(model.tapeTitle), side \(model.sideLetter)" : "No tape")
         .accessibilityAction(named: "Turn the tape over") { model.flipTape() }
@@ -235,16 +267,26 @@ struct OpenTrayView: View {
                     .multilineTextAlignment(.center)
             } icon: {
                 if model.hasTape {
-                    Image(systemName: model.endOfSideNote == nil ? "music.note" : "arrow.triangle.2.circlepath")
+                    Image(systemName: model.tapeEaten ? "exclamationmark.triangle.fill"
+                          : model.endOfSideNote == nil ? "music.note" : "arrow.triangle.2.circlepath")
                         .font(.system(size: 13, weight: .bold))
                 }
             }
             .foregroundColor(skin.note)
             .frame(maxWidth: .infinity, minHeight: 36)
 
-            if model.hasTape, model.duration > 0 { timeline }
+            if model.hasTape, model.duration > 0, !model.tapeEaten { timeline }
 
-            if model.hasTape, model.canFlip {
+            if model.hasTape, model.tapeEaten {
+                Button {
+                    model.windTapeBack()
+                } label: {
+                    Text("Wind it back in")
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(PlainKeyButtonStyle())
+            } else if model.hasTape, model.canFlip {
                 Button {
                     model.flipTape()
                 } label: {

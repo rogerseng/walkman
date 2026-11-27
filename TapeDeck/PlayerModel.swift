@@ -71,6 +71,11 @@ final class PlayerModel: ObservableObject {
         return trackArtist.isEmpty ? trackTitle : "\(trackTitle) · \(trackArtist)"
     }
 
+    /// The deck has chewed the tape: it hangs out of the cassette in a
+    /// tangle and nothing plays until it is wound back in. A bit of fun,
+    /// set off by leaning on a reel.
+    @Published private(set) var tapeEaten = false
+
     /// What to tell the listener when the tape has run out.
     var endOfSideNote: String? {
         guard hasTape, sideEnded else { return nil }
@@ -440,6 +445,7 @@ final class PlayerModel: ObservableObject {
     /// Lets go of everything in progress on the transport: a wind, a run-up
     /// or run-down, a promise. Called whenever the tape itself changes.
     private func resetTransport() {
+        tapeEaten = false
         seekTask?.cancel()
         seekTask = nil
         finishTask?.cancel()
@@ -483,7 +489,7 @@ final class PlayerModel: ObservableObject {
     /// from the start of the old one. A tape flipped at the very start of a
     /// side is treated as rewound, so the other side begins at its beginning.
     func flipTape() {
-        guard hasTape, !swapping, sides.count == 2 else { return }
+        guard hasTape, !swapping, !tapeEaten, sides.count == 2 else { return }
         let other = 1 - sideIndex
         guard !sides[other].isBlank else {
             pressFeedback()
@@ -546,7 +552,7 @@ final class PlayerModel: ObservableObject {
     func playKey() {
         pressFeedback()
         guard hasTape else { return }
-        if sideEnded {
+        if sideEnded || tapeEaten {
             // End of the tape: the key will not stay down.
             Task {
                 await pause(seconds: 0.18)
@@ -570,6 +576,48 @@ final class PlayerModel: ObservableObject {
             promise(.paused)
             stopTape()
         }
+    }
+
+    // MARK: Chewed tape
+
+    /// The speeds the music lurches through as the tape snags.
+    private static let chewRates: [Float] = [0.8, 1.12, 0.62, 0.95, 0.5, 0.7, 0.36]
+
+    /// The deck eats the tape: the music lurches and stops, and the tape
+    /// spills out until it is wound back.
+    func eatTape() {
+        guard hasTape, !swapping, !tapeEaten,
+              motion != .fastForward, motion != .rewind else { return }
+        sounds.play(.tangle)
+        Haptics.chew()
+        withAnimation(.easeOut(duration: 0.9)) { tapeEaten = true }
+        let wasPlaying = motion == .playing
+        promise(.paused)
+        ramp { [self] in
+            if wasPlaying {
+                for rate in Self.chewRates {
+                    setRate(rate)
+                    do { try await Task.sleep(nanoseconds: 85_000_000) } catch { return }
+                }
+            }
+            restoreRate()
+            player.pause()
+        }
+    }
+
+    /// Winds the spilled tape back into the cassette, ready to play again.
+    func windTapeBack() {
+        guard tapeEaten else { return }
+        sounds.play(.windBack)
+        Haptics.windBack()
+        withAnimation(.easeInOut(duration: 0.9)) { tapeEaten = false }
+    }
+
+    /// A knock on the empty deck: there is no tape to press on.
+    func knockEmptyDeck() {
+        guard !hasTape else { return }
+        sounds.play(.keyDown)
+        Haptics.door()
     }
 
     /// Shows what a key asked for straight away.
@@ -713,7 +761,7 @@ final class PlayerModel: ObservableObject {
     /// Rewind and fast forward: a tap skips a song, a hold winds the tape.
     func seekKeyDown(forward: Bool) {
         pressFeedback()
-        guard hasTape, !swapping else { return }
+        guard hasTape, !swapping, !tapeEaten else { return }
         keyWound = false
         seekTask?.cancel()
         seekTask = Task {
@@ -882,6 +930,9 @@ final class PlayerModel: ObservableObject {
         case .paused, .stopped: sounds.setLoop(nil)
         }
         pausedSince = motion == .paused ? Date() : nil
+        // Music started from somewhere else (headphones, the lock screen):
+        // the tape cannot be both playing and in a heap.
+        if motion == .playing, tapeEaten, rampTask == nil { tapeEaten = false }
         if motion == .playing {
             waitingForLid = false
             sideEnded = false

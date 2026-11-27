@@ -8,7 +8,7 @@ import UIKit
 /// carries on behind the lock screen, which also means the sounds are not muted
 /// by the silent switch.
 final class TapeSounds {
-    enum Effect { case keyDown, keyUp, eject, insert, motorUp, motorDown }
+    enum Effect { case keyDown, keyUp, eject, insert, motorUp, motorDown, tangle, windBack }
     enum Loop { case hiss, whir, reverse }
 
     var enabled = true {
@@ -60,6 +60,8 @@ final class TapeSounds {
         effects[.insert] = buffer(Self.insert())
         effects[.motorUp] = buffer(Self.motor(from: 0.35, to: 1.0, seconds: 0.36))
         effects[.motorDown] = buffer(Self.motor(from: 1.0, to: 0.3, seconds: 0.34))
+        effects[.tangle] = buffer(Self.tangle())
+        effects[.windBack] = buffer(Self.windBack())
         // Start the engine now, so the first key press is heard at once
         // rather than after the engine spins up.
         _ = start()
@@ -331,6 +333,64 @@ final class TapeSounds {
 
     /// The capstan motor changing speed: a whine and rumble whose pitch
     /// slides from one speed to another, fading in or out at the slow end.
+    /// The deck eating a tape: the motor labouring and lurching as the tape
+    /// wraps round the capstan, the crackle of tape crumpling, a squeal from
+    /// the pinch roller, and a clunk as the mechanism gives up.
+    private static func tangle() -> [Float] {
+        let seconds = 1.25
+        var s = silence(seconds)
+        var phase = 0.0
+        var squeal = 0.0
+        var low = 0.0
+        var crackle = 0.0
+        for i in 0..<s.count {
+            let t = Double(i) / rate
+            let along = t / seconds
+            // The motor sags, with a flutter that gets wilder as it jams
+            let flutter = sin(2 * .pi * (5 + along * 9) * t) * (0.10 + along * 0.22)
+            let speed = max(0.12, 1 - along * 0.8 + flutter)
+            phase += 2 * .pi * 560 * speed / rate
+            squeal += 2 * .pi * (1900 + 700 * sin(2 * .pi * 11 * t)) * speed / rate
+            low += (Double.random(in: -1...1) - low) * 0.10
+            // Crumpling: sparse sharp ticks, thickest in the middle
+            if Double.random(in: 0...1) < 0.012 * sin(.pi * along) { crackle = Double.random(in: -1...1) }
+            crackle *= 0.86
+            let fade = min(1, (1 - along) * 9) * min(1, along * 60)
+            let squealLevel = 0.022 * max(0, sin(.pi * min(1, along * 1.6)))
+            s[i] = Float(fade * (sin(phase) * 0.05 + sin(phase * 0.5) * 0.04 + low * 0.14
+                                 + crackle * 0.30 + sin(squeal) * squealLevel))
+        }
+        knock(&s, at: 0.0, freq: 180, decay: 40, noise: 0.8, gain: 0.35)
+        knock(&s, at: 1.02, freq: 90, decay: 26, noise: 0.9, gain: 0.7)
+        return s
+    }
+
+    /// Winding the spilled tape back in: a hand-turned ratchet that speeds
+    /// up, and a soft knock as the tape pulls taut.
+    private static func windBack() -> [Float] {
+        let seconds = 1.0
+        var s = silence(seconds)
+        var low = 0.0
+        var phase = 0.0
+        for i in 0..<s.count {
+            let t = Double(i) / rate
+            let along = t / seconds
+            phase += 2 * .pi * (300 + 520 * along) / rate
+            low += (Double.random(in: -1...1) - low) * 0.2
+            let fade = min(1, (1 - along) * 10) * min(1, along * 30)
+            s[i] = Float(fade * (sin(phase) * 0.03 + low * 0.07))
+        }
+        var at = 0.02
+        var gap = 0.11
+        while at < 0.85 {
+            knock(&s, at: at, freq: 900, decay: 160, noise: 0.5, gain: 0.16)
+            at += gap
+            gap = max(0.045, gap * 0.88)
+        }
+        knock(&s, at: 0.9, freq: 140, decay: 40, noise: 0.6, gain: 0.4)
+        return s
+    }
+
     private static func motor(from start: Double, to end: Double, seconds: Double) -> [Float] {
         var s = silence(seconds)
         var phase = 0.0

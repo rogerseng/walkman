@@ -44,6 +44,8 @@ struct CassetteView: View {
     /// Sitting in a deck: the deck's drive spindles show through the clear
     /// hubs and turn with them.
     var onSpindles = false
+    /// The deck has chewed the tape: it hangs out of the shell in a tangle.
+    var eaten = false
 
     @State private var spin = SpinState()
 
@@ -77,12 +79,14 @@ struct CassetteView: View {
                     .interpolation(.high)
 
                 label(u: u)
+
+                TapeTangle(u: u, out: eaten)
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .aspectRatio(100.0 / 63.0, contentMode: .fit)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Cassette: \(title). \(subtitle)")
+        .accessibilityLabel(eaten ? "Cassette: \(title). The tape is tangled." : "Cassette: \(title). \(subtitle)")
     }
 
     /// The lettering on the label strip, which the artwork leaves blank.
@@ -237,6 +241,71 @@ struct CassetteView: View {
             }
         }
         .frame(width: size, height: size)
+    }
+}
+
+/// Tape pulled out of the cassette and left in a heap over it: loops of
+/// brown ribbon that start at the head opening in the foot of the shell.
+/// They are drawn out along their length as the deck chews, and drawn back
+/// the same way when the tape is wound in. Sizes are in millimetres.
+struct TapeTangle: View {
+    let u: CGFloat
+    /// Whether the tape is out.
+    var out: Bool
+
+    private static let oxide = Color(red: 0.23, green: 0.15, blue: 0.10)
+    private static let sheen = Color(red: 0.62, green: 0.46, blue: 0.34)
+
+    /// Each strand leaves the head opening and wanders over the shell.
+    private static let strands: [[CGPoint]] = [
+        [CGPoint(x: 46, y: 60), CGPoint(x: 30, y: 44), CGPoint(x: 22, y: 20), CGPoint(x: 40, y: 12),
+         CGPoint(x: 52, y: 30), CGPoint(x: 34, y: 38), CGPoint(x: 26, y: 28), CGPoint(x: 44, y: 22),
+         CGPoint(x: 60, y: 36), CGPoint(x: 48, y: 50), CGPoint(x: 36, y: 46)],
+        [CGPoint(x: 54, y: 60), CGPoint(x: 70, y: 46), CGPoint(x: 84, y: 26), CGPoint(x: 66, y: 12),
+         CGPoint(x: 50, y: 24), CGPoint(x: 68, y: 36), CGPoint(x: 80, y: 30), CGPoint(x: 62, y: 20),
+         CGPoint(x: 46, y: 34), CGPoint(x: 58, y: 48), CGPoint(x: 72, y: 54)],
+        [CGPoint(x: 50, y: 61), CGPoint(x: 42, y: 40), CGPoint(x: 58, y: 16), CGPoint(x: 76, y: 22),
+         CGPoint(x: 64, y: 42), CGPoint(x: 40, y: 30), CGPoint(x: 28, y: 14), CGPoint(x: 18, y: 32),
+         CGPoint(x: 32, y: 52), CGPoint(x: 52, y: 44)],
+        [CGPoint(x: 49, y: 60), CGPoint(x: 62, y: 52), CGPoint(x: 86, y: 44), CGPoint(x: 78, y: 16),
+         CGPoint(x: 56, y: 28), CGPoint(x: 38, y: 18), CGPoint(x: 20, y: 40), CGPoint(x: 40, y: 56),
+         CGPoint(x: 66, y: 30)],
+    ]
+
+    var body: some View {
+        ZStack {
+            ForEach(Self.strands.indices, id: \.self) { index in
+                let path = Self.curve(through: Self.strands[index], u: u)
+                // The later strands come out a little after the first
+                let reach = out ? 1.0 : 0.0
+                path.trim(from: 0, to: reach)
+                    .stroke(Self.oxide, style: StrokeStyle(lineWidth: 1.5 * u, lineCap: .round, lineJoin: .round))
+                    .shadow(color: .black.opacity(0.55), radius: 0.8 * u, y: 0.5 * u)
+                // Light along one edge of the ribbon, so it reads as glossy tape
+                path.trim(from: 0, to: reach)
+                    .stroke(Self.sheen.opacity(0.55),
+                            style: StrokeStyle(lineWidth: 0.28 * u, lineCap: .round, lineJoin: .round))
+                    .offset(x: -0.35 * u, y: -0.35 * u)
+            }
+        }
+        .opacity(out ? 1 : 0)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    /// A smooth line through the points: each one is joined to the next by
+    /// a curve that passes through the middle of the gap.
+    private static func curve(through points: [CGPoint], u: CGFloat) -> Path {
+        var path = Path()
+        guard points.count > 2 else { return path }
+        func scaled(_ point: CGPoint) -> CGPoint { CGPoint(x: point.x * u, y: point.y * u) }
+        func middle(_ a: CGPoint, _ b: CGPoint) -> CGPoint { CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2) }
+        path.move(to: scaled(points[0]))
+        for index in 1..<points.count - 1 {
+            path.addQuadCurve(to: scaled(middle(points[index], points[index + 1])), control: scaled(points[index]))
+        }
+        path.addLine(to: scaled(points[points.count - 1]))
+        return path
     }
 }
 

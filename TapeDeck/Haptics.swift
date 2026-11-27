@@ -56,6 +56,31 @@ enum Haptics {
         rigid.impactOccurred(intensity: 0.6)
     }
 
+    /// The deck chewing the tape: a run of uneven knocks as it snags.
+    static func chew() {
+        guard on else { return }
+        heavy.impactOccurred(intensity: 1.0)
+        Task { @MainActor in
+            for (wait, strength) in [(70, 0.7), (60, 1.0), (110, 0.5), (80, 0.9), (140, 0.6), (120, 1.0)] {
+                try? await Task.sleep(nanoseconds: UInt64(wait) * 1_000_000)
+                rigid.impactOccurred(intensity: CGFloat(strength))
+            }
+            heavy.prepare()
+        }
+    }
+
+    /// The tape being wound back in: quick light ticks, then it seats.
+    static func windBack() {
+        guard on else { return }
+        Task { @MainActor in
+            for _ in 0..<8 {
+                light.impactOccurred(intensity: 0.7)
+                try? await Task.sleep(nanoseconds: 90_000_000)
+            }
+            rigid.impactOccurred(intensity: 0.8)
+        }
+    }
+
     /// The volume fader clicking into a notch.
     static func detent() {
         guard on else { return }

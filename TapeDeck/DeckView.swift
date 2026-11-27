@@ -22,6 +22,9 @@ struct DeckView: View {
     @StateObject private var volume = SystemVolume()
     @State private var showSettings = false
     @State private var showSongs = false
+    /// True while a finger is on the tape window.
+    @GestureState private var touchingWindow = false
+    @Environment(\.playerTheme) private var theme
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     var openShelf: () -> Void
 
@@ -65,7 +68,20 @@ struct DeckView: View {
                         model.flipTape()
                     }
                     .onTapGesture {
-                        if !model.hasTape { openShelf() }
+                        if model.tapeEaten {
+                            model.windTapeBack()
+                        } else if !model.hasTape {
+                            openShelf()
+                        }
+                    }
+                    // The empty deck answers a press as it lands, before
+                    // the tap is over.
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .updating($touchingWindow) { _, touching, _ in touching = true }
+                    )
+                    .onChange(of: touchingWindow) { _, touching in
+                        if touching { model.knockEmptyDeck() }
                     }
                     // For VoiceOver, which cannot double-tap the tape itself
                     .accessibilityElement()
@@ -78,6 +94,20 @@ struct DeckView: View {
                         if !model.hasTape { openShelf() }
                     }
                     .accessibilityAction(named: "Turn the tape over") { model.flipTape() }
+
+                // Lean on a reel and the deck eats the tape.
+                if model.hasTape, !model.tapeEaten {
+                    ForEach([-20.5, 20.5], id: \.self) { along in
+                        Color.clear
+                            .frame(width: 24 * plan.scale, height: 24 * plan.scale)
+                            .contentShape(Circle())
+                            .onTapGesture(count: 2) { model.flipTape() }
+                            .onLongPressGesture(minimumDuration: 0.7) { model.eatTape() }
+                            .position(x: plan.cassetteCenter.x - 3 * plan.scale,
+                                      y: plan.cassetteCenter.y + along * plan.scale)
+                            .accessibilityHidden(true)
+                    }
+                }
             }
             .frame(width: full.width, height: full.height, alignment: .topLeading)
             .background(
@@ -231,6 +261,19 @@ struct DeckView: View {
                 }
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: model.sideEnded)
+            // The deck has eaten the tape: own up, and offer to wind it back
+            .overlay(alignment: .topLeading) {
+                if model.hasTape, model.tapeEaten {
+                    TapeEatenCard()
+                        .frame(width: window.width - 28)
+                        .position(x: window.midX, y: window.minY + window.height * 0.74)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                }
+            }
+            // The card waits for the tape to finish spilling, and goes at once.
+            .animation(model.tapeEaten ? .spring(response: 0.35, dampingFraction: 0.8).delay(1.0)
+                                       : .easeOut(duration: 0.15),
+                       value: model.tapeEaten)
             // The tour: the tape lit up when it is the thing to touch, and
             // the card saying what to do
             .overlay(alignment: .topLeading) {
@@ -436,13 +479,23 @@ struct DeckView: View {
                     // The empty well is left dark; the drive spindles show
                     // only through a tape. The prompt sits in the middle of
                     // the window.
+                    // Pressed, the well lights up a little and the prompt
+                    // sinks in, like a door giving under a thumb.
+                    opening
+                        .fill(RadialGradient(colors: [theme.accentColor.opacity(0.28), .clear],
+                                             center: .center, startRadius: 0, endRadius: window.width * 0.7))
+                        .frame(width: window.width, height: window.height)
+                        .position(x: window.midX, y: window.midY)
+                        .opacity(touchingWindow ? 1 : 0)
                     VStack(spacing: 6) {
                         Image(systemName: "eject.fill").font(.system(size: 24))
                         Text("NO TAPE").font(Typeface.display(16)).tracking(3)
                         Text("Tap to choose one").font(.system(size: 11))
                     }
-                    .foregroundColor(Color.white.opacity(0.5))
+                    .foregroundColor(Color.white.opacity(touchingWindow ? 0.95 : 0.5))
+                    .scaleEffect(touchingWindow ? 0.92 : 1)
                     .position(x: window.midX, y: window.midY)
+                    .animation(.easeOut(duration: 0.1), value: touchingWindow)
                 }
 
                 // The casing: smoked plastic with the window cut out of it
@@ -675,7 +728,8 @@ struct DeckCassette: View {
                      printed: model.printedLabel,
                      tint: model.labelColor.map { Color(cgColor: $0) },
                      printColor: model.printColor.map { Color(cgColor: $0) },
-                     onSpindles: true)
+                     onSpindles: true,
+                     eaten: model.tapeEaten)
     }
 }
 
@@ -1082,6 +1136,45 @@ struct EndOfSideCard: View {
                     .foregroundColor(.white.opacity(0.8))
                     .multilineTextAlignment(.center)
             }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.black.opacity(0.84))
+                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(theme.accentColor.opacity(0.7), lineWidth: 1.5))
+        )
+        .shadow(color: .black.opacity(0.5), radius: 10, y: 5)
+    }
+}
+
+/// Shown in the tape window when the deck has chewed the tape.
+struct TapeEatenCard: View {
+    @EnvironmentObject private var model: PlayerModel
+    @Environment(\.playerTheme) private var theme
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(theme.accentColor)
+            Text("The deck ate your tape")
+                .font(Typeface.display(20))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+            Text("It happens to the best decks. Wind it back in and carry on.")
+                .font(.system(size: 13))
+                .foregroundColor(.white.opacity(0.8))
+                .multilineTextAlignment(.center)
+            Button {
+                model.windTapeBack()
+            } label: {
+                Text("Wind it back in")
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 9)
+            }
+            .buttonStyle(PlainKeyButtonStyle())
+            .padding(.top, 2)
         }
         .padding(16)
         .frame(maxWidth: .infinity)
