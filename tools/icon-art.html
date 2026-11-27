@@ -5,9 +5,9 @@ const bg='<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset=
 // as flat bands of colour that fill the icon, dusk outside to sunlight
 // at the hub.
 const cx=420,cy=610;
-const rings=[[730,'#35167a'],[600,'#5a24a0'],[470,'#a02a9c'],[345,'#f2418f'],[230,'#ff8442'],[130,'#ffd23f']];
-const hubTeeth=[...Array(6)].map((_,i)=>`<rect x="${cx-13}" y="${cy-78}" width="26" height="34" rx="5" fill="#ffd23f" transform="rotate(${i*60} ${cx} ${cy})"/>`).join('');
-const A=`<rect width="1024" height="1024" fill="#1d0b45"/>`+rings.map(([r,c])=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`).join('')+`<circle cx="${cx}" cy="${cy}" r="80" fill="#1d0b45"/>${hubTeeth}`;
+const rings=[[790,'#35167a'],[665,'#5a24a0'],[540,'#a02a9c'],[415,'#f2418f'],[290,'#ff8442'],[165,'#ffd23f']];
+const hubTeeth=[...Array(6)].map((_,i)=>`<rect x="${cx-24}" y="${cy-170}" width="48" height="66" rx="10" fill="#ff8442" transform="rotate(${i*60} ${cx} ${cy})"/>`).join('');
+const A=`<rect width="1024" height="1024" fill="#1d0b45"/>`+rings.slice(0,5).map(([r,c])=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`).join('')+`<circle cx="${cx}" cy="${cy}" r="165" fill="#1d0b45"/>${hubTeeth}`;
 const B=bg+`<g fill="none" stroke="#f2efe8" stroke-width="44"><circle cx="352" cy="512" r="150"/><circle cx="672" cy="512" r="150"/></g>
 <circle cx="352" cy="512" r="46" fill="#f57a21"/><circle cx="672" cy="512" r="46" fill="#f2efe8"/>`;
 const teeth=[...Array(6)].map((_,i)=>`<rect x="488" y="330" width="48" height="96" rx="10" fill="#f2efe8" transform="rotate(${i*60} 512 512)"/>`).join('');
