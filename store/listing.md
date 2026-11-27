@@ -92,7 +92,7 @@ iPhone only. The project is set to iPhone, so App Store Connect asks only for iP
 
 ## Screenshots
 
-Apple needs real screenshots taken from the running app, at the sizes it lists for iPhone. The pictures in `docs/` are mock-ups made while the app was being designed. They are not screenshots and must not be uploaded as if they were. Take new ones in Xcode's simulator or on your phone once the app runs:
+Apple needs real screenshots taken from the running app, at the sizes it lists for iPhone. Ready-made pictures with headlines are in `store/screenshots`, made from the running app by `tools/store-shots.sh`. They show:
 
 1. The closed tape deck in Retro 80s with an album tape playing.
 2. The tape deck in Black, Yellow and Blue.

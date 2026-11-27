@@ -38,3 +38,6 @@ document.querySelectorAll('details').forEach((item) => {
     }
   });
 });
+
+// The clip of the deck stays still for anyone who has asked for less motion.
+if (still) document.querySelectorAll('video').forEach((clip) => { clip.removeAttribute('autoplay'); clip.pause(); });

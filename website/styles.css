@@ -15,7 +15,9 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+/* Room for the scrollbar is always kept, so the page does not shift
+   sideways between long pages and short ones. */
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
 
 body {
   margin: 0;
@@ -47,7 +49,7 @@ header.site nav a[aria-current="page"] { background: var(--orange); color: var(-
 
 /* Hero: the icon's rings, spreading out from behind the phone */
 .hero { position: relative; overflow: hidden; background-color: var(--night); background-image: radial-gradient(circle at 76% 58%, var(--orange) 0 200px, var(--pink) 200px 330px, var(--magenta) 330px 470px, var(--violet) 470px 620px, var(--indigo) 620px 780px, var(--night) 780px); }
-.hero .wrap { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 30px; align-items: center; padding-top: 30px; padding-bottom: 70px; z-index: 2; }
+.hero main.wrap { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 30px; align-items: center; padding-top: 30px; padding-bottom: 70px; z-index: 2; }
 .hero h1 { margin: 0; font: 400 clamp(54px, 10vw, 104px)/0.95 "Righteous", sans-serif; letter-spacing: 1px; color: #fff; }
 .hero .tag { margin: 10px 0 18px; font: clamp(22px, 3.6vw, 32px)/1.15 "Righteous", sans-serif; color: var(--orange); }
 .hero p.lead { font-size: 19px; margin: 0 0 24px; max-width: 28em; }
@@ -60,7 +62,7 @@ a.button:hover { background: #fff; color: var(--night); }
 
 /* Pictures of the app */
 .shot { margin: 0; text-align: center; }
-.shot img { display: block; width: 100%; max-width: 330px; height: auto; margin: 0 auto; border-radius: 26px; border: 3px solid #0b0420; background: #0b0420; }
+.shot img, .shot video { display: block; width: 100%; max-width: 330px; height: auto; margin: 0 auto; border-radius: 26px; border: 3px solid #0b0420; background: #0b0420; }
 .shot.wide img { max-width: 100%; }
 .shot figcaption { margin-top: 14px; font: 15px/1.2 "Righteous", sans-serif; color: var(--text); letter-spacing: 0.5px; }
 
@@ -138,7 +140,7 @@ footer.site .legal { flex-basis: 100%; margin: 4px 0 0; }
 @keyframes level { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
 
 /* The phone in the hero drifts a little */
-.float img { animation: drift 7s ease-in-out infinite; }
+.float img, .float video { animation: drift 7s ease-in-out infinite; }
 @keyframes drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
 
 /* The cassette beside the heading, reels turning */
@@ -196,8 +198,8 @@ footer.site .legal { flex-basis: 100%; margin: 4px 0 0; }
 
 @media (max-width: 760px) {
   .hero { background-image: radial-gradient(circle at 50% 76%, var(--orange) 0 150px, var(--pink) 150px 250px, var(--magenta) 250px 360px, var(--violet) 360px 480px, var(--indigo) 480px 610px, var(--night) 610px); }
-  .hero .wrap, .pair { grid-template-columns: 1fr; }
-  .hero .wrap { padding-bottom: 50px; }
+  .hero main.wrap, .pair { grid-template-columns: 1fr; }
+  .hero main.wrap { padding-bottom: 50px; }
   .grid, .shots { grid-template-columns: 1fr; }
   .tape-art { display: none; }
   footer.site .wrap { flex-direction: column; }

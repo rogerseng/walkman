@@ -22,7 +22,7 @@ The first time it opens, Casseti shows a four page introduction: what it is, how
 
 ## Themes
 
-A theme is what the closed phone looks like: which player it is and what colour its case is. Pick one in Settings, under Theme, or on the last page of the introduction. Every theme plays the same tapes, with the same two sides, flipping and mixtapes.
+A theme is what the closed phone looks like: which player it is and what colour its case is. Pick one in Settings, under Theme, or on the last page of the introduction. Every theme plays the same tapes, with the same two sides and flipping.
 
 | Theme | What it is |
 | --- | --- |
@@ -33,7 +33,7 @@ A theme is what the closed phone looks like: which player it is and what colour 
 | Click wheel, Black | A screen above a click wheel. Xcode builds only. |
 | Click wheel, Silver | The same in silver with a white wheel. Xcode builds only. |
 
-On the MP3 player, turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The four keys beside it are back, play/pause, previous and next; hold previous or next to wind the tape. Its menus are Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape, and Settings and Themes. It is Casseti's own design: a knurled dial with no buttons on it, keys set apart, and an amber display.
+An MP3 player with a jog dial is also in the code but held back from version 1 (`Theme.includesMP3` is off).
 
 The two click wheel themes resemble the iPod closely enough to risk rejection from the App Store, so they are for your own phone only. They appear when the app is run from Xcode onto a device (a Debug build) and are left out of the build archived for the App Store (a Release build). The switch is `includesClickWheel` in `Skin.swift`.
 
@@ -44,7 +44,6 @@ On a pale case a dark plate sits behind the Duo's clock so it stays readable. Th
 | Where you are | How to get to Settings |
 | --- | --- |
 | Tape deck | The black key with the gear, at the foot of the keys. |
-| MP3 player or click wheel | "Settings and Themes" in the main menu. Press back (or MENU) until you reach it. |
 | Open phone | The black key with the gear in the row of keys, or the gear at the top of the tape shelf. |
 | Tape shelf | The gear at the top right. |
 
