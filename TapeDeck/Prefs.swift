@@ -6,6 +6,8 @@ enum Prefs {
     static let sounds = "soundEffectsOn"
     static let hiss = "tapeHissOn"
     static let haptics = "hapticsOn"
+    /// A light tap on each beat while music plays. Off unless asked for.
+    static let beatHaptics = "beatHapticsOn"
     static let glare = "glareOn"
     static let levelLights = "levelLightsOn"
     static let playOnClose = "playOnCloseOn"
@@ -22,6 +24,6 @@ enum Prefs {
     static let introSeen = "introSeen"
 
     static func isOn(_ key: String) -> Bool {
-        UserDefaults.standard.object(forKey: key) as? Bool ?? (key != autoFlip)
+        UserDefaults.standard.object(forKey: key) as? Bool ?? (key != autoFlip && key != beatHaptics)
     }
 }

@@ -20,6 +20,7 @@ struct TapeDeckApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .modifier(BeatHaptic())
                 .environmentObject(model)
                 .environmentObject(tour)
                 .preferredColorScheme(.dark)

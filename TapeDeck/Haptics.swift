@@ -81,6 +81,12 @@ enum Haptics {
         }
     }
 
+    /// One beat of the music: the lightest tap there is.
+    static func beat() {
+        guard on else { return }
+        soft.impactOccurred(intensity: 0.45)
+    }
+
     /// The volume fader clicking into a notch.
     static func detent() {
         guard on else { return }

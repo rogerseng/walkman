@@ -11,6 +11,7 @@ struct SettingsView: View {
 
     @AppStorage(Prefs.hiss) private var hissOn = true
     @AppStorage(Prefs.haptics) private var hapticsOn = true
+    @AppStorage(Prefs.beatHaptics) private var beatHapticsOn = false
     @AppStorage(Prefs.glare) private var glareOn = true
     @AppStorage(Prefs.levelLights) private var levelLightsOn = true
     @AppStorage(Prefs.playOnClose) private var playOnCloseOn = true
@@ -52,12 +53,14 @@ struct SettingsView: View {
 
                 Section {
                     Toggle("Haptics", isOn: $hapticsOn)
+                    Toggle("Tap along with the music", isOn: $beatHapticsOn)
+                        .disabled(!hapticsOn)
                     Toggle("Glare follows the phone", isOn: $glareOn)
                     Toggle("Level lights in the volume slot", isOn: $levelLightsOn)
                 } header: {
                     Text("Look and feel")
                 } footer: {
-                    Text("The level lights move in time while a tape plays. They are for show: Apple Music does not let an app listen to the music itself.")
+                    Text("The level lights move in time while a tape plays, and with Tap along the phone gives a light tap on each beat. They are for show: Apple Music does not let an app listen to the music itself.")
                 }
 
                 Section {
