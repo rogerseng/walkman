@@ -49,7 +49,7 @@ TWO PLAYERS IN ONE
 
 MORE
 • The tape on your Lock Screen, with keys.
-• Two colours of case: smoked dark plastic, or bright yellow.
+• Three cases: smoked dark plastic, bright yellow, or eighties neon.
 • Your mixtapes and settings sync with iCloud, and can be saved to a backup file.
 
 Cassety plays music from Apple Music. An Apple Music subscription is required.

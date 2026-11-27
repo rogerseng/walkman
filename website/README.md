@@ -12,6 +12,7 @@ Plain files for cassety.com. There is nothing to build or install: upload the co
 | `404.html` | Shown for addresses that do not exist |
 | `styles.css` | The look of every page |
 | `images/` | The icon and the pictures of the app |
+| `fonts/` | The three display fonts, served from the site itself. They are free to use (SIL Open Font License); see `fonts/LICENSE.txt`. |
 | `CNAME`, `robots.txt`, `sitemap.xml` | Housekeeping for the host and for search engines |
 
 ## The addresses to give Apple

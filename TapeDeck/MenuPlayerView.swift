@@ -109,6 +109,15 @@ struct MenuPlayerView: View {
 
     private var display: Display {
         let amber = Color(red: 1.0, green: 0.70, blue: 0.20)
+        if jog, skin == .neon {
+            // Cyan lettering with a hot pink highlight
+            return Display(paper: Color(red: 0.05, green: 0.02, blue: 0.12), ink: Skin.cyan,
+                           barTop: Color(red: 0.14, green: 0.05, blue: 0.28),
+                           barBottom: Color(red: 0.09, green: 0.03, blue: 0.20), barInk: Skin.hotPink,
+                           litTop: Color(red: 1.0, green: 0.40, blue: 0.74),
+                           litBottom: Color(red: 0.92, green: 0.14, blue: 0.54),
+                           litInk: .white, track: Skin.cyan.opacity(0.22), glow: Skin.cyan.opacity(0.55))
+        }
         if jog {
             // Amber on black, like the display of an old hi-fi
             return Display(paper: Color(red: 0.05, green: 0.04, blue: 0.03), ink: amber,

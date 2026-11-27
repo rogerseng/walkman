@@ -180,6 +180,14 @@ struct DeckView: View {
                                      startPoint: .topLeading, endPoint: .bottomTrailing),
                       style: FillStyle(eoFill: true))
 
+                // Eighties stripes across the foot of the case
+                if skin.hasStripes {
+                    RetroStripes()
+                        .frame(width: size.width, height: 30)
+                        .position(x: size.width / 2, y: min(size.height - 34, window.maxY + 62))
+                        .allowsHitTesting(false)
+                }
+
                 // The window: shadow where the casing overhangs the tape,
                 // a trace of glass, and the bright cut edge of the plastic.
                 Group {
@@ -187,10 +195,10 @@ struct DeckView: View {
                         .clipShape(opening)
                     opening.fill(LinearGradient(colors: [Color.white.opacity(0.10), Color.white.opacity(0.02), .clear],
                                                 startPoint: .topLeading, endPoint: .center))
-                    opening.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.75), Color.white.opacity(0.18),
-                                                                 Color.white.opacity(0.45)],
+                    opening.strokeBorder(LinearGradient(colors: skin.windowEdge,
                                                         startPoint: .topLeading, endPoint: .bottomTrailing),
                                          lineWidth: 2.5)
+                        .shadow(color: skin.hasStripes ? Skin.hotPink.opacity(0.8) : .clear, radius: 6)
                     // The cut has thickness: a dark inner face and a second lit lip
                     opening.strokeBorder(Color.black.opacity(0.55), lineWidth: 1.5).padding(2.5)
                     RoundedRectangle(cornerRadius: 17)
@@ -359,6 +367,26 @@ struct DeckView: View {
     }
 }
 
+/// Five bands of colour, the stripe that ran across everything in the 1980s.
+struct RetroStripes: View {
+    private let bands: [Color] = [
+        Color(red: 0.11, green: 0.60, blue: 0.67),
+        Color(red: 0.96, green: 0.91, blue: 0.76),
+        Color(red: 0.95, green: 0.62, blue: 0.02),
+        Color(red: 0.89, green: 0.34, blue: 0.18),
+        Color(red: 0.65, green: 0.15, blue: 0.22)
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(bands.enumerated()), id: \.offset) { _, band in
+                band
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 /// The name of the app, as lettering.
 struct Wordmark: View {
     var size: CGFloat = 22
@@ -512,6 +540,9 @@ struct TapeKey: View {
     var onUp: () -> Void = {}
 
     @State private var pressed = false
+    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+
+    private var skin: Skin { Skin(rawValue: skinName) ?? .smoke }
 
     /// How far the key moves when pressed.
     private let travel: CGFloat = 8
@@ -580,17 +611,16 @@ struct TapeKey: View {
     }
 
     private var wallColors: [Color] {
-        if accent { return [Color(red: 0.62, green: 0.27, blue: 0.05), Color(red: 0.40, green: 0.16, blue: 0.02)] }
+        if accent { return skin.accentWall }
         if dark { return [Color(white: 0.05), Color(white: 0.02)] }
         return [Color(white: 0.17), Color(white: 0.09)]
     }
 
     private func keyColors(down: Bool) -> [Color] {
         if accent {
-            // The play key: orange, as on the decks this is modelled on
-            return down
-                ? [Color(red: 0.66, green: 0.28, blue: 0.05), Color(red: 0.55, green: 0.22, blue: 0.03)]
-                : [Color(red: 0.99, green: 0.56, blue: 0.18), Color(red: 0.88, green: 0.40, blue: 0.08)]
+            // The play key: orange as on the decks this is modelled on, or
+            // hot pink on the neon skin
+            return down ? skin.accentDown : skin.accentUp
         }
         if dark {
             return down

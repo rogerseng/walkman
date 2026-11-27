@@ -1,0 +1,5 @@
+The fonts in this folder are Monoton, Righteous and Pacifico. Each is
+licensed under the SIL Open Font License, Version 1.1, which permits use,
+embedding and redistribution, including on commercial websites.
+The licence text is at https://openfontlicense.org
+They are served from this site itself, so no request goes to a font service.

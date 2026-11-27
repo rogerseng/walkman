@@ -8,6 +8,8 @@ enum Skin: String, CaseIterable, Identifiable {
     case smoke
     /// Cassette player in bright yellow, like the splash-proof ones of the eighties.
     case yellow
+    /// Eighties neon: deep purple with hot pink and cyan, and a band of stripes.
+    case neon
     /// Click-wheel player in black.
     case wheelBlack
     /// Click-wheel player in silver with a white wheel.
@@ -42,6 +44,7 @@ enum Skin: String, CaseIterable, Identifiable {
         switch self {
         case .smoke: return "Smoke cassette player"
         case .yellow: return "Yellow cassette player"
+        case .neon: return "Neon cassette player"
         case .wheelBlack: return "Black click wheel"
         case .wheelSilver: return "Silver click wheel"
         }
@@ -60,6 +63,11 @@ enum Skin: String, CaseIterable, Identifiable {
                     Color(red: 0.98, green: 0.77, blue: 0.09).opacity(0.96),
                     Color(red: 0.91, green: 0.68, blue: 0.04).opacity(0.96)]
         }
+        if self == .neon {
+            return [Color(red: 0.38, green: 0.10, blue: 0.58).opacity(0.93),
+                    Color(red: 0.22, green: 0.06, blue: 0.44).opacity(0.93),
+                    Color(red: 0.09, green: 0.03, blue: 0.26).opacity(0.93)]
+        }
         return [Color(white: 0.16).opacity(0.86), Color(white: 0.08).opacity(0.86),
                 Color(white: 0.05).opacity(0.86)]
     }
@@ -70,13 +78,53 @@ enum Skin: String, CaseIterable, Identifiable {
             return [Color(red: 0.99, green: 0.81, blue: 0.14), Color(red: 0.95, green: 0.73, blue: 0.07),
                     Color(red: 0.87, green: 0.64, blue: 0.03)]
         }
+        if self == .neon {
+            return [Color(red: 0.22, green: 0.08, blue: 0.42), Color(red: 0.14, green: 0.04, blue: 0.31),
+                    Color(red: 0.07, green: 0.02, blue: 0.19)]
+        }
         return [Color(white: 0.20), Color(white: 0.13), Color(white: 0.09)]
     }
+
+    /// The two neon colours.
+    static let hotPink = Color(red: 1.0, green: 0.24, blue: 0.64)
+    static let cyan = Color(red: 0.30, green: 0.94, blue: 1.0)
+
+    /// The play key: orange, or hot pink on the neon skin. Face when up,
+    /// face when pressed in, and the side of the key.
+    var accentUp: [Color] {
+        self == .neon
+            ? [Color(red: 1.0, green: 0.40, blue: 0.74), Color(red: 0.92, green: 0.14, blue: 0.54)]
+            : [Color(red: 0.99, green: 0.56, blue: 0.18), Color(red: 0.88, green: 0.40, blue: 0.08)]
+    }
+
+    var accentDown: [Color] {
+        self == .neon
+            ? [Color(red: 0.62, green: 0.08, blue: 0.37), Color(red: 0.50, green: 0.05, blue: 0.30)]
+            : [Color(red: 0.66, green: 0.28, blue: 0.05), Color(red: 0.55, green: 0.22, blue: 0.03)]
+    }
+
+    var accentWall: [Color] {
+        self == .neon
+            ? [Color(red: 0.56, green: 0.06, blue: 0.33), Color(red: 0.32, green: 0.03, blue: 0.20)]
+            : [Color(red: 0.62, green: 0.27, blue: 0.05), Color(red: 0.40, green: 0.16, blue: 0.02)]
+    }
+
+    /// The cut edge of the tape window, from its top left round to its
+    /// bottom right. On the neon skin it glows.
+    var windowEdge: [Color] {
+        self == .neon
+            ? [Self.hotPink, Self.cyan, Self.hotPink]
+            : [Color.white.opacity(0.75), Color.white.opacity(0.18), Color.white.opacity(0.45)]
+    }
+
+    /// Whether the case carries the band of eighties stripes.
+    var hasStripes: Bool { self == .neon }
 
     /// Lettering and marks cut into the plastic, and the thin edge of light
     /// or shadow that makes them read as cut.
     var engraving: Color {
-        isPale ? Color.black.opacity(0.60) : Color.white.opacity(0.55)
+        if self == .neon { return Self.cyan.opacity(0.85) }
+        return isPale ? Color.black.opacity(0.60) : Color.white.opacity(0.55)
     }
 
     var engravingEdge: Color {
@@ -89,7 +137,8 @@ enum Skin: String, CaseIterable, Identifiable {
 
     /// The faint Cassety name on the case.
     var mark: Color {
-        isPale ? Color.black.opacity(0.20) : Color.white.opacity(0.22)
+        if self == .neon { return Self.hotPink.opacity(0.85) }
+        return isPale ? Color.black.opacity(0.20) : Color.white.opacity(0.22)
     }
 
     /// Lines of text printed on the case, such as the song under the window.
@@ -131,6 +180,7 @@ enum Skin: String, CaseIterable, Identifiable {
         switch self {
         case .smoke: return Color(white: 0.14)
         case .yellow: return Color(red: 0.98, green: 0.77, blue: 0.09)
+        case .neon: return Color(red: 0.86, green: 0.16, blue: 0.62)
         case .wheelBlack: return Color(white: 0.04)
         case .wheelSilver: return Color(white: 0.80)
         }

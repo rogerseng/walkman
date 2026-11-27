@@ -30,8 +30,10 @@ A theme is what the closed phone looks like: which player it is and what colour 
 | --- | --- |
 | Tape player, Smoke | The cassette and its reels behind a window in dark smoked plastic, with the volume fader and keys beside it. |
 | Tape player, Yellow | The same in bright yellow with dark engraved lettering. |
+| Tape player, Neon | Eighties neon: deep purple, a glowing pink and cyan window, a hot pink play key and a band of stripes. |
 | MP3 player, Smoke | A display of menus and a metal jog dial, in dark plastic. |
 | MP3 player, Yellow | The same in yellow. |
+| MP3 player, Neon | The same in purple, with cyan lettering on the display and a pink highlight. |
 | Click wheel, Black | A screen above a click wheel. Xcode builds only. |
 | Click wheel, Silver | The same in silver with a white wheel. Xcode builds only. |
 
@@ -83,7 +85,7 @@ The `store/` folder has what is needed to put Cassety on the App Store at $4.99:
 
 ## Website
 
-The `website` folder is the site for cassety.com: a home page, the support page and the privacy policy. It is plain files with nothing to build. `website/README.md` says how to put it online.
+The `website` folder is the site for cassety.com: a home page, the support page and the privacy policy, in an eighties neon style to match the Neon skin. It is plain files with nothing to build. `website/README.md` says how to put it online.
 
 ## Running it on your iPhone
 

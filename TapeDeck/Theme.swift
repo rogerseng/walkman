@@ -17,8 +17,10 @@ struct Theme: Identifiable, Equatable {
         var list = [
             Theme(id: "tape-smoke", name: "Tape player", detail: "Smoke", player: "tape", skin: .smoke),
             Theme(id: "tape-yellow", name: "Tape player", detail: "Yellow", player: "tape", skin: .yellow),
+            Theme(id: "tape-neon", name: "Tape player", detail: "Neon", player: "tape", skin: .neon),
             Theme(id: "mp3-smoke", name: "MP3 player", detail: "Smoke", player: "mp3", skin: .smoke),
-            Theme(id: "mp3-yellow", name: "MP3 player", detail: "Yellow", player: "mp3", skin: .yellow)
+            Theme(id: "mp3-yellow", name: "MP3 player", detail: "Yellow", player: "mp3", skin: .yellow),
+            Theme(id: "mp3-neon", name: "MP3 player", detail: "Neon", player: "mp3", skin: .neon)
         ]
         if Skin.includesClickWheel {
             list.append(Theme(id: "wheel-black", name: "Click wheel", detail: "Black",
