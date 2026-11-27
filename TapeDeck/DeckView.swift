@@ -355,19 +355,15 @@ struct DeckView: View {
     }
 
     /// On the Duo, how far down the name and the songs key move so they
-    /// sit in the middle of the case above the window.
+    /// sit just above the window, as the song line sits just below it.
     private func headLift(_ plan: Layout, _ insets: EdgeInsets) -> CGFloat {
         guard plan.rail else { return 0 }
-        return max(0, plan.window.minY / 2 - 29 - insets.top)
+        // The songs key is 38 points tall and starts 9 below its offset.
+        return max(0, plan.window.minY - 6 - 47 - 6 - insets.top)
     }
 
-    /// On the Duo, how far under the window the song line starts, so it
-    /// sits in the middle of the case below the window (above the stripes,
-    /// on the case that has them).
-    private func footGap(_ plan: Layout, _ full: CGSize) -> CGFloat {
-        let room = full.height - plan.window.maxY - (skin.hasStripes ? 32 : 0)
-        return max(12, (room - 20) / 2)
-    }
+    /// On the Duo, how far under the window the song line starts.
+    private func footGap(_ plan: Layout, _ full: CGSize) -> CGFloat { 10 }
 
     private var underWindowNote: String? {
         // The end of a side has its own card in the window.
