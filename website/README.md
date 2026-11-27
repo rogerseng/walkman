@@ -12,7 +12,7 @@ Plain files for cassety.com. There is nothing to build or install: upload the co
 | `404.html` | Shown for addresses that do not exist |
 | `styles.css` | The look of every page |
 | `images/` | The icon and the pictures of the app |
-| `fonts/` | The three display fonts, served from the site itself. They are free to use (SIL Open Font License); see `fonts/LICENSE.txt`. |
+| `fonts/` | The display font, served from the site itself. It is free to use (SIL Open Font License); see `fonts/LICENSE.txt`. |
 | `CNAME`, `robots.txt`, `sitemap.xml` | Housekeeping for the host and for search engines |
 
 ## The addresses to give Apple
@@ -37,5 +37,5 @@ In every case you then go to wherever you bought cassety.com and point the domai
 
 1. **Email.** The pages give `support@cassety.com` as the contact. Set that address up with your domain, or change it in the three pages to one you already read. Apple requires a working way to reach you.
 2. **The date** at the top of `privacy.html`. Set it to the day you publish.
-3. **The pictures.** The `duo-*.webp` images are design renders inside a drawn phone frame, not photographs of the app running on an iPhone Duo. Replace them with real screenshots once the app runs, using the same file names. `tools/device-frame.html` puts a screenshot inside the frame; Apple's own product frames are in its marketing resources and may only hold real screenshots.
+3. **The pictures.** The `duo-*.webp` images are real screenshots of the app in Xcode's iPhone Duo simulator, showing a made-up demo tape (a debug build launched with `-demoTape`), because the simulator cannot play Apple Music. Retake them the same way after any change to the look, or replace them with screenshots from a phone.
 4. **The App Store button.** The home page says "Coming soon to the App Store". When the app is live, replace that with Apple's official "Download on the App Store" badge from Apple's marketing resources, linked to the app's page.
