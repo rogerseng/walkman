@@ -50,7 +50,7 @@ TWO PLAYERS IN ONE
 MORE
 • Tape deck in retro 80s, black, yellow or blue. MP3 player in retro 80s or black. The colours carry through the whole app.
 • A hands-on tour teaches the keys by having you press them.
-• Open a folding iPhone and the player becomes a boombox, with the tape dropping in behind its door.
+• Open a folding iPhone and the player becomes a tape recorder, with a speaker grille, the tape behind a tinted door, and a row of chunky keys.
 • Your settings sync with iCloud.
 
 Casseti plays music from Apple Music. An Apple Music subscription is required.
@@ -103,7 +103,7 @@ Apple needs real screenshots taken from the running app, at the sizes it lists f
 3. The MP3 player with its white dial.
 4. The open screen with the tape shelf.
 5. The library: playlists, artists, albums and songs.
-6. The open folding phone: the album's songs beside the boombox.
+6. The open folding phone: the album's songs beside the player.
 
 ## App privacy answers ("nutrition label")
 

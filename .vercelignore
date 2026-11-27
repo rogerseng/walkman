@@ -1,0 +1,8 @@
+# Only the website is published; the app's source stays out of the upload.
+TapeDeck
+TapeDeck.xcodeproj
+Config
+docs
+store
+tools
+.claude
