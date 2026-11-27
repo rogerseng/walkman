@@ -236,7 +236,7 @@ struct MenuPlayerView: View {
         if rail, skin.needsStatusPlate {
             RoundedRectangle(cornerRadius: 26)
                 .fill(Color.black.opacity(0.78))
-                .frame(width: railKeyWidth, height: 140)
+                .frame(width: railKeyWidth, height: 156)
                 .padding(leading ? .leading : .trailing, railOuterMargin)
                 .padding(.top, 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: leading ? .topLeading : .topTrailing)

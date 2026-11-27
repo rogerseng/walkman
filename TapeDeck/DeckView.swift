@@ -133,7 +133,7 @@ struct DeckView: View {
                     if plan.rail, skin.needsStatusPlate {
                         RoundedRectangle(cornerRadius: 26)
                             .fill(Color.black.opacity(0.78))
-                            .frame(width: railKeyWidth, height: 140)
+                            .frame(width: railKeyWidth, height: 156)
                             .padding(plan.railLeading ? .leading : .trailing, railOuterMargin)
                             .padding(.top, 16)
                             .frame(maxWidth: .infinity, maxHeight: .infinity,
