@@ -131,6 +131,10 @@ struct PianoKey: View {
     var dark = false
     var latched = false
     var height: CGFloat = 104
+    /// How round the key's lower corners are. The keys at the ends of the
+    /// row follow the corner of the case beside them.
+    var lowerLeft: CGFloat = 4
+    var lowerRight: CGFloat = 4
     var onDown: () -> Void = {}
     var onUp: () -> Void = {}
 
@@ -169,7 +173,7 @@ struct PianoKey: View {
                     .position(x: face.size.width / 2, y: face.size.height / 2)
                 }
                 // Lit along the back edge and the left, dark along the right
-                Rectangle()
+                UnevenRoundedRectangle(topLeadingRadius: 13, topTrailingRadius: 13)
                     .strokeBorder(LinearGradient(colors: [Color.white.opacity(down ? 0.08 : 0.38), .clear,
                                                           Color.black.opacity(0.5)],
                                                  startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
@@ -183,7 +187,9 @@ struct PianoKey: View {
                 .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.22)).frame(height: 1) }
                 .frame(height: down ? wall - travel : wall)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        // Rounded over at the back, where the key meets the case
+        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 13, bottomLeadingRadius: lowerLeft,
+                                          bottomTrailingRadius: lowerRight, topTrailingRadius: 13))
         .frame(height: height, alignment: .bottom)
         .shadow(color: .black.opacity(down ? 0.2 : 0.65), radius: down ? 1 : 5, y: down ? 1 : 5)
         .animation(.easeOut(duration: 0.08), value: down)

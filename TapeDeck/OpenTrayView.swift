@@ -73,7 +73,9 @@ struct OpenTrayView: View {
             // the safe area, so it is large without costing the tape room.
             let above = max(0, geo.safeAreaInsets.top - 20)
             let grilleHeight = min(120, max(80, height * 0.12))
-            let fixed = grilleHeight + 44 + 44 + (keysHeight + 44) + 5 * 12
+            // The keys sit as far from the foot of the screen as from its sides.
+            let foot = max(0, side - geo.safeAreaInsets.bottom)
+            let fixed = grilleHeight + 44 + 44 + (keysHeight + 42) + foot + 5 * 12
             let doorWidth = min(width - side * 2 - 8, 640, (height - fixed - 26) / 0.63)
             let doorHeight = doorWidth * 0.63 + 26
             VStack(spacing: 12) {
@@ -95,7 +97,7 @@ struct OpenTrayView: View {
             }
             .padding(.horizontal, side)
             .padding(.top, 6)
-            .padding(.bottom, 8)
+            .padding(.bottom, foot)
             .frame(width: width, height: height)
             .background(recorderCase(top: geo.safeAreaInsets.top).ignoresSafeArea())
         }
@@ -141,9 +143,6 @@ struct OpenTrayView: View {
                 WindingReel().frame(width: 28, height: 28).foregroundColor(theme.accentColor)
             } else if model.hasTape, model.tapeEaten {
                 Button("Wind it back in") { model.windTapeBack() }
-                    .buttonStyle(PlainKeyButtonStyle())
-            } else if model.hasTape, model.canFlip {
-                Button("Flip to side \(model.sideLetter == "A" ? "B" : "A")") { model.flipTape() }
                     .buttonStyle(PlainKeyButtonStyle())
             }
             // The songs on the tape in the deck, with the one that is playing
@@ -244,9 +243,11 @@ struct OpenTrayView: View {
             ("play.fill", "PLAY"), ("stop.fill", "STOP"), ("forward.fill", "F.FWD"),
             ("backward.fill", "REW"), (BeamedNotes.symbol, "MUSIC"), ("gearshape.fill", "SET UP")
         ]
-        return VStack(spacing: 0) {
-            // The lettered ledge
-            HStack(spacing: 3) {
+        // The corner of the case beside the end keys, less the gap to it
+        let corner: CGFloat = 20
+        return VStack(spacing: 5) {
+            // What each key does, moulded into the case above it
+            HStack(spacing: 6) {
                 ForEach(keys, id: \.word) { key in
                     Text(key.word)
                         .font(Typeface.displayFixed(9.5))
@@ -256,14 +257,15 @@ struct OpenTrayView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .foregroundColor(Color.white.opacity(0.82))
-            .frame(height: 22)
-            .background(Color.black.opacity(0.72))
+            .foregroundColor(skin.engraving)
+            .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
+            .padding(.horizontal, 7)
+            .frame(height: 16)
             .accessibilityHidden(true)
-            // The keys, shoulder to shoulder
-            HStack(alignment: .bottom, spacing: 3) {
+            // The keys, each its own, a finger's gap apart
+            HStack(alignment: .bottom, spacing: 6) {
                 PianoKey(symbol: "play.fill", label: "Play", accent: true,
-                         latched: model.motion == .playing, height: height,
+                         latched: model.motion == .playing, height: height, lowerLeft: corner - 7,
                          onDown: { model.playKey() })
                 PianoKey(symbol: "stop.fill", label: "Stop",
                          latched: model.hasTape && (model.motion == .paused || model.motion == .stopped),
@@ -281,18 +283,18 @@ struct OpenTrayView: View {
                              model.ejectKey(removeTape: false)
                              showShelf = true
                          })
-                PianoKey(symbol: "gearshape.fill", label: "Settings", height: height,
+                PianoKey(symbol: "gearshape.fill", label: "Settings", height: height, lowerRight: corner - 7,
                          onDown: {
                              Haptics.keyDown()
                              showSettings = true
                          })
             }
-            .padding(.horizontal, 5)
-            .padding(.top, 8)
-            .padding(.bottom, 5)
+            .padding(.horizontal, 7)
+            .padding(.top, 9)
+            .padding(.bottom, 7)
             .background(Color(white: 0.02))
+            .modifier(Recess(corner: corner, depth: 1))
         }
-        .modifier(Recess(corner: 9, depth: 1))
     }
 
     // MARK: Beside the shelf
@@ -502,10 +504,27 @@ struct OpenTrayView: View {
                                               removal: .move(edge: .top).combined(with: .opacity)))
             }
 
-            // Smoked glass over the lot, and the shadow of the frame
-            shape.fill(LinearGradient(colors: [Color.white.opacity(0.13), Color.white.opacity(0.02), .clear],
-                                      startPoint: .topLeading, endPoint: .center))
-                .allowsHitTesting(false)
+            // The door's cover: tinted plastic over the tape, a shade of the
+            // case's own colour, with the room's light lying across it.
+            ZStack {
+                shape.fill(Color.black.opacity(0.26))
+                shape.fill(theme.accentColor.opacity(0.07))
+                shape.fill(LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.02), .clear,
+                                                   Color.white.opacity(0.04)],
+                                          startPoint: .topLeading, endPoint: .bottomTrailing))
+                // A band of reflection across the cover
+                LinearGradient(colors: [.clear, Color.white.opacity(0.09), .clear],
+                               startPoint: .init(x: 0.15, y: 0), endPoint: .init(x: 0.5, y: 1))
+                    .clipShape(shape)
+                // The finger lip along the top of the cover
+                Capsule()
+                    .fill(LinearGradient(colors: [Color.white.opacity(0.30), Color.black.opacity(0.35)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .frame(width: width * 0.22, height: 5)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .padding(.top, 9)
+            }
+            .allowsHitTesting(false)
             shape.strokeBorder(Color.black.opacity(0.7), lineWidth: 7).blur(radius: 4).clipShape(shape)
                 .allowsHitTesting(false)
         }
@@ -524,8 +543,8 @@ struct OpenTrayView: View {
         )
         .shadow(color: .black.opacity(0.6), radius: 8, y: 5)
         // Hinged along its foot: it tips toward you to take or give a tape
-        .rotation3DEffect(.degrees(doorOpen ? -24 : 0), axis: (x: 1, y: 0, z: 0),
-                          anchor: .bottom, perspective: 0.55)
+        .rotation3DEffect(.degrees(doorOpen ? -34 : 0), axis: (x: 1, y: 0, z: 0),
+                          anchor: .bottom, perspective: 0.6)
         .onTapGesture(count: 2) { model.flipTape() }
         .onTapGesture {
             if model.tapeJammed {
@@ -594,15 +613,6 @@ struct OpenTrayView: View {
                     model.windTapeBack()
                 } label: {
                     Text("Wind it back in")
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                }
-                .buttonStyle(PlainKeyButtonStyle())
-            } else if model.hasTape, model.canFlip {
-                Button {
-                    model.flipTape()
-                } label: {
-                    Text("Flip to side \(model.sideLetter == "A" ? "B" : "A")")
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                 }
@@ -747,9 +757,9 @@ struct OpenTrayView: View {
     /// Opens the door, lets the tape travel, and shuts it again.
     private func swingDoor() {
         guard !reduceMotion else { return }
-        withAnimation(.easeOut(duration: 0.22)) { doorOpen = true }
+        withAnimation(.easeOut(duration: 0.26)) { doorOpen = true }
         Task {
-            try? await Task.sleep(nanoseconds: 650_000_000)
+            try? await Task.sleep(nanoseconds: 800_000_000)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { doorOpen = false }
         }
     }
