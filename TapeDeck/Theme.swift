@@ -14,6 +14,12 @@ struct Theme: Identifiable, Equatable {
 
     /// The themes a person can choose from. The two click wheel themes are
     /// only in builds run from Xcode (see `Skin.includesClickWheel`).
+    /// How an ordinary iPhone shows the tape deck: "side" for the keys down
+    /// the right with a big tape, "recorder" for the upright tape recorder.
+    /// The iPhone Duo has its own layouts and does not use this.
+    static let phoneLayoutKey = "phoneLayout"
+    static let defaultPhoneLayout = "side"
+
     /// The MP3 player is held back from this version. Its code stays, and
     /// turning this on brings its themes back.
     static let includesMP3 = false

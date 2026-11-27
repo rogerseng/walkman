@@ -30,6 +30,22 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // An ordinary iPhone can wear either of two layouts. The
+                // Duo has its own for each way it is held.
+                if !hasRail, !wide {
+                    Section {
+                        Picker("Layout", selection: $phoneLayout) {
+                            Text("Keys on the side").tag("side")
+                            Text("Tape recorder").tag("recorder")
+                        }
+                        .pickerStyle(.segmented)
+                    } header: {
+                        Text("Layout")
+                    } footer: {
+                        Text("Keys on the side gives the biggest tape, standing on end with the keys down the right. Tape recorder lays the tape flat under a speaker, with a row of keys along the foot.")
+                    }
+                }
+
                 ForEach(PlayerKind.offered) { kind in
                     Section {
                         ThemePicker(kind: kind)
@@ -240,6 +256,7 @@ struct SettingsView: View {
         }
     }
 
+    @AppStorage(Theme.phoneLayoutKey) private var phoneLayout = Theme.defaultPhoneLayout
     /// The Duo's rail is on screen, and Done sits in it.
     @State private var hasRail = false
     @Environment(\.horizontalSizeClass) private var horizontalSize

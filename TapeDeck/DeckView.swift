@@ -27,6 +27,12 @@ struct DeckView: View {
     @Environment(\.playerTheme) private var theme
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     var openShelf: () -> Void
+    /// An ordinary iPhone wearing the Duo's look: the keys in a column
+    /// down the right, with the tape as big as the rest of the screen
+    /// allows. The phone has no rail of its own, so one is made for it.
+    var sideKeys = false
+    /// The width of the column made for the keys on such a phone.
+    private let phoneRail: CGFloat = 92
 
     private var skin: Skin {
         let stored = Skin(rawValue: skinName) ?? Skin.standard
@@ -53,10 +59,14 @@ struct DeckView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let insets = geo.safeAreaInsets
-            let full = CGSize(width: geo.size.width + insets.leading + insets.trailing,
-                              height: geo.size.height + insets.top + insets.bottom)
-            let plan = layout(full: full, insets: insets)
+            let real = geo.safeAreaInsets
+            // A column for the keys is made on a phone that has no rail.
+            let phone = sideKeys && max(real.leading, real.trailing) < 60
+            let insets = phone ? EdgeInsets(top: real.top, leading: real.leading,
+                                            bottom: real.bottom, trailing: phoneRail) : real
+            let full = CGSize(width: geo.size.width + real.leading + real.trailing,
+                              height: geo.size.height + real.top + real.bottom)
+            let plan = layout(full: full, insets: insets, phone: phone)
             let window = plan.window
             ZStack(alignment: .topLeading) {
                 // The face itself is drawn in the background, full screen.
@@ -130,7 +140,7 @@ struct DeckView: View {
                     }
                     // On a pale case, a dark plate behind the Duo's clock and
                     // status icons, which the system draws in white.
-                    if plan.rail, skin.needsStatusPlate {
+                    if plan.rail, !phone, skin.needsStatusPlate {
                         RoundedRectangle(cornerRadius: 26)
                             .fill(Color.black.opacity(0.78))
                             .frame(width: railKeyWidth, height: 156)
@@ -217,7 +227,20 @@ struct DeckView: View {
             // On the Duo: the volume fader on the solid side, level with the
             // window and as tall as it, and the keys in the rail
             .overlay(alignment: .topLeading) {
-                if plan.rail {
+                if phone {
+                    // No room beside the tape on a phone: the fader lies
+                    // across the case under the song.
+                    HStack(spacing: 8) {
+                        volumeWord.fixedSize()
+                        fader
+                            .frame(width: 44, height: max(60, window.width - 62))
+                            .rotationEffect(.degrees(90))
+                            .frame(width: max(60, window.width - 62), height: 44)
+                    }
+                    .frame(width: window.width, height: 44)
+                    .offset(x: window.minX, y: min(full.height - real.bottom - (skin.hasStripes ? 86 : 56),
+                                                    window.maxY + 62))
+                } else if plan.rail {
                     // Never under the keys
                     let keysLeft = full.width - plan.railWidth
                     let faderX = plan.railLeading ? plan.panelWidth - 70
@@ -235,7 +258,8 @@ struct DeckView: View {
             }
             .overlay(alignment: plan.railLeading ? .topLeading : .topTrailing) {
                 if plan.rail {
-                    railKeyColumn(insets: insets, leading: plan.railLeading)
+                    railKeyColumn(insets: insets, leading: plan.railLeading,
+                                  statusHeight: phone ? real.top + 10 : railStatusHeight)
                 }
             }
             // On other phones, the panel along the foot: the fader lying
@@ -407,11 +431,13 @@ struct DeckView: View {
     private let windowMinWidth: CGFloat = 36.5
     private let windowEdgeInset: CGFloat = 2.5
 
-    private func layout(full: CGSize, insets: EdgeInsets) -> Layout {
+    private func layout(full: CGSize, insets: EdgeInsets, phone: Bool = false) -> Layout {
         let railWidth = max(insets.leading, insets.trailing)
         let rail = railWidth >= 60
         let railLeading = rail && insets.leading > insets.trailing
-        if rail { return railLayout(full: full, insets: insets, railWidth: railWidth, leading: railLeading) }
+        if rail {
+            return railLayout(full: full, insets: insets, railWidth: railWidth, leading: railLeading, phone: phone)
+        }
 
         // The row of keys along the foot: six keys across the width
         let rowWidth = full.width - 2 * keysMargin
@@ -451,7 +477,26 @@ struct DeckView: View {
 
     /// The Duo's outer screen: the cassette as large as the screen allows,
     /// in the middle of it, with the keys in the rail at the side.
-    private func railLayout(full: CGSize, insets: EdgeInsets, railWidth: CGFloat, leading: Bool) -> Layout {
+    private func railLayout(full: CGSize, insets: EdgeInsets, railWidth: CGFloat, leading: Bool,
+                            phone: Bool = false) -> Layout {
+        if phone {
+            // The window takes all the width the keys leave, or all the
+            // height under the name, whichever runs out first.
+            let roomWide = full.width - railWidth - 20
+            let roomTall = full.height - insets.top - 58 - insets.bottom - 132 - (skin.hasStripes ? 30 : 0)
+            let scale = min(roomWide / windowMinWidth, roomTall / windowLength)
+            let windowX = 10 + (roomWide - windowMinWidth * scale) / 2
+            let windowY = insets.top + 58
+            let left = windowX - windowEdgeInset * scale
+            let bottom = windowY + windowFarEnd * scale
+            let window = CGRect(x: windowX, y: windowY, width: windowMinWidth * scale, height: windowLength * scale)
+            return Layout(scale: scale, window: window,
+                          cassetteCenter: CGPoint(x: left + 31.5 * scale, y: bottom - 50 * scale),
+                          panelTop: full.height, keyHeight: 0,
+                          contentLeft: 14 + insets.leading,
+                          rail: true, railLeading: false, railWidth: railWidth,
+                          panelWidth: railWidth)
+        }
         // As big as the screen allows. The cassette may run a little past
         // the edges, but never far enough to lose the label.
         let long = max(full.width, full.height)
@@ -611,13 +656,13 @@ struct DeckView: View {
     }
 
     /// The column of keys in the Duo's rail, starting below the camera and clock.
-    private func railKeyColumn(insets: EdgeInsets, leading: Bool) -> some View {
+    private func railKeyColumn(insets: EdgeInsets, leading: Bool, statusHeight: CGFloat) -> some View {
         let width = max(insets.leading, insets.trailing)
         let inner = max(0, width - railKeyWidth - railOuterMargin)
         return GeometryReader { geo in
-            let room = geo.size.height - railStatusHeight - insets.bottom - 12
+            let room = geo.size.height - statusHeight - insets.bottom - 12
             VStack(spacing: 0) {
-                Color.clear.frame(height: railStatusHeight)
+                Color.clear.frame(height: statusHeight)
                 railKeys(height: min(railKeyMaxHeight, max(36, (room - 5 * keyGap) / 6)))
                 Spacer(minLength: 0)
             }

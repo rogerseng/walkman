@@ -42,6 +42,7 @@ struct ContentView: View {
     @AppStorage(Prefs.introSeen) private var introSeen = false
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     @AppStorage(Prefs.player) private var player = "tape"
+    @AppStorage(Theme.phoneLayoutKey) private var phoneLayout = Theme.defaultPhoneLayout
     @Environment(\.horizontalSizeClass) private var horizontalSize
     @Environment(\.verticalSizeClass) private var verticalSize
 
@@ -90,10 +91,17 @@ struct ContentView: View {
                         .fullScreenCover(isPresented: $showShelf) {
                             ShelfView(onPick: { showShelf = false }, onClose: { showShelf = false })
                         }
-                } else {
-                    // Every other iPhone: the upright recorder, as on the
-                    // open Duo, fitted to a narrower screen.
+                } else if phoneLayout == "recorder" {
+                    // Every other iPhone, by choice: the upright recorder,
+                    // as on the open Duo, fitted to a narrower screen.
                     OpenTrayView(upright: true, compact: true)
+                } else {
+                    // Every other iPhone: a big tape with the keys down
+                    // the side, as on the Duo's cover.
+                    DeckView(openShelf: { showShelf = true }, sideKeys: true)
+                        .fullScreenCover(isPresented: $showShelf) {
+                            ShelfView(onPick: { showShelf = false }, onClose: { showShelf = false })
+                        }
                 }
             }
             .onChange(of: open) { wasOpen, isOpen in
