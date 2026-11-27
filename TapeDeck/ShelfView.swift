@@ -91,7 +91,7 @@ struct ShelfView: View {
     /// note shown in builds run from Xcode.
     private static func diagnosis(of error: Error) async -> String {
         let plain = error as NSError
-        var parts = ["\(type(of: error)).\(String(describing: error).prefix(160))", "\(plain.domain) \(plain.code)"]
+        var parts = ["\(type(of: error)).\(String(describing: error).prefix(90))", "\(plain.domain) \(plain.code)"]
         if let under = plain.userInfo[NSUnderlyingErrorKey] as? NSError {
             parts.append("under: \(under.domain) \(under.code) \(under.localizedDescription)")
         }
@@ -107,14 +107,12 @@ struct ShelfView: View {
         } else {
             parts.append("subscription unknown")
         }
-        do {
-            let country = try await MusicDataRequest.currentCountryCode
-            let direct = try await SearchFindings.direct(term: "love")
-            parts.append("direct \(country) http \(direct.status) bytes \(direct.bytes)")
-        } catch {
-            let failed = error as NSError
-            parts.append("direct failed: \(type(of: error)).\(error) \(failed.domain) \(failed.code)")
-        }
+        let country = (try? await MusicDataRequest.currentCountryCode) ?? "??"
+        parts.append("country \(country)")
+        parts.append(await SearchFindings.probe("/v1/catalog/\(country)/search?term=love&types=songs&limit=1"))
+        parts.append(await SearchFindings.probe("/v1/storefronts/\(country)"))
+        parts.append(await SearchFindings.probe("/v1/me/storefront"))
+        parts.append(await SearchFindings.probe("/v1/catalog/\(country)/charts?types=songs&limit=1"))
         return parts.joined(separator: " | ")
     }
     #endif

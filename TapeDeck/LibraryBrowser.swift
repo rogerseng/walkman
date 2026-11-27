@@ -603,6 +603,26 @@ extension SearchFindings {
         var results: Results
     }
 
+    /// Apple Music answered with no content at all.
+    struct EmptyReply: LocalizedError {
+        var status: Int
+        var url: String
+        var errorDescription: String? { "Apple Music sent back an empty reply (status \(status))." }
+    }
+
+    /// Asks a path of the Apple Music web service and says what came back:
+    /// for finding out which requests are being answered.
+    static func probe(_ path: String) async -> String {
+        guard let url = URL(string: "https://api.music.apple.com" + path) else { return "\(path) bad" }
+        do {
+            let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
+            let type = response.urlResponse.value(forHTTPHeaderField: "Content-Type") ?? "no type"
+            return "\(path) http \(response.urlResponse.statusCode) \(response.data.count)b \(type)"
+        } catch {
+            return "\(path) threw \(type(of: error)) \(String(describing: error).prefix(90))"
+        }
+    }
+
     static func direct(term: String) async throws -> Direct {
         let country = try await MusicDataRequest.currentCountryCode
         var parts = URLComponents(string: "https://api.music.apple.com/v1/catalog/\(country)/search")!
@@ -612,8 +632,11 @@ extension SearchFindings {
         guard let url = parts.url else { throw URLError(.badURL) }
         let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
         var answer = Direct(status: response.urlResponse.statusCode, bytes: response.data.count)
-        // Nothing found comes back as an empty page, which is not an error.
-        guard !response.data.isEmpty else { return answer }
+        // A reply with nothing in it is a failure, not "no results": a
+        // search that finds nothing still answers with an empty page.
+        guard !response.data.isEmpty else {
+            throw EmptyReply(status: answer.status, url: url.absoluteString)
+        }
         let page = try JSONDecoder().decode(Page.self, from: response.data)
         answer.findings = SearchFindings(artists: Array(page.results.artists ?? []),
                                          albums: Array(page.results.albums ?? []),
