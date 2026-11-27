@@ -34,9 +34,9 @@ struct Theme: Identifiable, Equatable {
     /// The theme the stored settings add up to.
     static func current(player: String, skinName: String) -> Theme {
         let all = offered
-        let skin = Skin(rawValue: skinName) ?? .smoke
+        let skin = Skin(rawValue: skinName) ?? Skin.standard
         if skin.isWheel, let wheel = all.first(where: { $0.skin == skin }) { return wheel }
-        let colour: Skin = skin.isWheel ? .smoke : skin
+        let colour: Skin = skin.isWheel ? Skin.standard : skin
         return all.first { $0.player == player && $0.skin == colour } ?? all[0]
     }
 }
@@ -45,7 +45,7 @@ struct Theme: Identifiable, Equatable {
 /// applies it at once.
 struct ThemePicker: View {
     @AppStorage(Prefs.player) private var player = "tape"
-    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
 
     var body: some View {
         let chosen = Theme.current(player: player, skinName: skinName)

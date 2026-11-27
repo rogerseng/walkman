@@ -59,8 +59,11 @@ struct OpenTrayView: View {
         }
         .padding(20)
         .background(
-            RadialGradient(colors: [Color(white: 0.20), Color(white: 0.04)],
-                           center: .center, startRadius: 20, endRadius: 520)
+            // A dusk sky: deep purple warming to pink at the foot
+            LinearGradient(colors: [Color(red: 0.07, green: 0.02, blue: 0.18),
+                                    Color(red: 0.20, green: 0.06, blue: 0.40),
+                                    Color(red: 0.55, green: 0.12, blue: 0.50)],
+                           startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
         )
         .sheet(isPresented: $showSettings) {

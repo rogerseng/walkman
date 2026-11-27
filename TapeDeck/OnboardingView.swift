@@ -55,9 +55,12 @@ struct OnboardingView: View {
         .frame(maxWidth: 560)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(
-            LinearGradient(colors: [Color(white: 0.17), Color(white: 0.06)],
+            // A dusk sky with the eighties stripe along the foot
+            LinearGradient(colors: [Color(red: 0.07, green: 0.02, blue: 0.18),
+                                    Color(red: 0.20, green: 0.06, blue: 0.40),
+                                    Color(red: 0.52, green: 0.11, blue: 0.50)],
                            startPoint: .top, endPoint: .bottom)
-                .overlay(PlasticGrain(strength: 0.35))
+                .overlay(alignment: .bottom) { RetroStripes().frame(height: 10) }
                 .ignoresSafeArea()
         )
         .preferredColorScheme(.dark)
@@ -70,10 +73,13 @@ struct OnboardingView: View {
             CassetteView(title: "Welcome", subtitle: "Side A", progress: 0.3, motion: .playing)
                 .frame(maxWidth: 300)
                 .padding(.bottom, 8)
-            Wordmark(size: 40).foregroundColor(.white)
+            Wordmark(size: 40)
+                .foregroundColor(.white)
+                .shadow(color: Skin.hotPink, radius: 10)
+                .shadow(color: Skin.hotPink.opacity(0.7), radius: 22)
             Text("Your Apple Music, on tape.")
                 .font(.system(size: 19, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(Skin.cyan)
             Text("Albums and playlists become cassettes with two sides. Put one in, press play, and watch the reels turn.")
                 .foregroundColor(.white.opacity(0.7))
         }
@@ -155,7 +161,7 @@ struct OnboardingView: View {
                     .padding(.vertical, 5)
             }
             .foregroundColor(.white)
-            .tint(Color(white: 0.75))
+            .tint(Skin.hotPink)
             .padding(.horizontal, 16)
             .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.07)))
             .multilineTextAlignment(.leading)

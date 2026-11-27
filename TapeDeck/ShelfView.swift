@@ -50,7 +50,7 @@ struct ShelfView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
-            .background(Color(white: 0.05).ignoresSafeArea())
+            .background(Color(red: 0.06, green: 0.02, blue: 0.15).ignoresSafeArea())
         }
     }
 
@@ -101,7 +101,7 @@ struct ShelfView: View {
                 .frame(height: 52)
                 .overlay(
                     RoundedRectangle(cornerRadius: 5)
-                        .strokeBorder(Color.white.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [6, 5]))
+                        .strokeBorder(Skin.hotPink.opacity(0.9), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
                 )
                 .contentShape(Rectangle())
             }
@@ -134,6 +134,7 @@ struct ShelfView: View {
             Text("YOUR MIXTAPES")
                 .font(.system(size: 11, weight: .bold))
                 .tracking(1.5)
+                .foregroundColor(Skin.cyan)
         }
     }
 
@@ -160,6 +161,7 @@ struct ShelfView: View {
                 Text(title.uppercased())
                     .font(.system(size: 11, weight: .bold))
                     .tracking(1.5)
+                    .foregroundColor(Skin.cyan)
             }
         }
     }
@@ -184,8 +186,11 @@ struct ShelfView: View {
 struct TapeSpine: View {
     let tape: Tape
 
+    /// The five colours of the eighties stripe
     private static let bands: [Color] = [
-        Color(white: 0.16), Color(white: 0.28), Color(white: 0.40), Color(white: 0.52), Color(white: 0.66)
+        Color(red: 0.11, green: 0.60, blue: 0.67), Color(red: 0.95, green: 0.79, blue: 0.30),
+        Color(red: 0.95, green: 0.62, blue: 0.02), Color(red: 0.89, green: 0.34, blue: 0.18),
+        Color(red: 1.0, green: 0.24, blue: 0.64)
     ]
     private let ink = Color(red: 0.07, green: 0.10, blue: 0.33)
 

@@ -17,6 +17,9 @@ enum Skin: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// The skin a new install starts with.
+    static let standard: Skin = .neon
+
     /// Whether the click-wheel skins are offered. They are built and working,
     /// but Apple has removed apps whose players resembled the iPod, so they
     /// must not go to the App Store. They are on in a build run straight from
@@ -36,8 +39,8 @@ enum Skin: String, CaseIterable, Identifiable {
     }
 
     static var current: Skin {
-        let stored = Skin(rawValue: UserDefaults.standard.string(forKey: Prefs.skin) ?? "") ?? .smoke
-        return offered.contains(stored) ? stored : .smoke
+        let stored = Skin(rawValue: UserDefaults.standard.string(forKey: Prefs.skin) ?? "") ?? standard
+        return offered.contains(stored) ? stored : standard
     }
 
     var name: String {

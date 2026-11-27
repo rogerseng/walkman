@@ -20,7 +20,7 @@ struct MenuPlayerView: View {
 
     @EnvironmentObject private var model: PlayerModel
     @StateObject private var volume = SystemVolume()
-    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     @State private var showSettings = false
 
     // Where you are in the menus: each level and the row chosen on it.
@@ -49,8 +49,8 @@ struct MenuPlayerView: View {
     private let keyGap: CGFloat = 10
 
     private var skin: Skin {
-        let stored = Skin(rawValue: skinName) ?? .smoke
-        if jog { return stored.isWheel ? .smoke : stored }
+        let stored = Skin(rawValue: skinName) ?? Skin.standard
+        if jog { return stored.isWheel ? Skin.standard : stored }
         return stored.isWheel ? stored : .wheelBlack
     }
 

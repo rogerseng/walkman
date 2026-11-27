@@ -1,10 +1,13 @@
 <body style="margin:0;background:#2a2a2a"><script>
 const q=new URLSearchParams(location.search),pick=q.get('i'),gray=q.get('gray');
 const bg='<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2b2d"/><stop offset="1" stop-color="#121213"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#b)"/>';
-const A=bg+`<g transform="translate(512 512) scale(1.24) translate(-512 -512)"><rect x="172" y="312" width="680" height="400" rx="56" fill="#f2efe8"/>
-<rect x="232" y="364" width="560" height="64" rx="12" fill="#f57a21"/>
-<circle cx="372" cy="560" r="78" fill="#161617"/><circle cx="652" cy="560" r="78" fill="#161617"/>
-<circle cx="372" cy="560" r="26" fill="#f2efe8"/><circle cx="652" cy="560" r="26" fill="#f2efe8"/></g>`;
+// The app's icon: the cassette against an eighties sunset, with the five
+// stripes as its label.
+const sky='<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0b4a"/><stop offset=".45" stop-color="#6a1b9a"/><stop offset=".8" stop-color="#ff3da6"/><stop offset="1" stop-color="#ff9a5c"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#sky)"/>';
+const A=sky+`<g transform="translate(512 512) scale(1.24) translate(-512 -512)"><rect x="186" y="326" width="680" height="400" rx="56" fill="#1a0b3b"/><rect x="172" y="312" width="680" height="400" rx="56" fill="#f6efe2"/>
+<g><rect x="232" y="360" width="560" height="15" fill="#1b9aaa"/><rect x="232" y="375" width="560" height="15" fill="#f2c94c"/><rect x="232" y="390" width="560" height="15" fill="#f29f05"/><rect x="232" y="405" width="560" height="15" fill="#e4572e"/><rect x="232" y="420" width="560" height="15" fill="#ff3da6"/></g>
+<circle cx="372" cy="572" r="78" fill="#1a0b3b"/><circle cx="652" cy="572" r="78" fill="#1a0b3b"/>
+<circle cx="372" cy="572" r="26" fill="#f6efe2"/><circle cx="652" cy="572" r="26" fill="#f6efe2"/></g>`;
 const B=bg+`<g fill="none" stroke="#f2efe8" stroke-width="44"><circle cx="352" cy="512" r="150"/><circle cx="672" cy="512" r="150"/></g>
 <circle cx="352" cy="512" r="46" fill="#f57a21"/><circle cx="672" cy="512" r="46" fill="#f2efe8"/>`;
 const teeth=[...Array(6)].map((_,i)=>`<rect x="488" y="330" width="48" height="96" rx="10" fill="#f2efe8" transform="rotate(${i*60} 512 512)"/>`).join('');

@@ -22,7 +22,7 @@ struct ContentView: View {
     @EnvironmentObject private var model: PlayerModel
     @State private var showShelf = false
     @AppStorage(Prefs.introSeen) private var introSeen = false
-    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     @AppStorage(Prefs.player) private var player = "tape"
     @Environment(\.horizontalSizeClass) private var horizontalSize
     @Environment(\.verticalSizeClass) private var verticalSize

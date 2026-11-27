@@ -11,9 +11,9 @@ struct TapeDeckWidgets: WidgetBundle {
 }
 
 private enum Palette {
-    static let body = Color(white: 0.07)
+    static let body = Color(red: 0.08, green: 0.02, blue: 0.19)
     static let ink = Color(red: 0.07, green: 0.10, blue: 0.33)
-    static let accent = Color(white: 0.92)
+    static let accent = Color(red: 1.0, green: 0.24, blue: 0.64)
     static let oxide = Color(red: 0.24, green: 0.18, blue: 0.14)
 }
 
@@ -203,7 +203,7 @@ struct TapeKeys: View {
     private func key(_ symbol: String, accent: Bool) -> some View {
         Image(systemName: symbol)
             .font(.system(size: 14, weight: .bold))
-            .foregroundColor(accent ? Color(white: 0.10) : .white)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 30)
             .background(RoundedRectangle(cornerRadius: 6)

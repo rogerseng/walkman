@@ -16,12 +16,12 @@ struct DeckView: View {
     /// The phone's volume, which the fader on the panel sets.
     @StateObject private var volume = SystemVolume()
     @State private var showSettings = false
-    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     var openShelf: () -> Void
 
     private var skin: Skin {
-        let stored = Skin(rawValue: skinName) ?? .smoke
-        return stored.isWheel ? .smoke : stored
+        let stored = Skin(rawValue: skinName) ?? Skin.standard
+        return stored.isWheel ? Skin.standard : stored
     }
 
     /// Width of the key column on phones that have no side rail.
@@ -540,9 +540,9 @@ struct TapeKey: View {
     var onUp: () -> Void = {}
 
     @State private var pressed = false
-    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
 
-    private var skin: Skin { Skin(rawValue: skinName) ?? .smoke }
+    private var skin: Skin { Skin(rawValue: skinName) ?? Skin.standard }
 
     /// How far the key moves when pressed.
     private let travel: CGFloat = 8
@@ -697,19 +697,25 @@ struct ClearButtonStyle: ButtonStyle {
     }
 }
 
-/// A plain light button, for the few places that need an ordinary one.
+/// The app's ordinary button, eighties style: hot pink with a hard yellow
+/// shadow that it sinks onto when pressed.
 struct PlainKeyButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
+        let down = configuration.isPressed
         configuration.label
-            .font(.system(size: 14, weight: .bold))
-            .foregroundColor(Color(white: 0.10))
-            .background(
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(LinearGradient(colors: [Color(white: 0.96), Color(white: 0.76)],
-                                         startPoint: .top, endPoint: .bottom))
-                    .brightness(configuration.isPressed ? -0.15 : 0)
+            .font(.system(size: 15, weight: .heavy, design: .rounded))
+            .foregroundColor(Color(red: 0.10, green: 0.02, blue: 0.13))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Skin.hotPink))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(Color(red: 0.10, green: 0.02, blue: 0.13), lineWidth: 1.5)
             )
-            .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Color.black.opacity(0.35), lineWidth: 1))
-            .offset(y: configuration.isPressed ? 2 : 0)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color(red: 1.0, green: 0.89, blue: 0.36))
+                    .offset(x: down ? 0 : 4, y: down ? 0 : 4)
+            )
+            .offset(x: down ? 4 : 0, y: down ? 4 : 0)
+            .animation(.easeOut(duration: 0.08), value: down)
     }
 }
