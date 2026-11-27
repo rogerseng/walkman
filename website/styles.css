@@ -76,10 +76,9 @@ p.intro { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .card:nth-child(3n) { background: var(--pink); }
 .card:nth-child(n+4) { background: var(--magenta); }
 .card:nth-child(5) { background: var(--pink); }
-.card:nth-child(6) { background: var(--orange); }
+.card:nth-child(6) { background: #c8501d; }
 .card h3 { margin: 0 0 6px; font: 400 21px/1.15 "Righteous", sans-serif; color: #fff; }
 .card p { margin: 0; color: #fff; font-size: 16px; }
-.card:nth-child(6) h3, .card:nth-child(6) p { color: var(--night); }
 
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; }
 .pair ul { margin: 10px 0 0; padding: 0; list-style: none; }
@@ -121,6 +120,8 @@ footer.site .wrap { display: flex; flex-wrap: wrap; gap: 18px 40px; align-items:
 footer.site .name { display: flex; align-items: center; gap: 10px; font: 22px/1 "Righteous", sans-serif; color: #fff; }
 footer.site .name img { width: 32px; height: 32px; border-radius: 8px; }
 footer.site .credit p { margin: 10px 0 0; font-size: 15px; color: var(--text); }
+footer.site .credit a { color: inherit; text-decoration-color: var(--violet); text-decoration-thickness: 2px; }
+footer.site .credit a:hover { color: #fff; text-decoration-color: var(--orange); }
 footer.site nav { display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 6px; }
 footer.site nav a { color: var(--text); text-decoration: none; border-bottom: 2px solid var(--violet); padding-bottom: 2px; transition: border-color .2s, color .2s; }
 footer.site nav a:hover { color: #fff; border-color: var(--orange); }
@@ -157,7 +158,6 @@ footer.site .legal { flex-basis: 100%; margin: 4px 0 0; }
 .card { transition: transform .25s ease; }
 .card:hover { transform: translateY(-4px); }
 .ico { display: block; width: 56px; height: 40px; margin-bottom: 12px; color: #fff; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.card:nth-child(6) .ico { color: var(--night); }
 .ico .fill, .ico .dot, .ico .base { fill: currentColor; stroke: none; }
 .ico .base { opacity: .35; }
 .ico .spin { animation-duration: 3s; }

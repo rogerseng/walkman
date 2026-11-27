@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- The picture shown when casseti.com is shared (1200 x 630).
+     Render it with:  tools/share-image.sh -->
+<meta charset="utf-8">
+<style>
+@font-face { font-family: "Righteous"; src: url("../website/fonts/righteous.woff2") format("woff2"); }
+* { box-sizing: border-box; margin: 0; }
+body { width: 1200px; height: 630px; overflow: hidden; position: relative; color: #fff6ee; background: #1d0b45;
+  background-image: radial-gradient(circle at 80% 58%, #ff8442 0 150px, #f2418f 150px 250px, #a02a9c 250px 360px, #5a24a0 360px 480px, #35167a 480px 610px, #1d0b45 610px);
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.bands { position: absolute; left: 0; right: 0; height: 18px; background: linear-gradient(#ff8442 0 25%, #f2418f 25% 50%, #a02a9c 50% 75%, #5a24a0 75% 100%); }
+.bands.top { top: 0; } .bands.foot { bottom: 0; transform: scaleY(-1); }
+.text { position: absolute; left: 70px; top: 150px; width: 600px; }
+.brand { display: flex; align-items: center; gap: 22px; font: 400 112px/1 "Righteous", sans-serif; }
+.brand img { width: 104px; height: 104px; border-radius: 24px; }
+.tag { margin-top: 22px; font: 400 46px/1.1 "Righteous", sans-serif; color: #ff8442; }
+p { margin-top: 20px; font-size: 28px; line-height: 1.35; font-weight: 500; }
+.phone { position: absolute; right: 120px; top: 62px; height: 600px; border-radius: 34px; border: 5px solid #0b0420; box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+</style>
+<div class="bands top"></div>
+<div class="text">
+  <div class="brand"><img src="../website/images/icon.png" alt="">Casseti</div>
+  <div class="tag">Your music, on tape.</div>
+  <p>Albums and playlists become cassettes. Two sides, reels that turn, keys that clunk.</p>
+</div>
+<img class="phone" src="../website/images/duo-tape-80s.webp" alt="">
+<div class="bands foot"></div>
