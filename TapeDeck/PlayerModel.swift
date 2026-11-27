@@ -153,9 +153,10 @@ final class PlayerModel: ObservableObject {
             request.limit = 12
             let response = try await request.response()
             guard !Task.isCancelled else { return }
-            searchResults = response.albums.map { Tape.album($0) }
-                + response.playlists.map { Tape.playlist($0) }
-                + response.songs.map { Tape.song($0) }
+            var found: [Tape] = response.albums.map { Tape.album($0) }
+            found += response.playlists.map { Tape.playlist($0) }
+            found += response.songs.map { Tape.song($0) }
+            searchResults = found
         } catch {
             if !Task.isCancelled {
                 errorMessage = "Search failed. \(error.localizedDescription)"

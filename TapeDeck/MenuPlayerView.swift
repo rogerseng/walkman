@@ -286,11 +286,12 @@ struct MenuPlayerView: View {
                     let angle = (Double(ridge) / Double(ridges)) * 2 * .pi + dialAngle * .pi / 180
                     // Lit from the top left: ridges facing the light are brighter
                     let facing = 0.5 + 0.5 * cos(angle + 2.2)
+                    let across = CGFloat(cos(angle)), down = CGFloat(sin(angle))
                     var line = Path()
-                    line.move(to: CGPoint(x: centre.x + cos(angle) * radius * 0.86,
-                                          y: centre.y + sin(angle) * radius * 0.86))
-                    line.addLine(to: CGPoint(x: centre.x + cos(angle) * radius * 0.995,
-                                             y: centre.y + sin(angle) * radius * 0.995))
+                    line.move(to: CGPoint(x: centre.x + across * radius * 0.86,
+                                          y: centre.y + down * radius * 0.86))
+                    line.addLine(to: CGPoint(x: centre.x + across * radius * 0.995,
+                                             y: centre.y + down * radius * 0.995))
                     context.stroke(line, with: .color(Color(white: 0.66 + 0.34 * facing)),
                                    lineWidth: radius * 0.034)
                 }
