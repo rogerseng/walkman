@@ -25,6 +25,9 @@ Casseti turns your music into cassettes.
 
 Browse your library by playlist, artist, album or song, or search all of Apple Music. Whatever you pick becomes a tape with two sides. Drop it in, press play, and watch the reels turn. When side A runs out the play key pops up and the music stops. Flip the tape to carry on.
 
+MADE FOR LISTENING, NOT SKIPPING
+A tape has no queue to fiddle with and no feed to scroll. Changing the song takes a little effort, on purpose, so you stay with the one you are on. Casseti is for hearing an album all the way through, and for keeping your mind on the music.
+
 A REAL DECK
 • Play and stop are a pair of keys. Press one in and the other pops out.
 • Tap fast forward or rewind to skip a song. Hold to wind the tape, reels spinning, until you let go.

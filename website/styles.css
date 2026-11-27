@@ -81,6 +81,8 @@ section.alt { background: var(--indigo); }
 h2 { margin: 0 0 12px; font: 400 clamp(28px, 4.6vw, 44px)/1.08 "Righteous", sans-serif; letter-spacing: 0.5px; color: #fff; }
 p.intro { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 
+.focus { text-align: center; }
+.focus p { font-size: 20px; color: var(--text); margin: 14px auto 0; max-width: 34em; }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 .card { background: var(--violet); border-radius: 22px; padding: 22px; }
 .card:nth-child(3n+2) { background: var(--magenta); }
