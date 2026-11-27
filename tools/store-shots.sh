@@ -26,7 +26,7 @@ shot iphone/1-on-tape.png      1206 2622 "Your music, on tape" "Albums and playl
 shot iphone/2-feel-it.png      1206 2622 "Keys that clunk. Reels that turn." "Every key, the door and the fader click under your thumb." ip-tape-black.png "" "#3a3a3d,#0d0d0f"
 shot iphone/3-eats-tape.png    1206 2622 "Sometimes the deck eats your tape" "Lean on a reel too long. Then wind it back in." ip-eaten.png
 shot iphone/4-colours.png      1206 2622 "Pick your colour" "Retro 80s, black, yellow or blue." ip-tape-80s.png,ip-tape-black.png,ip-tape-yellow.png,ip-tape-blue.png 0.86 "" 2
-shot iphone/5-flip.png         1206 2622 "Two sides. You flip it." "When side A runs out, turn the tape over." ip-tape-blue.png "" "#2a4f8f,#101a33"
+shot iphone/5-recorder.png     1206 2622 "Or make it a tape recorder" "Two layouts on iPhone. Pick the one you like." ip-recorder.png
 # Folding iPhone, cover screen: 1398 x 2034
 shot duo/1-cover.png           1398 2034 "The whole cover is a tape deck" "Made for the folding iPhone." duo-closed.png 0.66
 shot duo/2-colours.png         1398 2034 "Pick your colour" "Retro 80s, black, yellow or blue." duo-closed.png,duo-black.png,duo-yellow.png,duo-blue.png 0.86 "" 2

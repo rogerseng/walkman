@@ -103,6 +103,8 @@ p.intro { color: var(--muted); max-width: 40em; margin: 0 0 30px; }
 .shots { display: flex; flex-wrap: wrap; gap: 30px 14px; }
 .shots .shot { width: calc(25% - 11px); min-width: 200px; transition: transform .25s ease; }
 .shots .shot:hover { transform: translateY(-6px); }
+.shots.two { justify-content: center; gap: 30px 40px; }
+.shots.two .shot { width: 260px; min-width: 0; }
 .row-title { margin: 30px 0 10px; font: 400 22px/1.2 "Righteous", sans-serif; color: var(--orange); }
 
 /* Text pages: plain and easy to read, on one flat sheet */

@@ -44,7 +44,7 @@ YOUR TAPES
 DESIGNED FOR IPHONE DUO AND IPHONE
 • On iPhone Duo, closed, the whole cover screen is the player.
 • Open, your tape shelf is on one side and the tape on the other. Choose one and close the phone to start it playing.
-• Works fully on every iPhone.
+• On every other iPhone, choose a big tape with the keys down the side, or the tape recorder.
 
 MORE
 • Retro 80s, black, yellow or blue. The colours carry through the whole app.
