@@ -85,9 +85,10 @@ enum Skin: String, CaseIterable, Identifiable {
                     Color(red: 0.91, green: 0.68, blue: 0.04).opacity(0.96)]
         }
         if self == .blue {
-            return [Color(red: 0.33, green: 0.47, blue: 0.68).opacity(0.97),
-                    Color(red: 0.24, green: 0.37, blue: 0.58).opacity(0.97),
-                    Color(red: 0.17, green: 0.28, blue: 0.47).opacity(0.97)]
+            // The bright sky blue of foam headphone pads
+            return [Color(red: 0.17, green: 0.66, blue: 0.87).opacity(0.97),
+                    Color(red: 0.09, green: 0.56, blue: 0.79).opacity(0.97),
+                    Color(red: 0.05, green: 0.44, blue: 0.67).opacity(0.97)]
         }
         if self == .neon {
             return [Color(red: 0.38, green: 0.10, blue: 0.58).opacity(0.93),
@@ -220,7 +221,7 @@ enum Skin: String, CaseIterable, Identifiable {
         case .smoke: return Color(white: 0.14)
         case .yellow: return Color(red: 0.98, green: 0.77, blue: 0.09)
         case .neon: return Color(red: 0.86, green: 0.16, blue: 0.62)
-        case .blue: return Color(red: 0.24, green: 0.37, blue: 0.58)
+        case .blue: return Color(red: 0.09, green: 0.56, blue: 0.79)
         case .wheelBlack: return Color(white: 0.04)
         case .wheelSilver: return Color(white: 0.80)
         }
@@ -277,9 +278,9 @@ extension Skin {
                                accent: [1.0, 0.80, 0.12], secondary: [1.0, 0.92, 0.62],
                                accentInk: [0.12, 0.09, 0.0])
         case .blue:
-            return PlayerTheme(background: [0.04, 0.07, 0.15],
-                               dusk: [[0.04, 0.07, 0.15], [0.12, 0.20, 0.36], [0.30, 0.42, 0.62]],
-                               accent: [0.95, 0.30, 0.27], secondary: [0.80, 0.86, 0.94],
+            return PlayerTheme(background: [0.03, 0.08, 0.13],
+                               dusk: [[0.03, 0.08, 0.13], [0.05, 0.24, 0.36], [0.10, 0.47, 0.68]],
+                               accent: [0.95, 0.30, 0.27], secondary: [0.78, 0.91, 0.97],
                                accentInk: [0.10, 0.01, 0.01])
         case .wheelSilver:
             return PlayerTheme(background: [0.07, 0.07, 0.08],
