@@ -369,7 +369,22 @@ struct MenuPlayerView: View {
             .background(
                 ZStack {
                     LinearGradient(colors: skin.wheelBody, startPoint: .top, endPoint: .bottom)
-                    PlasticGrain(strength: 0.3)
+                    // Brushed metal: fine lines along the grain
+                    Canvas { context, size in
+                        var y: CGFloat = 0.5
+                        while y < size.height {
+                            let line = Path(CGRect(x: 0, y: y, width: size.width, height: 0.5))
+                            context.fill(line, with: .color(.white.opacity(skin == .wheelSilver ? 0.20 : 0.045)))
+                            y += 2
+                        }
+                    }
+                    PlasticGrain(strength: 0.25)
+                    // The body curves away at its sides and is lit from above
+                    LinearGradient(colors: [Color.black.opacity(0.30), .clear, .clear, Color.black.opacity(0.34)],
+                                   startPoint: .leading, endPoint: .trailing)
+                    LinearGradient(colors: [Color.white.opacity(0.14), .clear, Color.black.opacity(0.20)],
+                                   startPoint: .top, endPoint: .bottom)
+                    GlassShimmer(strength: 0.45)
                     statusPlate(rail: rail, leading: railLeading)
                 }
                 .ignoresSafeArea()
@@ -378,28 +393,65 @@ struct MenuPlayerView: View {
     }
 
     private func wheel(diameter: CGFloat) -> some View {
-        ZStack {
+        let pale = skin == .wheelSilver
+        // Lettering is printed on the wheel, with a hair of shadow or light under it
+        let edge = pale ? Color.white.opacity(0.8) : Color.black.opacity(0.7)
+        return ZStack {
+            // The wheel sits a little below the face of the body
             Circle()
-                .fill(LinearGradient(colors: skin.wheelRing, startPoint: .top, endPoint: .bottom))
-                .overlay(Circle().strokeBorder(Color.black.opacity(0.25), lineWidth: 1))
-                .shadow(color: .black.opacity(0.35), radius: 3, y: 1)
-            Text("MENU")
-                .font(.system(size: diameter * 0.062, weight: .bold))
-                .tracking(1)
-                .offset(y: -diameter * 0.37)
-            Image(systemName: "backward.end.alt.fill")
-                .font(.system(size: diameter * 0.06))
-                .offset(x: -diameter * 0.37)
-            Image(systemName: "forward.end.alt.fill")
-                .font(.system(size: diameter * 0.06))
-                .offset(x: diameter * 0.37)
-            Image(systemName: "playpause.fill")
-                .font(.system(size: diameter * 0.06))
-                .offset(y: diameter * 0.37)
+                .fill(Color.black.opacity(pale ? 0.30 : 0.7))
+                .padding(-2.5)
+                .blur(radius: 2)
+            // The ring: matte plastic, lit from the top left
             Circle()
-                .fill(LinearGradient(colors: skin.wheelCentre, startPoint: .top, endPoint: .bottom))
-                .overlay(Circle().strokeBorder(Color.black.opacity(0.3), lineWidth: 1))
+                .fill(LinearGradient(colors: skin.wheelRing, startPoint: .topLeading, endPoint: .bottomTrailing))
+            PlasticGrain(strength: 0.22).clipShape(Circle())
+            // It is very slightly dished: darker toward the middle, lit at the rim
+            Circle()
+                .fill(RadialGradient(colors: [Color.black.opacity(0.12), .clear, Color.white.opacity(pale ? 0.5 : 0.07)],
+                                     center: .center, startRadius: diameter * 0.18, endRadius: diameter * 0.5))
+            // The lip of the recess: shadowed above, catching light below
+            Circle()
+                .strokeBorder(LinearGradient(colors: [Color.black.opacity(pale ? 0.35 : 0.8),
+                                                      Color.white.opacity(pale ? 0.9 : 0.28)],
+                                             startPoint: .top, endPoint: .bottom), lineWidth: 1.5)
+
+            Group {
+                Text("MENU")
+                    .font(.system(size: diameter * 0.062, weight: .bold))
+                    .tracking(1)
+                    .offset(y: -diameter * 0.37)
+                Image(systemName: "backward.end.alt.fill")
+                    .font(.system(size: diameter * 0.06))
+                    .offset(x: -diameter * 0.37)
+                Image(systemName: "forward.end.alt.fill")
+                    .font(.system(size: diameter * 0.06))
+                    .offset(x: diameter * 0.37)
+                Image(systemName: "playpause.fill")
+                    .font(.system(size: diameter * 0.06))
+                    .offset(y: diameter * 0.37)
+            }
+            .shadow(color: edge, radius: 0.3, y: pale ? 0.8 : -0.8)
+
+            // The gap round the middle button
+            Circle()
+                .fill(Color.black.opacity(pale ? 0.35 : 0.75))
+                .frame(width: diameter * 0.385, height: diameter * 0.385)
+                .blur(radius: 1.2)
+            // The middle button: a shallow dome
+            Circle()
+                .fill(RadialGradient(colors: [skin.wheelCentre[0], skin.wheelCentre[1]],
+                                     center: UnitPoint(x: 0.36, y: 0.30), startRadius: 0,
+                                     endRadius: diameter * 0.24))
+                .overlay(
+                    Circle().strokeBorder(LinearGradient(colors: [Color.white.opacity(pale ? 0.95 : 0.35),
+                                                                  Color.black.opacity(pale ? 0.30 : 0.7)],
+                                                         startPoint: .top, endPoint: .bottom), lineWidth: 1.2)
+                )
                 .frame(width: diameter * 0.36, height: diameter * 0.36)
+                .shadow(color: .black.opacity(pale ? 0.25 : 0.5), radius: 2.5, y: 1.5)
+                // Pressed, it sinks and darkens
+                .scaleEffect(zone == .centre ? 0.975 : 1)
                 .brightness(zone == .centre ? -0.08 : 0)
         }
         .foregroundColor(skin.wheelLettering)
