@@ -169,17 +169,20 @@ struct OpenTrayView: View {
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(skin.note.opacity(0.7))
                         .frame(width: 48, height: 40)
-                        // Moulded in the case's own plastic and standing a
-                        // little proud of it, not a key of another colour
-                        .background(
-                            ZStack {
-                                LinearGradient(colors: bodyColors, startPoint: .top, endPoint: .bottom)
-                                // A shade darker than the case round it
-                                Color.black.opacity(0.22)
-                                PlasticGrain(strength: 0.5)
-                            }
+                        // Cut out of the case: flush with it and of the
+                        // same plastic, with only the fine gap round the key
+                        // to show where it is. The gap is dark, and the case
+                        // below it catches a little light.
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
+                                .offset(y: 1.2)
                         )
-                        .modifier(Raised(corner: 10, shine: 0.4))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(Color.black.opacity(0.78), lineWidth: 1.6)
+                        )
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Songs on this tape")
