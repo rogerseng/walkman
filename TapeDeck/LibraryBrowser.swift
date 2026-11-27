@@ -422,6 +422,20 @@ struct CollectionDetail: View {
                 scroller.scrollTo("side-\(side == 0 ? "A" : "B")", anchor: .top)
             }
         }
+        // Opened while the deck is on side B: start there, not at the top.
+        .onChange(of: loading) { _, stillLoading in
+            guard !stillLoading, inDeck, model.sideIndex == 1, sideACount != nil else { return }
+            let playing = tracks.first(where: isPlaying)
+            // After the rows are in place
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                if let playing {
+                    scroller.scrollTo(playing.id, anchor: .center)
+                } else {
+                    followFlip = true
+                    scroller.scrollTo("side-B", anchor: .top)
+                }
+            }
+        }
         .onChange(of: model.trackTitle) { _, _ in
             guard followFlip, inDeck, let playing = tracks.first(where: isPlaying) else { return }
             followFlip = false

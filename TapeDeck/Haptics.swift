@@ -81,10 +81,17 @@ enum Haptics {
         }
     }
 
-    /// One beat of the music: the lightest tap there is.
+    /// One beat of the music, as strong as the listener has set it: a soft
+    /// tap at the low end, and a firmer knock toward the top.
     static func beat() {
         guard on else { return }
-        soft.impactOccurred(intensity: 0.45)
+        let stored = UserDefaults.standard.object(forKey: Prefs.beatStrength) as? Double
+        let strength = min(1, max(0, stored ?? Prefs.defaultBeatStrength))
+        if strength < 0.5 {
+            soft.impactOccurred(intensity: CGFloat(0.35 + strength * 1.3))
+        } else {
+            medium.impactOccurred(intensity: CGFloat(0.45 + (strength - 0.5) * 1.1))
+        }
     }
 
     /// The volume fader clicking into a notch.

@@ -8,6 +8,9 @@ enum Prefs {
     static let haptics = "hapticsOn"
     /// A light tap on each beat while music plays. Off unless asked for.
     static let beatHaptics = "beatHapticsOn"
+    /// How strong that tap is, from 0 (faintest) to 1 (strongest).
+    static let beatStrength = "beatStrength"
+    static let defaultBeatStrength = 0.6
     static let glare = "glareOn"
     static let levelLights = "levelLightsOn"
     static let playOnClose = "playOnCloseOn"

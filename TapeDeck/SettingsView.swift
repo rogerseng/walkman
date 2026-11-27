@@ -12,6 +12,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.hiss) private var hissOn = true
     @AppStorage(Prefs.haptics) private var hapticsOn = true
     @AppStorage(Prefs.beatHaptics) private var beatHapticsOn = false
+    @AppStorage(Prefs.beatStrength) private var beatStrength = Prefs.defaultBeatStrength
     @AppStorage(Prefs.glare) private var glareOn = true
     @AppStorage(Prefs.levelLights) private var levelLightsOn = true
     @AppStorage(Prefs.playOnClose) private var playOnCloseOn = true
@@ -55,6 +56,17 @@ struct SettingsView: View {
                     Toggle("Haptics", isOn: $hapticsOn)
                     Toggle("Tap along with the music", isOn: $beatHapticsOn)
                         .disabled(!hapticsOn)
+                    if beatHapticsOn, hapticsOn {
+                        // How hard each tap lands. Letting go gives one tap
+                        // at the chosen strength, to feel it.
+                        HStack(spacing: 12) {
+                            Text("Strength")
+                            Slider(value: $beatStrength, in: 0...1) { editing in
+                                if !editing { Haptics.beat() }
+                            }
+                            .accessibilityLabel("Tap strength")
+                        }
+                    }
                     Toggle("Glare follows the phone", isOn: $glareOn)
                     Toggle("Level lights in the volume slot", isOn: $levelLightsOn)
                 } header: {
