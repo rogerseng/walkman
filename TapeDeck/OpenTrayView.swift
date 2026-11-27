@@ -39,7 +39,7 @@ struct OpenTrayView: View {
     }
 
     private var hint: String {
-        if !model.hasTape { return "Pick a tape from the shelf" }
+        if !model.hasTape { return upright ? "Tap the door, or the music key, to choose a tape" : "Pick a tape from the shelf" }
         if model.tapeChurn == .winding { return "Winding the tape back in" }
         if model.tapeEaten { return "The deck ate your tape. It happens to the best decks." }
         if let note = model.endOfSideNote { return note }
@@ -98,8 +98,8 @@ struct OpenTrayView: View {
                 ZStack(alignment: .top) {
                     bodyShell(railWidth: 0, seam: false)
                     CarryHandle(skin: skin)
-                        .frame(width: min(360, width * 0.5), height: handleHeight - 6)
-                        .padding(.top, 8)
+                        .frame(width: min(320, width * 0.46), height: max(40, handleHeight - 40))
+                        .padding(.top, 22)
                 }
                 .ignoresSafeArea()
             )
@@ -317,10 +317,22 @@ struct OpenTrayView: View {
         return ZStack {
             // The well
             shape.fill(Color(white: 0.04))
+            // Upright, the deck's works show faintly in the empty well:
+            // the two spindles that turn a tape.
+            if upright, !model.hasTape {
+                HStack(spacing: 33 * u) {
+                    DriveSpindle(u: u).frame(width: 8 * u, height: 8 * u)
+                    DriveSpindle(u: u).frame(width: 8 * u, height: 8 * u)
+                }
+                .opacity(0.16)
+                .offset(y: (28.5 - 31.5) * u)
+                .transition(.opacity)
+            }
             if !model.hasTape {
                 VStack(spacing: 5) {
                     Image(systemName: "eject.fill").font(.system(size: 22))
                     Text("NO TAPE").font(Typeface.display(15)).tracking(3)
+                    if upright { Text("Tap to choose one").font(.system(size: 11)) }
                 }
                 .foregroundColor(Color.white.opacity(doorKnocked ? 0.95 : 0.5))
                 .scaleEffect(doorKnocked ? 0.92 : 1)
@@ -369,7 +381,9 @@ struct OpenTrayView: View {
                 model.windTapeBack()
             } else if !model.hasTape {
                 // Nothing to press on: the door knocks and gives a little.
+                // Upright there is no shelf beside it, so it opens the shelf.
                 model.knockEmptyDeck()
+                if upright { showShelf = true }
                 withAnimation(.easeOut(duration: 0.08)) { doorKnocked = true }
                 Task {
                     try? await Task.sleep(nanoseconds: 160_000_000)
@@ -590,72 +604,37 @@ struct OpenTrayView: View {
     }
 }
 
-/// The boombox's carrying handle, folded down against the top of the case:
-/// a metal bar bent up and over between two sockets, with a grip along its
-/// top.
+/// The boombox's carrying handle: a hand hole cut clean through the top of
+/// the case, dark inside, with the wall of the cut catching the light along
+/// its lower lip.
 private struct CarryHandle: View {
     let skin: Skin
 
     var body: some View {
         GeometryReader { geo in
-            let bar: CGFloat = 13
-            let arch = Path { path in
-                let inset = bar / 2 + 6
-                let top = bar / 2 + 2
-                let bend = min(26, geo.size.height * 0.4)
-                path.move(to: CGPoint(x: inset, y: geo.size.height))
-                path.addLine(to: CGPoint(x: inset, y: top + bend))
-                path.addQuadCurve(to: CGPoint(x: inset + bend, y: top), control: CGPoint(x: inset, y: top))
-                path.addLine(to: CGPoint(x: geo.size.width - inset - bend, y: top))
-                path.addQuadCurve(to: CGPoint(x: geo.size.width - inset, y: top + bend),
-                                  control: CGPoint(x: geo.size.width - inset, y: top))
-                path.addLine(to: CGPoint(x: geo.size.width - inset, y: geo.size.height))
-            }
-            ZStack(alignment: .top) {
-                // The bar: bright metal, with shadow under it on the case
-                arch.stroke(Color.black.opacity(0.5), style: StrokeStyle(lineWidth: bar + 3, lineCap: .butt))
-                    .blur(radius: 5)
-                    .offset(y: 5)
-                arch.stroke(LinearGradient(colors: [Color(white: 0.95), Color(white: 0.55), Color(white: 0.80)],
-                                           startPoint: .top, endPoint: .bottom),
-                            style: StrokeStyle(lineWidth: bar, lineCap: .butt, lineJoin: .round))
-                arch.stroke(Color.white.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, lineCap: .butt))
-                    .offset(x: -bar / 2 + 2.5, y: -bar / 2 + 2.5)
-                    .mask(arch.stroke(style: StrokeStyle(lineWidth: bar, lineCap: .butt, lineJoin: .round)))
-                // The grip: ribbed rubber over the middle of the bar
-                Capsule()
-                    .fill(LinearGradient(colors: [Color(white: 0.24), Color(white: 0.07)],
+            let slot = RoundedRectangle(cornerRadius: min(22, geo.size.height * 0.4))
+            ZStack {
+                // Through the hole: the dark behind the case
+                slot.fill(LinearGradient(colors: [Color.black, Color(white: 0.07)],
                                          startPoint: .top, endPoint: .bottom))
-                    .overlay(
-                        HStack(spacing: 5) {
-                            ForEach(0..<Int(geo.size.width * 0.5 / 7), id: \.self) { _ in
-                                Rectangle().fill(Color.black.opacity(0.55)).frame(width: 2)
-                            }
-                        }
-                        .clipShape(Capsule())
-                    )
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
-                    .frame(width: geo.size.width * 0.5, height: bar + 7)
-                    .offset(y: -1.5)
-                    .shadow(color: .black.opacity(0.5), radius: 3, y: 2)
-                // The sockets the bar goes into
-                HStack {
-                    socket
-                    Spacer()
-                    socket
-                }
-                .frame(maxHeight: .infinity, alignment: .bottom)
+                // The case has thickness: its upper wall is in shadow
+                slot.strokeBorder(Color.black.opacity(0.9), lineWidth: 10)
+                    .blur(radius: 6)
+                    .offset(y: 5)
+                    .clipShape(slot)
+                // and its lower wall faces the light
+                slot.strokeBorder(LinearGradient(colors: [.clear, .clear, Color.white.opacity(0.22)],
+                                                 startPoint: .top, endPoint: .bottom), lineWidth: 3)
+                // The edge of the cut, dark above and lit below
+                slot.strokeBorder(LinearGradient(colors: [Color.black.opacity(0.85), Color.white.opacity(0.28)],
+                                                 startPoint: .top, endPoint: .bottom), lineWidth: 1.2)
             }
+            // A soft roll of the case round the hole
+            .background(
+                slot.stroke(Color.white.opacity(0.10), lineWidth: 2).blur(radius: 1.5).offset(y: 1.5)
+            )
         }
         .accessibilityHidden(true)
-    }
-
-    private var socket: some View {
-        RoundedRectangle(cornerRadius: 5)
-            .fill(LinearGradient(colors: [Color(white: 0.16), Color(white: 0.04)], startPoint: .top, endPoint: .bottom))
-            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-            .frame(width: 31, height: 16)
-            .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
     }
 }
 
