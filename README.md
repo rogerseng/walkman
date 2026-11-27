@@ -85,7 +85,7 @@ The `store/` folder has what is needed to put Cassety on the App Store at $4.99:
 
 ## Website
 
-The `website` folder is the site for cassety.com: a home page, the support page and the privacy policy, in an eighties neon style to match the Neon skin. It is plain files with nothing to build. `website/README.md` says how to put it online.
+The `website` folder is the site for cassety.com: a home page, the support page and the privacy policy, in flat bands of colour to match the app icon. It is plain files with nothing to build. `website/README.md` says how to put it online.
 
 ## Running it on your iPhone
 
