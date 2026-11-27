@@ -786,6 +786,10 @@ struct TapeKey: View {
     var onUp: () -> Void = {}
 
     @State private var pressed = false
+    /// True only while a finger is on the key. Unlike `pressed`, the system
+    /// puts this back by itself when a touch is taken away without ending,
+    /// as when a page slides up over the key.
+    @GestureState private var touching = false
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     /// The tour lights up the key it wants pressed.
     @Environment(\.tourKey) private var tourKey
@@ -856,12 +860,22 @@ struct TapeKey: View {
                         onDown()
                     }
                 }
+                .updating($touching) { _, touching, _ in touching = true }
                 .onEnded { _ in
                     pressed = false
                     if !latched { Haptics.keyUp() }
                     onUp()
                 }
         )
+        // A touch that is cancelled never ends, so the key would stay down
+        // (and a wind would never stop). Let it up when the finger is gone.
+        .onChange(of: touching) { _, touching in
+            if !touching, pressed {
+                pressed = false
+                onUp()
+            }
+        }
+        .onDisappear { pressed = false }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(spokenLabel)
         .accessibilityAddTraits(latched ? [.isButton, .isSelected] : .isButton)
