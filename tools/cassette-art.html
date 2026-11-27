@@ -114,25 +114,58 @@ const front = `
 ${screw(3.4, 3.5, 20)}${screw(96.6, 3.5, 65)}${screw(3.4, 59.5, 8)}${screw(96.6, 59.5, 50)}
 </svg>`;
 
+// The reel hub. A clear flange with moulded pockets carries a solid white core;
+// six drive lugs stand in the core's bore, and a small clamp in its rim pins
+// the end of the tape.
 const pockets = [...Array(8)].map((_, i) => `<g transform="rotate(${i * 45 + 12} 10 10)">
-  <ellipse cx="10" cy="2.55" rx="1.45" ry=".95" fill="#aeb6bd" fill-opacity=".38"/>
-  <ellipse cx="10" cy="2.55" rx="1.45" ry=".95" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width=".16"/>
-  <path d="M8.7 2.9A1.45 .95 0 0 0 11.3 2.9" fill="none" stroke="#59616a" stroke-opacity=".35" stroke-width=".1"/></g>`).join('');
-const teeth = [...Array(6)].map((_, i) => `<g transform="rotate(${i * 60} 10 10)">
-  <path d="M9.45 5.05H10.55L10.4 6.5H9.6Z" fill="#fff" fill-opacity=".92" stroke="#59616a" stroke-opacity=".5" stroke-width=".1"/></g>`).join('');
+  <ellipse cx="10" cy="2.35" rx="1.35" ry=".8" fill="#0b0d10" fill-opacity=".30"/>
+  <path d="M8.75 2.2A1.35 .8 0 0 1 11.25 2.2" fill="none" stroke="#1d2227" stroke-opacity=".55" stroke-width=".16"/>
+  <path d="M8.72 2.55A1.35 .8 0 0 0 11.28 2.55" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width=".14"/></g>`).join('');
+const lugs = [...Array(6)].map((_, i) => `<g transform="rotate(${i * 60} 10 10)">
+  <path d="M9.42 5.3H10.58L10.42 6.95H9.58Z" fill="#000" fill-opacity=".45" transform="translate(.12 .16)"/>
+  <path d="M9.42 5.3H10.58L10.42 6.95H9.58Z" fill="url(#lug)"/>
+  <path d="M9.42 5.3H10.58" stroke="#fff" stroke-width=".1"/>
+  <path d="M10.58 5.3L10.42 6.95H9.58" fill="none" stroke="#4a5158" stroke-opacity=".6" stroke-width=".09"/></g>`).join('');
+const pins = [0, 120, 240].map(a => `<circle transform="rotate(${a + 50} 10 10)" cx="10" cy="1.25" r=".22" fill="none" stroke="#6b737b" stroke-opacity=".35" stroke-width=".06"/>`).join('');
 const hub = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="480" height="480">
-<defs><radialGradient id="flange" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".80"/><stop offset="1" stop-color="#e6eaee" stop-opacity=".62"/></radialGradient></defs>
-<path fill-rule="evenodd" fill="url(#flange)" d="M10 .3A9.7 9.7 0 1 1 9.99 .3ZM10 5A5 5 0 1 0 10.01 5Z"/>
-<circle cx="10" cy="10" r="9.7" fill="none" stroke="#59616a" stroke-opacity=".5" stroke-width=".16"/>
-<circle cx="10" cy="10" r="9.25" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width=".2"/>
-${pockets}
-<circle cx="10" cy="10" r="5.75" fill="none" stroke="#59616a" stroke-opacity=".35" stroke-width=".14"/>
-<circle cx="10" cy="10" r="5.35" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width=".5"/>
-<circle cx="10" cy="10" r="5" fill="none" stroke="#59616a" stroke-opacity=".55" stroke-width=".14"/>
-${teeth}
-<path d="M2.6 6A8.4 8.4 0 0 1 7 2.2" fill="none" stroke="#fff" stroke-width=".3" stroke-linecap="round"/>
+<defs>
+  <radialGradient id="flange" cx=".38" cy=".32" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".62"/><stop offset=".7" stop-color="#e9edf0" stop-opacity=".46"/><stop offset="1" stop-color="#cfd5da" stop-opacity=".58"/></radialGradient>
+  <linearGradient id="core" x1=".15" y1=".1" x2=".85" y2=".9"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#eceeef"/><stop offset="1" stop-color="#b9bec3"/></linearGradient>
+  <linearGradient id="bore" x1=".15" y1=".1" x2=".85" y2=".9"><stop offset="0" stop-color="#7d848b"/><stop offset=".5" stop-color="#cfd3d7"/><stop offset="1" stop-color="#fff"/></linearGradient>
+  <linearGradient id="lug" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#c4c9ce"/></linearGradient>
+  <filter id="hb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".35"/></filter>
+  <filter id="hs" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".18"/></filter>
+</defs>
+<!-- the clear flange -->
+<path fill-rule="evenodd" fill="url(#flange)" d="M10 .3A9.7 9.7 0 1 1 9.99 .3ZM10 4.4A5.6 5.6 0 1 0 10.01 4.4Z"/>
+<circle cx="10" cy="10" r="9.7" fill="none" stroke="#4a5158" stroke-opacity=".55" stroke-width=".14"/>
+<circle cx="10" cy="10" r="9.32" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width=".2"/>
+<circle cx="10" cy="10" r="8.85" fill="none" stroke="#4a5158" stroke-opacity=".18" stroke-width=".08"/>
+${pockets}${pins}
+<!-- light sliding across the gloss -->
+<g filter="url(#hb)" fill="none" stroke="#fff" stroke-linecap="round">
+  <path d="M2.3 7A8.3 8.3 0 0 1 7 2.3" stroke-width=".7" stroke-opacity=".9"/>
+  <path d="M17.2 14A8.3 8.3 0 0 1 14 17.2" stroke-width=".5" stroke-opacity=".5"/>
+</g>
+<!-- shadow the core throws on the flange -->
+<circle cx="10.15" cy="10.2" r="6.25" fill="none" stroke="#000" stroke-opacity=".35" stroke-width=".7" filter="url(#hs)"/>
+<!-- the solid core: outer wall, top face, bore -->
+<path fill-rule="evenodd" fill="url(#core)" d="M10 3.85A6.15 6.15 0 1 1 9.99 3.85ZM10 5.3A4.7 4.7 0 1 0 10.01 5.3Z"/>
+<circle cx="10" cy="10" r="6.15" fill="none" stroke="#3f464d" stroke-opacity=".6" stroke-width=".12"/>
+<circle cx="10" cy="10" r="5.9" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width=".14"/>
+<circle cx="10" cy="10" r="4.85" fill="none" stroke="url(#bore)" stroke-width=".3"/>
+<circle cx="10" cy="10" r="4.7" fill="none" stroke="#2c3238" stroke-opacity=".7" stroke-width=".12"/>
+<!-- the clamp that pins the tape's end, let into the rim -->
+<g transform="rotate(-38 10 10)">
+  <path d="M9.05 3.86H10.95L10.8 5.2H9.2Z" fill="#f6f7f8"/>
+  <path d="M9.05 3.86L9.2 5.2M10.95 3.86L10.8 5.2" stroke="#3f464d" stroke-opacity=".75" stroke-width=".1"/>
+  <path d="M9.3 4.5H10.7" stroke="#3f464d" stroke-opacity=".3" stroke-width=".08"/>
+</g>
+${lugs}
+<path d="M5.3 6.4A5.9 5.9 0 0 1 8.3 4.35" fill="none" stroke="#fff" stroke-width=".3" stroke-linecap="round" filter="url(#hs)"/>
 </svg>`;
+
 // Inside the shell, behind the reels.
 const back = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 63" width="${W}" height="${W * 0.63}">

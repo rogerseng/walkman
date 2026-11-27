@@ -14,6 +14,11 @@ final class TapeSounds {
         didSet { applyLoop() }
     }
 
+    /// Tape hiss can be turned off on its own, leaving the mechanical sounds.
+    var hissEnabled = true {
+        didSet { if hissEnabled != oldValue { applyLoop() } }
+    }
+
     /// While true, something is always playing, silence if need be. iOS suspends
     /// an app in the background unless it is playing audio, and the app has to
     /// stay awake to keep the lock screen tape in step with the music.
@@ -65,7 +70,7 @@ final class TapeSounds {
     private func applyLoop() {
         var wanted: AVAudioPCMBuffer?
         var volume: Float = 1
-        if enabled, let loop = currentLoop {
+        if enabled, let loop = currentLoop, hissEnabled || loop != .hiss {
             wanted = loops[loop]
             volume = loop == .hiss ? 0.5 : 0.9
         } else if keepAlive {

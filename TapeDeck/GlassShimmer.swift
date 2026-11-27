@@ -35,12 +35,13 @@ struct GlassShimmer: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var tilt = TiltSensor()
+    @AppStorage(Prefs.glare) private var glareOn = true
     /// Multiplies the brightness.
     var strength = 1.0
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60.0,
-                                paused: reduceMotion || scenePhase != .active)) { _ in
+                                paused: still || scenePhase != .active)) { _ in
             GeometryReader { geo in
                 let size = geo.size
                 ZStack {
@@ -60,16 +61,26 @@ struct GlassShimmer: View {
             }
         }
         .allowsHitTesting(false)
-        .onAppear { if !reduceMotion { tilt.start() } }
+        .onAppear { if !still { tilt.start() } }
         .onDisappear { tilt.stop() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active, !reduceMotion {
+            if phase == .active, !still {
+                tilt.start()
+            } else {
+                tilt.stop()
+            }
+        }
+        .onChange(of: glareOn) { _, on in
+            if on, !reduceMotion {
                 tilt.start()
             } else {
                 tilt.stop()
             }
         }
     }
+
+    /// The glare holds still when Reduce Motion is on or the setting is off.
+    private var still: Bool { reduceMotion || !glareOn }
 
     private func band(at position: Double, width: Double, strength: Double, in size: CGSize) -> some View {
         Rectangle()

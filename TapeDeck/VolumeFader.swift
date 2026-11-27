@@ -71,7 +71,10 @@ private struct VolumeHost: UIViewRepresentable {
 /// step, and it follows the phone's volume buttons.
 struct VolumeFader: View {
     @ObservedObject var volume: SystemVolume
+    /// A tape is playing, so the level lights should move.
+    var playing = false
     @State private var lastStep = -1
+    @AppStorage(Prefs.levelLights) private var lightsOn = true
 
     private let capHeight: CGFloat = 22
     private let capWidth: CGFloat = 38
@@ -108,6 +111,15 @@ struct VolumeFader: View {
                     .frame(width: 8)
                     .padding(.vertical, capHeight / 2 - 4)
                     .frame(maxWidth: .infinity)
+
+                // Level lights down inside the slot. They only ever light
+                // from the bottom up to the cap, never past it.
+                if lightsOn {
+                    LevelLights(level: volume.level, playing: playing)
+                        .frame(width: 4)
+                        .padding(.vertical, capHeight / 2 - 2)
+                        .frame(maxWidth: .infinity)
+                }
 
                 // The cap: brushed metal with grip ridges and a marker line
                 ZStack {
@@ -166,5 +178,47 @@ struct VolumeFader: View {
             @unknown default: break
             }
         }
+    }
+}
+
+/// A ladder of small lamps inside the volume slot. How high it can light is
+/// set by the volume; while a tape plays the lit part rises and falls in a
+/// steady beat. It is for show: an app cannot hear what Apple Music plays.
+private struct LevelLights: View {
+    let level: Double
+    let playing: Bool
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !playing)) { timeline in
+            Canvas { context, size in
+                let time = timeline.date.timeIntervalSinceReferenceDate
+                // Where the middle of the cap sits, measured from the top
+                let capY = 2 + CGFloat(1 - min(max(level, 0), 1)) * (size.height - 4)
+                let room = max(0, size.height - capY)
+                let lit = playing ? room * CGFloat(Self.pulse(at: time)) : room
+                var y = size.height
+                while y - 3 > capY {
+                    let on = size.height - y < lit
+                    // Amber at the bottom, warming toward the cap
+                    let rise = Double(1 - (y - capY) / max(1, room))
+                    let lamp = Color(red: 1.0, green: 0.46 + 0.32 * rise, blue: 0.10)
+                    let rect = CGRect(x: 0, y: y - 3, width: size.width, height: 3)
+                    context.fill(Path(roundedRect: rect, cornerRadius: 1),
+                                 with: .color(lamp.opacity(on ? (playing ? 1.0 : 0.5) : 0.09)))
+                    y -= 4.5
+                }
+            }
+        }
+        .shadow(color: Color(red: 1.0, green: 0.55, blue: 0.1).opacity(playing ? 0.55 : 0.2), radius: 3)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    /// 0...1: a kick on each beat that dies away, with some movement between.
+    private static func pulse(at time: Double) -> Double {
+        let beat = time * 2.05
+        let kick = exp(-(beat - floor(beat)) * 4.5)
+        let sway = 0.5 + 0.5 * sin(time * 7.3) * sin(time * 3.1 + 1.7)
+        return min(1, 0.38 + 0.44 * kick + 0.18 * sway)
     }
 }

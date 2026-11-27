@@ -68,6 +68,15 @@ struct DeckView: View {
                         .frame(maxWidth: .infinity, alignment: railLeading ? .leading : .trailing)
                 }
             )
+            // The maker's name, moulded faintly into the top corner of the case
+            .overlay(alignment: .topLeading) {
+                Wordmark()
+                    .foregroundColor(Color.white.opacity(0.22))
+                    .shadow(color: .black.opacity(0.6), radius: 0.3, y: -0.7)
+                    .offset(x: 22 + (railLeading ? panelWidth : insets.leading), y: insets.top + 16)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
             // Under the window: the song that is playing on an album tape
             // (its printed label has no room for it), or word that the tape
             // has run out.
@@ -86,7 +95,7 @@ struct DeckView: View {
             // Volume: on the solid panel, level with the window and as tall as it
             .overlay(alignment: .topLeading) {
                 let faderX = railLeading ? panelWidth - 70 : full.width - panelWidth + 22
-                VolumeFader(volume: volume)
+                VolumeFader(volume: volume, playing: model.motion == .playing)
                     .frame(width: 48, height: window.height)
                     .offset(x: faderX, y: window.minY)
                 // Engraved under the fader
@@ -331,6 +340,18 @@ struct DeckView: View {
             }
             .frame(width: stripWidth + insets.trailing)
         }
+    }
+}
+
+/// The name of the app, as lettering.
+struct Wordmark: View {
+    var size: CGFloat = 22
+
+    var body: some View {
+        Text("Cassety")
+            .font(.system(size: size, weight: .heavy, design: .rounded))
+            .italic()
+            .tracking(0.4)
     }
 }
 

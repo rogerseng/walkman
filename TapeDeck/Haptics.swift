@@ -10,10 +10,8 @@ enum Haptics {
     private static let soft = UIImpactFeedbackGenerator(style: .soft)
 
     /// Where the on/off setting is kept. Settings writes it; this reads it.
-    static let settingKey = "hapticsOn"
-    private static var on: Bool {
-        UserDefaults.standard.object(forKey: settingKey) as? Bool ?? true
-    }
+    static let settingKey = Prefs.haptics
+    private static var on: Bool { Prefs.isOn(Prefs.haptics) }
 
     /// Wakes the haptic engine so the first tap is not late.
     static func warmUp() {

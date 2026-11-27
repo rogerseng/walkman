@@ -278,9 +278,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/TapeDeck-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TapeDeck;
+				INFOPLIST_KEY_CFBundleDisplayName = Cassety;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
-				INFOPLIST_KEY_NSAppleMusicUsageDescription = "TapeDeck plays music from your Apple Music library as cassette tapes.";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Cassety plays music from your Apple Music library as cassette tapes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -308,9 +308,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/TapeDeck-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TapeDeck;
+				INFOPLIST_KEY_CFBundleDisplayName = Cassety;
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
-				INFOPLIST_KEY_NSAppleMusicUsageDescription = "TapeDeck plays music from your Apple Music library as cassette tapes.";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Cassety plays music from your Apple Music library as cassette tapes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -336,7 +336,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/TapeDeckWidgets-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TapeDeck;
+				INFOPLIST_KEY_CFBundleDisplayName = Cassety;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -360,7 +360,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/TapeDeckWidgets-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TapeDeck;
+				INFOPLIST_KEY_CFBundleDisplayName = Cassety;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

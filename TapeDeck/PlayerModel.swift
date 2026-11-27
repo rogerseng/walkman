@@ -77,6 +77,13 @@ final class PlayerModel: ObservableObject {
     private var waitingForLid = false
     private var heldSeek: TapeMotion?
     private var seekTask: Task<Void, Never>?
+    /// Winding the tape by hand: where it has got to on the side, and
+    /// whether to carry on playing when the key is let go.
+    private var winding = false
+    private var windPosition: TimeInterval = 0
+    private var windResume = false
+    /// This press of the key wound the tape, so letting go must not skip a song.
+    private var keyWound = false
     private var swapping = false
     private var lastKeyPress = Date.distantPast
     private var lastEntryID: String?
@@ -185,7 +192,7 @@ final class PlayerModel: ObservableObject {
 
     /// The phone was folded shut. A tape chosen while it was open starts now.
     func lidClosed() {
-        guard waitingForLid, hasTape, motion != .playing else { return }
+        guard Prefs.isOn(Prefs.playOnClose), waitingForLid, hasTape, motion != .playing else { return }
         playKey()
     }
 
@@ -429,19 +436,86 @@ final class PlayerModel: ObservableObject {
         }
     }
 
-    /// Rewind and fast forward: a tap skips a track, a hold winds the tape.
+    /// Rewind and fast forward: a tap skips a song, a hold winds the tape.
     func seekKeyDown(forward: Bool) {
         pressFeedback()
         guard hasTape else { return }
+        keyWound = false
         seekTask?.cancel()
         seekTask = Task {
             do { try await Task.sleep(nanoseconds: 350_000_000) } catch { return }
-            guard !Task.isCancelled else { return }
-            heldSeek = forward ? .fastForward : .rewind
-            if forward {
-                player.beginSeekingForward()
-            } else {
-                player.beginSeekingBackward()
+            guard !Task.isCancelled, sideIndex < sides.count else { return }
+            await wind(forward: forward)
+        }
+    }
+
+    /// Winds the tape the way a deck does: the music stops, the motor spins
+    /// the reels up to speed, and the tape runs on through one song after
+    /// another until the key is let go or the tape runs out.
+    private func wind(forward: Bool) async {
+        let side = sides[sideIndex]
+        guard side.duration > 0 else { return }
+        keyWound = true
+        windResume = motion == .playing
+        windPosition = sideEnded ? side.duration : side.start(of: trackIndex) + elapsed
+        player.pause()
+        sideEnded = false
+        winding = true
+        heldSeek = forward ? .fastForward : .rewind
+        refresh()
+
+        var held = 0.0
+        while !Task.isCancelled {
+            do { try await Task.sleep(nanoseconds: 100_000_000) } catch { return }
+            held += 0.1
+            // Seconds of tape per second: slow off the mark, then quick.
+            let rate = min(45, 12 + held * 14)
+            windPosition += (forward ? 1 : -1) * rate * 0.1
+            let hitEnd = windPosition <= 0 || windPosition >= side.duration
+            windPosition = min(max(windPosition, 0), side.duration)
+
+            let spot = side.locate(windPosition)
+            trackIndex = spot.index
+            trackTitle = side.entries[spot.index].title
+            trackArtist = side.entries[spot.index].artist
+            duration = side.entries[spot.index].duration
+            elapsed = spot.offset
+            progress = windPosition / side.duration
+
+            if hitEnd {
+                // The tape has run out: the key is thrown back up.
+                finishWinding()
+                return
+            }
+        }
+    }
+
+    /// Lets the winding key go and picks the music up where the tape stopped.
+    private func finishWinding() {
+        guard winding, sideIndex < sides.count else { return }
+        let side = sides[sideIndex]
+        winding = false
+        heldSeek = nil
+        lastKeyPress = Date()
+        sounds.play(.keyUp)
+        Haptics.keyUp()
+        if windPosition >= side.duration - 0.5 {
+            sideEnded = true
+            progress = 1
+            refresh()
+            return
+        }
+        let resume = windResume
+        let position = windPosition
+        Task {
+            do {
+                let spot = side.locate(position)
+                setQueue(side: side, startAt: spot.index)
+                try await player.prepareToPlay()
+                if spot.offset > 0 { player.playbackTime = spot.offset }
+                if resume { try await player.play() }
+            } catch {
+                errorMessage = "The tape would not play. \(error.localizedDescription)"
             }
             refresh()
         }
@@ -451,13 +525,11 @@ final class PlayerModel: ObservableObject {
         seekTask?.cancel()
         seekTask = nil
         guard hasTape else { return }
-        if heldSeek != nil {
-            heldSeek = nil
-            player.endSeeking()
-            lastKeyPress = Date()
-            sounds.play(.keyUp)
-            Haptics.keyUp()
-            refresh()
+        if winding {
+            finishWinding()
+        } else if keyWound {
+            // The tape ran out while the key was still held.
+            keyWound = false
         } else {
             run {
                 if forward {
@@ -513,6 +585,14 @@ final class PlayerModel: ObservableObject {
                duration <= 0 || duration - elapsed < 3 || elapsed < 1.5 {
                 sideEnded = true
                 progress = 1
+                // Auto reverse, for those who have it switched on
+                let other = 1 - sideIndex
+                if Prefs.isOn(Prefs.autoFlip), other < sides.count, !sides[other].isBlank {
+                    Task {
+                        await pause(seconds: 0.8)
+                        if sideEnded { flipTape() }
+                    }
+                }
             }
         }
     }
@@ -528,10 +608,19 @@ final class PlayerModel: ObservableObject {
             return
         }
 
+        let hissOn = Prefs.isOn(Prefs.hiss)
+        if sounds.hissEnabled != hissOn { sounds.hissEnabled = hissOn }
+
+        if winding, let heldSeek {
+            // Winding by hand: the tape position is ours until the key is let go.
+            if motion != heldSeek { motion = heldSeek }
+            Haptics.windTick() // the motor, felt four times a second
+            return
+        }
+
         let newMotion: TapeMotion
         if let heldSeek {
             newMotion = heldSeek
-            Haptics.windTick() // the motor, felt four times a second
         } else {
             switch player.state.playbackStatus {
             case .playing: newMotion = .playing
@@ -586,7 +675,7 @@ final class PlayerModel: ObservableObject {
     private func syncLockScreen() {
         let parked = motion == .paused
             && Date().timeIntervalSince(pausedSince ?? Date()) > 600
-        guard motion != .stopped, !parked else {
+        guard motion != .stopped, !parked, Prefs.isOn(Prefs.lockScreenTape) else {
             sounds.keepAlive = false
             lockScreen.end()
             return
