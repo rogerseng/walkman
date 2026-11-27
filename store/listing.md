@@ -45,11 +45,11 @@ MADE FOR FOLDING PHONES
 
 TWO PLAYERS IN ONE
 • Tape player: the cassette and its reels, a fader and a row of keys.
-• MP3 player: an amber display of menus and a metal jog dial. Turn to scroll, press to choose.
+• MP3 player: a display of menus and a white jog dial. Turn to scroll, press to choose.
 
 MORE
 • The tape on your Lock Screen, with keys.
-• Three colours for each player: retro 80s, black or yellow.
+• Tape player in retro 80s, black or yellow. MP3 player in retro 80s or black.
 • Your mixtapes and settings sync with iCloud, and can be saved to a backup file.
 
 Cassety plays music from Apple Music. An Apple Music subscription is required.

@@ -19,8 +19,7 @@ struct Theme: Identifiable, Equatable {
             Theme(id: "tape-smoke", name: "Tape player", detail: "Black", player: "tape", skin: .smoke),
             Theme(id: "tape-yellow", name: "Tape player", detail: "Yellow", player: "tape", skin: .yellow),
             Theme(id: "mp3-neon", name: "MP3 player", detail: "Retro 80s", player: "mp3", skin: .neon),
-            Theme(id: "mp3-smoke", name: "MP3 player", detail: "Black", player: "mp3", skin: .smoke),
-            Theme(id: "mp3-yellow", name: "MP3 player", detail: "Yellow", player: "mp3", skin: .yellow)
+            Theme(id: "mp3-smoke", name: "MP3 player", detail: "Black", player: "mp3", skin: .smoke)
         ]
         if Skin.includesClickWheel {
             list.append(Theme(id: "wheel-black", name: "Click wheel", detail: "Black",
@@ -37,7 +36,9 @@ struct Theme: Identifiable, Equatable {
         let skin = Skin(rawValue: skinName) ?? Skin.standard
         if skin.isWheel, let wheel = all.first(where: { $0.skin == skin }) { return wheel }
         let colour: Skin = skin.isWheel ? Skin.standard : skin
-        return all.first { $0.player == player && $0.skin == colour } ?? all[0]
+        // A colour the player does not come in falls back to that player's first.
+        return all.first { $0.player == player && $0.skin == colour }
+            ?? all.first { $0.player == player } ?? all[0]
     }
 }
 

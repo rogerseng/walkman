@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// It comes in two forms.
 ///
-/// The jog dial player is the one people choose in the app. A knurled metal
+/// The jog dial player is the one people choose in the app. A white ridged
 /// dial turns to scroll and presses to select, four keys sit apart from it in
 /// the same column as the tape player's, and the display is amber on black.
 ///
@@ -50,7 +50,8 @@ struct MenuPlayerView: View {
 
     private var skin: Skin {
         let stored = Skin(rawValue: skinName) ?? Skin.standard
-        if jog { return stored.isWheel ? Skin.standard : stored }
+        // The MP3 player comes in Retro 80s and Black only.
+        if jog { return stored.isWheel || stored == .yellow ? Skin.standard : stored }
         return stored.isWheel ? stored : .wheelBlack
     }
 
@@ -258,7 +259,7 @@ struct MenuPlayerView: View {
         .frame(width: width, height: height)
     }
 
-    /// The jog dial: a metal knob with a knurled edge that turns under the
+    /// The jog dial: a white knob with a ridged edge that turns under the
     /// thumb. Turning scrolls; a press selects.
     private func dial(diameter: CGFloat) -> some View {
         ZStack {
@@ -290,46 +291,34 @@ struct MenuPlayerView: View {
                                           y: centre.y + sin(angle) * radius * 0.86))
                     line.addLine(to: CGPoint(x: centre.x + cos(angle) * radius * 0.995,
                                              y: centre.y + sin(angle) * radius * 0.995))
-                    context.stroke(line, with: .color(Color(white: 0.30 + 0.62 * facing)),
+                    context.stroke(line, with: .color(Color(white: 0.66 + 0.34 * facing)),
                                    lineWidth: radius * 0.034)
                 }
             }
-            .background(Circle().fill(LinearGradient(colors: [Color(white: 0.34), Color(white: 0.10)],
+            .background(Circle().fill(LinearGradient(colors: [Color(white: 0.80), Color(white: 0.52)],
                                                      startPoint: .topLeading, endPoint: .bottomTrailing)))
             .clipShape(Circle())
 
             // The chamfer between the skirt and the top
             Circle()
-                .fill(LinearGradient(colors: [Color(white: 1.0), Color(white: 0.62), Color(white: 0.36)],
+                .fill(LinearGradient(colors: [Color(white: 1.0), Color(white: 0.90), Color(white: 0.70)],
                                      startPoint: .topLeading, endPoint: .bottomTrailing))
                 .padding(diameter * 0.066)
 
-            // The top: spun metal, which shows as light and dark sectors
+            // The top: smooth white plastic, lit from the top left
             Circle()
-                .fill(AngularGradient(colors: [Color(white: 0.90), Color(white: 0.60), Color(white: 0.94),
-                                               Color(white: 0.56), Color(white: 0.88), Color(white: 0.62),
-                                               Color(white: 0.95), Color(white: 0.58), Color(white: 0.90)],
-                                      center: .center))
-                .overlay(
-                    // Fine turning marks
-                    ZStack {
-                        ForEach(1..<7, id: \.self) { ring in
-                            Circle()
-                                .strokeBorder(Color.black.opacity(0.07), lineWidth: 0.6)
-                                .padding(diameter * 0.055 * CGFloat(ring))
-                        }
-                    }
-                )
-                .overlay(Circle().strokeBorder(Color.black.opacity(0.35), lineWidth: 0.75))
+                .fill(LinearGradient(colors: [Color(white: 0.99), Color(white: 0.94), Color(white: 0.85)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                .overlay(Circle().strokeBorder(Color.black.opacity(0.14), lineWidth: 0.75))
                 .padding(diameter * 0.085)
                 .brightness(zone == .dial && !scrolling ? -0.05 : 0)
 
             // The finger dimple, which goes round as the dial is turned
             Circle()
-                .fill(RadialGradient(colors: [Color(white: 0.36), Color(white: 0.66)],
+                .fill(RadialGradient(colors: [Color(white: 0.78), Color(white: 0.92)],
                                      center: UnitPoint(x: 0.4, y: 0.35), startRadius: 0,
                                      endRadius: diameter * 0.08))
-                .overlay(Circle().strokeBorder(LinearGradient(colors: [Color.black.opacity(0.6), Color.white.opacity(0.9)],
+                .overlay(Circle().strokeBorder(LinearGradient(colors: [Color.black.opacity(0.28), Color.white.opacity(0.95)],
                                                               startPoint: .top, endPoint: .bottom), lineWidth: 1))
                 .frame(width: diameter * 0.15, height: diameter * 0.15)
                 .offset(y: -diameter * 0.27)
