@@ -121,7 +121,7 @@ struct SpeakerGrille: View {
 }
 
 /// One piano key of the recorder: a block of plastic hinged at the back,
-/// with a dished thumb rest moulded into its top. Pressed, it tips down
+/// with its mark moulded dark into its top. Pressed, it tips down
 /// into the trough and its front wall disappears. It reports press and
 /// release separately, and stays down while latched.
 struct PianoKey: View {
@@ -152,25 +152,20 @@ struct PianoKey: View {
             ZStack {
                 LinearGradient(colors: top, startPoint: .top, endPoint: .bottom)
                 PlasticGrain(strength: 0.35)
-                // The dished thumb rest
+                // The mark is moulded into the key: a dark hollow in the
+                // plastic, with light on its lower edge.
                 GeometryReader { face in
-                    let size = min(face.size.width - 14, face.size.height - 12)
-                    ZStack {
-                        Circle()
-                            .fill(RadialGradient(colors: [Color.black.opacity(0.42), Color.black.opacity(0.14)],
-                                                 center: .init(x: 0.5, y: 0.38), startRadius: 0, endRadius: size * 0.6))
-                        Circle()
-                            .strokeBorder(LinearGradient(colors: [Color.black.opacity(0.75), Color.white.opacity(0.32)],
-                                                         startPoint: .top, endPoint: .bottom), lineWidth: 1.5)
+                    let size = min(face.size.width, face.size.height) * 0.36
+                    Group {
                         if symbol == BeamedNotes.symbol {
-                            BeamedNotes().frame(width: size * 0.36, height: size * 0.38)
+                            BeamedNotes().frame(width: size * 1.05, height: size * 1.1)
                         } else {
-                            Image(systemName: symbol).font(.system(size: size * 0.34, weight: .bold))
+                            Image(systemName: symbol).font(.system(size: size, weight: .heavy))
                         }
                     }
                     .foregroundColor(symbolColor(down: down))
+                    .shadow(color: Color.white.opacity(down && accent ? 0 : 0.30), radius: 0, y: 1)
                     .shadow(color: down && accent ? Self.lit : .clear, radius: 6)
-                    .frame(width: size, height: size)
                     .position(x: face.size.width / 2, y: face.size.height / 2)
                 }
                 // Lit along the back edge and the left, dark along the right
@@ -241,8 +236,8 @@ struct PianoKey: View {
     }
 
     private func symbolColor(down: Bool) -> Color {
-        guard down else { return Color(white: 0.95) }
-        if accent { return Self.lit }
-        return dark ? Color(white: 0.38) : Color(white: 0.04)
+        // The play key's mark lights up from behind while the tape plays.
+        if down, accent { return Self.lit }
+        return Color.black.opacity(dark ? 0.9 : 0.78)
     }
 }

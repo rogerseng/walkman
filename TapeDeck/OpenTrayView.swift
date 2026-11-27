@@ -17,6 +17,7 @@ struct OpenTrayView: View {
     @StateObject private var volume = SystemVolume()
     @State private var showShelf = false
     @State private var showSettings = false
+    @State private var showSongs = false
     @Environment(\.playerTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(Prefs.player) private var player = "tape"
@@ -68,15 +69,19 @@ struct OpenTrayView: View {
             // From the top: speaker, the strip of small controls, the tape,
             // what is playing, and the keys. The tape gets all the height
             // the rest can spare.
-            let grilleHeight = min(150, max(100, height * 0.15))
-            let fixed = grilleHeight + 44 + 74 + (keysHeight + 44) + 5 * 12
+            // The speaker runs up beside the clock, into the space above
+            // the safe area, so it is large without costing the tape room.
+            let above = max(0, geo.safeAreaInsets.top - 20)
+            let grilleHeight = min(120, max(80, height * 0.12))
+            let fixed = grilleHeight + 44 + 44 + (keysHeight + 44) + 5 * 12
             let doorWidth = min(width - side * 2 - 8, 640, (height - fixed - 26) / 0.63)
             let doorHeight = doorWidth * 0.63 + 26
             VStack(spacing: 12) {
                 SpeakerGrille(colors: skin.isWheel ? skin.wheelBody : skin.panel,
                               playing: model.motion == .playing, tempo: model.beatsPerMinute)
-                    .frame(height: grilleHeight)
-                    .modifier(Recess(corner: 12, depth: 0.7))
+                    .frame(height: grilleHeight + above)
+                    .modifier(Recess(corner: 14, depth: 0.7))
+                    .padding(.top, -above)
                 controlStrip
                     .frame(height: 44)
                 if isMP3 {
@@ -84,7 +89,7 @@ struct OpenTrayView: View {
                 } else {
                     door(width: doorWidth, height: doorHeight)
                 }
-                nowPlaying
+                uprightLine
                     .frame(maxHeight: .infinity)
                 keyTrough(height: keysHeight)
             }
@@ -93,15 +98,6 @@ struct OpenTrayView: View {
             .padding(.bottom, 8)
             .frame(width: width, height: height)
             .background(recorderCase(top: geo.safeAreaInsets.top).ignoresSafeArea())
-            // The maker's name, moulded in beside the clock
-            .overlay(alignment: .topLeading) {
-                Wordmark(size: 22)
-                    .foregroundColor(skin.mark.opacity(1))
-                    .shadow(color: skin.engravingEdge.opacity(0.6), radius: 0.3, y: skin.engravingEdgeOffset)
-                    .padding(.leading, side + 4)
-                    .offset(y: -geo.safeAreaInsets.top / 2 - 12)
-                    .accessibilityHidden(true)
-            }
         }
         // Keeps the system volume control in the window so the fader can set it.
         .background(
@@ -116,6 +112,65 @@ struct OpenTrayView: View {
         }
         .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
+        }
+        .fullScreenCover(isPresented: $showSongs) {
+            CurrentTapeView(onClose: { showSongs = false })
+        }
+    }
+
+    /// Under the tape: what is playing, the way to turn the tape over, and
+    /// the key that lists the tape's songs.
+    private var uprightLine: some View {
+        HStack(spacing: 12) {
+            Label {
+                Text(hint)
+                    .font(.system(size: 15, weight: .semibold))
+                    .lineLimit(2)
+            } icon: {
+                if model.hasTape {
+                    Image(systemName: model.tapeChurn == .winding ? "arrow.triangle.2.circlepath"
+                          : model.tapeEaten ? "exclamationmark.triangle.fill"
+                          : model.endOfSideNote == nil ? "music.note" : "arrow.triangle.2.circlepath")
+                        .font(.system(size: 14, weight: .bold))
+                }
+            }
+            .foregroundColor(skin.note)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if model.hasTape, model.tapeChurn == .winding {
+                WindingReel().frame(width: 28, height: 28).foregroundColor(theme.accentColor)
+            } else if model.hasTape, model.tapeEaten {
+                Button("Wind it back in") { model.windTapeBack() }
+                    .buttonStyle(PlainKeyButtonStyle())
+            } else if model.hasTape, model.canFlip {
+                Button("Flip to side \(model.sideLetter == "A" ? "B" : "A")") { model.flipTape() }
+                    .buttonStyle(PlainKeyButtonStyle())
+            }
+            // The songs on the tape in the deck, with the one that is playing
+            if model.hasTape, hasSongList {
+                Button {
+                    Haptics.keyDown()
+                    showSongs = true
+                } label: {
+                    Image(systemName: "list.bullet")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(skin.note)
+                        .frame(width: 46, height: 40)
+                        .background(Color.black.opacity(0.35))
+                        .modifier(Recess(corner: 9, depth: 0.5))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Songs on this tape")
+            }
+        }
+        .padding(.horizontal, 6)
+    }
+
+    /// A single song has no list to show.
+    private var hasSongList: Bool {
+        switch model.currentTape {
+        case .album, .playlist: return true
+        default: return false
         }
     }
 
@@ -146,6 +201,10 @@ struct OpenTrayView: View {
     /// the lamp, and the volume laid on its side.
     private var controlStrip: some View {
         HStack(spacing: 12) {
+            Wordmark(size: 21)
+                .foregroundColor(skin.mark.opacity(1))
+                .shadow(color: skin.engravingEdge.opacity(0.6), radius: 0.3, y: skin.engravingEdgeOffset)
+                .accessibilityHidden(true)
             Text(model.hasTape ? "SIDE \(model.sideLetter)" : (isMP3 ? "MP3 PLAYER" : "CASSETTE DECK"))
                 .font(Typeface.displayFixed(10))
                 .tracking(1.6)
@@ -222,7 +281,7 @@ struct OpenTrayView: View {
                              model.ejectKey(removeTape: false)
                              showShelf = true
                          })
-                PianoKey(symbol: "gearshape.fill", label: "Settings", dark: true, height: height,
+                PianoKey(symbol: "gearshape.fill", label: "Settings", height: height,
                          onDown: {
                              Haptics.keyDown()
                              showSettings = true
