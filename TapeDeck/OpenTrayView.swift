@@ -339,16 +339,12 @@ struct OpenTrayView: View {
                 }
                 nowPlaying
                 if !rail { keyBed }
-                // A pair of speakers where there is the width for them, one
-                // large one where the space is tall
+                // The speaker: the same punched plate as on the upright
+                // player, sunk into the case
                 GeometryReader { room in
-                    let pair = room.size.width > room.size.height * 1.15
-                    HStack(spacing: 18) {
-                        Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
-                        if pair {
-                            Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
-                        }
-                    }
+                    SpeakerGrille(colors: skin.isWheel ? skin.wheelBody : skin.panel,
+                                  playing: model.motion == .playing, tempo: model.beatsPerMinute)
+                        .modifier(Recess(corner: 14, depth: 0.7))
                     .frame(width: room.size.width, height: room.size.height)
                     .onChange(of: room.size.height, initial: true) { _, height in
                         if geo.safeAreaInsets.bottom <= 120 { speakerRest = height }
@@ -776,106 +772,6 @@ struct OpenTrayView: View {
         Task {
             try? await Task.sleep(nanoseconds: 800_000_000)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { doorOpen = false }
-        }
-    }
-}
-
-/// The boombox's speaker: a perforated grille over a cone, in a trim ring.
-/// The cone moves a little in time with the song's tempo while a tape
-/// plays: a small push on each beat, and nothing more. It is for show: the
-/// app cannot hear what the music service plays.
-private struct Speaker: View {
-    let skin: Skin
-    let playing: Bool
-    var tempo = PlayerModel.defaultTempo
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        GeometryReader { geo in
-            let size = min(geo.size.width, geo.size.height)
-            ZStack {
-                // Trim ring
-                Circle()
-                    .fill(LinearGradient(colors: [Color(white: 0.85), Color(white: 0.45), Color(white: 0.70)],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-                Circle().fill(Color(white: 0.06)).padding(size * 0.035)
-                // The cone, seen through the grille
-                TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !playing || reduceMotion)) { timeline in
-                    let kick = Self.kick(at: timeline.date, tempo: tempo, moving: playing && !reduceMotion)
-                    ZStack {
-                        Circle()
-                            .fill(RadialGradient(colors: [Color(white: 0.20), Color(white: 0.09), Color(white: 0.16)],
-                                                 center: .center, startRadius: 0, endRadius: size * 0.42))
-                            .padding(size * 0.07)
-                        Circle()
-                            .fill(RadialGradient(colors: [Color(white: 0.34), Color(white: 0.12)],
-                                                 center: .init(x: 0.4, y: 0.35), startRadius: 0,
-                                                 endRadius: size * 0.14))
-                            .frame(width: size * 0.26, height: size * 0.26)
-                    }
-                    .scaleEffect(1 + 0.028 * kick)
-                }
-                // Grille: rows of holes punched in the skin's panel colour
-                Canvas { context, canvas in
-                    let centre = CGPoint(x: canvas.width / 2, y: canvas.height / 2)
-                    let radius = size / 2 - size * 0.05
-                    let pitch = max(5.5, size / 46)
-                    var y = centre.y - radius
-                    var row = 0
-                    while y <= centre.y + radius {
-                        var x = centre.x - radius + (row % 2 == 0 ? 0 : pitch / 2)
-                        while x <= centre.x + radius {
-                            let dx = x - centre.x
-                            let dy = y - centre.y
-                            if dx * dx + dy * dy <= radius * radius {
-                                let hole = CGRect(x: x - pitch * 0.2, y: y - pitch * 0.2,
-                                                  width: pitch * 0.4, height: pitch * 0.4)
-                                context.fill(Path(ellipseIn: hole.offsetBy(dx: 0, dy: 0.6)),
-                                             with: .color(.white.opacity(0.10)))
-                                context.fill(Path(ellipseIn: hole), with: .color(.black.opacity(0.85)))
-                            }
-                            x += pitch
-                        }
-                        y += pitch * 0.86
-                        row += 1
-                    }
-                }
-                .background(
-                    Circle()
-                        .fill(LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
-                                             startPoint: .top, endPoint: .bottom))
-                        .opacity(0.72)
-                        .padding(size * 0.045)
-                )
-                .clipShape(Circle())
-                .padding(size * 0.035)
-            }
-            .frame(width: size, height: size)
-            .shadow(color: .black.opacity(0.55), radius: 8, y: 5)
-            .modifier(Thump(playing: playing && !reduceMotion, tempo: tempo))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .accessibilityHidden(true)
-    }
-
-    /// How far out the cone is, from 0 to 1: out on each beat of the
-    /// song's tempo, and settling back before the next.
-    static func kick(at date: Date, tempo: Double, moving: Bool) -> Double {
-        guard moving else { return 0 }
-        let beat = date.timeIntervalSinceReferenceDate * tempo / 60
-        let phase = beat - floor(beat)
-        return exp(-phase * 5)
-    }
-
-    /// The whole speaker swelling a little with each push of the cone.
-    private struct Thump: ViewModifier {
-        let playing: Bool
-        let tempo: Double
-
-        func body(content: Content) -> some View {
-            TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !playing)) { timeline in
-                content.scaleEffect(1 + 0.004 * Speaker.kick(at: timeline.date, tempo: tempo, moving: playing))
-            }
         }
     }
 }
