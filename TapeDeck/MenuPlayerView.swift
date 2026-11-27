@@ -368,6 +368,10 @@ struct MenuPlayerView: View {
             .frame(width: width, height: geo.size.height)
             .background(
                 ZStack {
+                    // A black bar down the side the Duo keeps for its camera
+                    // and clock, so the player beside it is even on both sides.
+                    Color.black
+                    ZStack {
                     LinearGradient(colors: skin.wheelBody, startPoint: .top, endPoint: .bottom)
                     // Brushed metal: fine lines along the grain
                     Canvas { context, size in
@@ -385,7 +389,9 @@ struct MenuPlayerView: View {
                     LinearGradient(colors: [Color.white.opacity(0.14), .clear, Color.black.opacity(0.20)],
                                    startPoint: .top, endPoint: .bottom)
                     GlassShimmer(strength: 0.45)
-                    statusPlate(rail: rail, leading: railLeading)
+                    }
+                    .padding(railLeading ? .leading : .trailing,
+                             rail ? max(insets.leading, insets.trailing) : 0)
                 }
                 .ignoresSafeArea()
             )
