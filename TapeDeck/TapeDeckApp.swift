@@ -61,6 +61,7 @@ struct ContentView: View {
                 if wasOpen, !isOpen { model.lidClosed() }
             }
         }
+        .environment(\.playerTheme, Theme.current(player: player, skinName: skinName).skin.theme)
         // The introduction, the first time the app is opened
         .fullScreenCover(isPresented: introShown) {
             OnboardingView(done: { introSeen = true })

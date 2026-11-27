@@ -22,6 +22,7 @@ struct ShelfView: View {
     /// The mixtape being recorded or edited, if any.
     @State private var editing: Mixtape?
     @State private var showSettings = false
+    @Environment(\.playerTheme) private var theme
 
     var body: some View {
         NavigationStack {
@@ -47,7 +48,7 @@ struct ShelfView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if let onClose {
-                    ToolbarItem(placement: .topBarLeading) {
+                    ToolbarItem(placement: .topBarTrailing) {
                         Button(action: onClose) {
                             Image(systemName: "xmark")
                         }
@@ -66,7 +67,7 @@ struct ShelfView: View {
             .fullScreenCover(isPresented: $showSettings) {
                 SettingsView()
             }
-            .background(ShelfStyle.background.ignoresSafeArea())
+            .background(ShelfBackground())
         }
         .environment(\.pickTape, PickTape { tape, track in
             model.insert(tape, autoPlay: playOnPick, startingAt: track)
@@ -172,7 +173,7 @@ struct ShelfView: View {
                 .frame(height: 52)
                 .overlay(
                     RoundedRectangle(cornerRadius: 5)
-                        .strokeBorder(Skin.hotPink.opacity(0.9), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
+                        .strokeBorder(theme.accentColor.opacity(0.9), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5]))
                 )
                 .contentShape(Rectangle())
             }
@@ -202,10 +203,7 @@ struct ShelfView: View {
                 }
             }
         } header: {
-            Text("YOUR MIXTAPES")
-                .font(.system(size: 11, weight: .bold))
-                .tracking(1.5)
-                .foregroundColor(Skin.cyan)
+            ShelfStyle.header("Your Mixtapes")
         }
     }
 

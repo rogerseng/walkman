@@ -32,6 +32,14 @@ struct Theme: Identifiable, Equatable {
         return list
     }
 
+    /// The skin actually on show: the stored skin, as the chosen player
+    /// wears it.
+    static func shownSkin() -> Skin {
+        let defaults = UserDefaults.standard
+        return current(player: defaults.string(forKey: Prefs.player) ?? "tape",
+                       skinName: defaults.string(forKey: Prefs.skin) ?? Skin.standard.rawValue).skin
+    }
+
     /// The theme the stored settings add up to.
     static func current(player: String, skinName: String) -> Theme {
         let all = offered
@@ -44,25 +52,51 @@ struct Theme: Identifiable, Equatable {
     }
 }
 
-/// The list of themes, for a settings form or the introduction. Tapping one
-/// applies it at once.
+/// The kinds of player, for grouping the themes.
+enum PlayerKind: String, CaseIterable, Identifiable {
+    case tape = "Tape deck"
+    case mp3 = "MP3 player"
+    case wheel = "Click wheel"
+
+    var id: String { rawValue }
+
+    func includes(_ theme: Theme) -> Bool {
+        switch self {
+        case .tape: return theme.player == "tape"
+        case .mp3: return theme.player == "mp3" && !theme.skin.isWheel
+        case .wheel: return theme.skin.isWheel
+        }
+    }
+
+    /// The kinds that have themes in this build.
+    static var offered: [PlayerKind] {
+        allCases.filter { kind in Theme.offered.contains(where: kind.includes) }
+    }
+}
+
+/// The list of themes, for a settings form or the introduction, each with a
+/// small picture of the player. Tapping one applies it at once. With a kind,
+/// only that kind of player is listed.
 struct ThemePicker: View {
+    var kind: PlayerKind?
     @AppStorage(Prefs.player) private var player = "tape"
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
 
     var body: some View {
         let chosen = Theme.current(player: player, skinName: skinName)
-        ForEach(Theme.offered) { theme in
+        ForEach(Theme.offered.filter { kind?.includes($0) ?? true }) { theme in
             Button {
                 Haptics.detent()
                 player = theme.player
                 skinName = theme.skin.rawValue
             } label: {
                 HStack(spacing: 12) {
-                    SkinSwatch(skin: theme.skin, chosen: theme == chosen)
+                    PlayerPreview(theme: theme, chosen: theme == chosen)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(theme.name).foregroundColor(.primary)
-                        Text(theme.detail).font(.footnote).foregroundColor(.secondary)
+                        Text(kind == nil ? theme.name : theme.detail).foregroundColor(.primary)
+                        if kind == nil {
+                            Text(theme.detail).font(.footnote).foregroundColor(.secondary)
+                        }
                     }
                     Spacer(minLength: 0)
                     if theme == chosen {
@@ -114,6 +148,112 @@ enum Typeface {
         }
         if let large = UIFont(name: displayName, size: 34) {
             bar.largeTitleTextAttributes = [.font: large]
+        }
+    }
+}
+
+/// A small picture of a player in its colours, for choosing a theme: the
+/// tape deck with its window, reels and keys, or the MP3 player with its
+/// screen and dial.
+struct PlayerPreview: View {
+    let theme: Theme
+    var chosen = false
+
+    private var skin: Skin { theme.skin }
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 7, style: .continuous)
+        ZStack {
+            if theme.player == "tape" {
+                tape
+            } else {
+                mp3
+            }
+        }
+        .frame(width: 46, height: 70)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(Color.white.opacity(0.25), lineWidth: 0.75))
+        .padding(3)
+        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .strokeBorder(Color.white.opacity(chosen ? 0.95 : 0), lineWidth: 2))
+        .accessibilityHidden(true)
+    }
+
+    private var tape: some View {
+        HStack(spacing: 0) {
+            // The case, with the window and the two reels
+            ZStack {
+                LinearGradient(colors: skin.casing, startPoint: .topLeading, endPoint: .bottomTrailing)
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color(white: 0.10))
+                    .overlay(RoundedRectangle(cornerRadius: 3)
+                        .strokeBorder(LinearGradient(colors: skin.windowEdge, startPoint: .top, endPoint: .bottom),
+                                      lineWidth: 0.75))
+                    .overlay(
+                        VStack(spacing: 9) {
+                            reel
+                            reel
+                        }
+                    )
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 9)
+                if skin.hasStripes {
+                    VStack(spacing: 0) {
+                        Spacer()
+                        HStack(spacing: 0) {
+                            ForEach([Skin.cyan, .yellow, .orange, Skin.hotPink], id: \.self) { $0 }
+                        }
+                        .frame(height: 3)
+                        .padding(.bottom, 4)
+                    }
+                }
+            }
+            // The side panel and its keys
+            ZStack {
+                LinearGradient(colors: skin.panel, startPoint: .top, endPoint: .bottom)
+                VStack(spacing: 2.5) {
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(LinearGradient(colors: skin.accentUp, startPoint: .top, endPoint: .bottom))
+                        .frame(height: 6)
+                    ForEach(0..<4, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: 1.5).fill(Color(white: 0.40)).frame(height: 6)
+                    }
+                }
+                .padding(.horizontal, 2.5)
+            }
+            .frame(width: 13)
+        }
+    }
+
+    private var reel: some View {
+        Circle()
+            .fill(Color(white: 0.22))
+            .overlay(Circle().fill(Color(white: 0.75)).padding(3.5))
+            .frame(width: 13, height: 13)
+    }
+
+    private var mp3: some View {
+        ZStack {
+            LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
+                           startPoint: .top, endPoint: .bottom)
+            VStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(skin.theme.backgroundColor)
+                    .overlay(VStack(spacing: 2) {
+                        ForEach(0..<3, id: \.self) { row in
+                            Capsule().fill(row == 0 ? skin.theme.accentColor : Color.white.opacity(0.4))
+                                .frame(height: 2)
+                        }
+                    }.padding(3))
+                    .frame(height: 22)
+                Circle()
+                    .fill(skin.isWheel
+                          ? AnyShapeStyle(LinearGradient(colors: skin.wheelRing, startPoint: .top, endPoint: .bottom))
+                          : AnyShapeStyle(Color(white: 0.95)))
+                    .overlay(Circle().fill(Color.black.opacity(0.25)).padding(8))
+                    .frame(width: 26, height: 26)
+            }
+            .padding(6)
         }
     }
 }

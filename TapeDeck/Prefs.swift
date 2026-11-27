@@ -11,6 +11,8 @@ enum Prefs {
     static let playOnClose = "playOnCloseOn"
     static let autoFlip = "autoFlipOn"
     static let lockScreenTape = "lockScreenTapeOn"
+    /// The tape slurs up to speed on play and down to a stop on stop.
+    static let tapeRamp = "tapeRampOn"
     /// Kept on each device separately, so one can opt out without the others.
     static let iCloudSync = "iCloudSyncOn"
     /// Which skin the case wears: a `Skin` raw value.

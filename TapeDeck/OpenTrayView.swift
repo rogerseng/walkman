@@ -6,6 +6,7 @@ import SwiftUI
 struct OpenTrayView: View {
     @EnvironmentObject private var model: PlayerModel
     @State private var showSettings = false
+    @Environment(\.playerTheme) private var theme
 
     private var hint: String {
         if !model.hasTape { return "Choose a tape" }
@@ -59,11 +60,8 @@ struct OpenTrayView: View {
         }
         .padding(20)
         .background(
-            // A dusk sky: deep purple warming to pink at the foot
-            LinearGradient(colors: [Color(red: 0.07, green: 0.02, blue: 0.18),
-                                    Color(red: 0.20, green: 0.06, blue: 0.40),
-                                    Color(red: 0.55, green: 0.12, blue: 0.50)],
-                           startPoint: .top, endPoint: .bottom)
+            // A dusk sky in the chosen skin's colours, warming at the foot
+            LinearGradient(colors: theme.duskColors, startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
         )
         .fullScreenCover(isPresented: $showSettings) {

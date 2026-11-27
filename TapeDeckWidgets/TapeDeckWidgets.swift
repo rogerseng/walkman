@@ -21,7 +21,7 @@ struct TapeLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TapeActivityAttributes.self) { context in
             LockScreenTapeView(state: context.state)
-                .activityBackgroundTint(Palette.body)
+                .activityBackgroundTint(context.state.bodyColor)
                 .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
             DynamicIsland {
@@ -41,7 +41,7 @@ struct TapeLiveActivity: Widget {
                     .lineLimit(1)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    TapeKeys(isPlaying: context.state.isPlaying)
+                    TapeKeys(isPlaying: context.state.isPlaying, accent: context.state.accentColor)
                 }
             } compactLeading: {
                 ReelView(state: context.state, fill: 0, size: 24)
@@ -80,8 +80,8 @@ struct LockScreenTapeView: View {
                         ProgressView(value: state.progress)
                     }
                 }
-                .tint(Palette.accent)
-                TapeKeys(isPlaying: state.isPlaying)
+                .tint(state.accentColor)
+                TapeKeys(isPlaying: state.isPlaying, accent: state.accentColor)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -181,6 +181,7 @@ struct ReelView: View {
 
 struct TapeKeys: View {
     var isPlaying: Bool
+    var accent: Color = Palette.accent
 
     var body: some View {
         HStack(spacing: 8) {
@@ -200,19 +201,30 @@ struct TapeKeys: View {
         .buttonStyle(.plain)
     }
 
-    private func key(_ symbol: String, accent: Bool) -> some View {
+    private func key(_ symbol: String, accent lit: Bool) -> some View {
         Image(systemName: symbol)
             .font(.system(size: 14, weight: .bold))
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 30)
             .background(RoundedRectangle(cornerRadius: 6)
-                .fill(accent ? Palette.accent.opacity(0.92) : Color.white.opacity(0.22)))
+                .fill(lit ? accent.opacity(0.92) : Color.white.opacity(0.22)))
             .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.white.opacity(0.3), lineWidth: 0.75))
     }
 }
 
 private extension TapeActivityAttributes.ContentState {
+    /// The app's chosen skin colours, falling back to the eighties purple.
+    var bodyColor: Color {
+        guard let theme, theme.count >= 6 else { return Palette.body }
+        return Color(red: theme[0], green: theme[1], blue: theme[2])
+    }
+
+    var accentColor: Color {
+        guard let theme, theme.count >= 6 else { return Palette.accent }
+        return Color(red: theme[3], green: theme[4], blue: theme[5])
+    }
+
     var tintColor: Color? {
         guard let tint, tint.count >= 3 else { return nil }
         return Color(red: tint[0], green: tint[1], blue: tint[2])

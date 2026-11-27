@@ -109,11 +109,19 @@ struct DeckView: View {
             // has run out.
             .overlay(alignment: .topLeading) {
                 if let note = underWindowNote {
-                    Text(note)
-                        .font(Typeface.marker(14))
-                        .lineLimit(2)
-                        .multilineTextAlignment(.center)
+                    // The song, in plain type with a note beside it, so it
+                    // reads on every case colour.
+                    Label {
+                        Text(note)
+                            .font(.system(size: 14, weight: .semibold))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                    } icon: {
+                        Image(systemName: model.endOfSideNote == nil ? "music.note" : "stop.circle")
+                            .font(.system(size: 13, weight: .bold))
+                    }
                         .foregroundColor(skin.note)
+                        .shadow(color: .black.opacity(skin == .yellow ? 0 : 0.6), radius: 2)
                         .frame(width: window.width)
                         .offset(x: window.minX, y: window.maxY + 14)
                         .allowsHitTesting(false)
@@ -178,6 +186,11 @@ struct DeckView: View {
                                           axis: (x: upright ? 1 : 0, y: upright ? 0 : 1, z: 0),
                                           perspective: 0.4)
                         .transition(.move(edge: .top).combined(with: .opacity))
+                        // The turned cassette is longer than the screen is
+                        // wide. Held to the screen's size here so it cannot
+                        // widen this layer and push the casing and its window
+                        // off centre.
+                        .frame(width: size.width, height: size.height)
                 } else {
                     emptyWell(upright: upright, length: 100 * scale)
                     // The prompt sits in the middle of the window, not of
@@ -583,7 +596,7 @@ struct TapeKey: View {
         .frame(height: height - travel)
         .background(KeyCap(corner: corner, colors: keyColors(down: down), sunk: down))
         // Pressed, the face sinks until the side is hidden.
-        .offset(y: down ? travel - 1 : 0)
+        .offset(y: down ? travel : 0)
         .frame(height: height, alignment: .top)
         .background(
             // The side of the key
@@ -688,8 +701,8 @@ private struct KeyCap: View {
                                lineWidth: 1.2)
             if sunk {
                 shape.fill(LinearGradient(stops: [
-                    .init(color: Color.black.opacity(0.60), location: 0),
-                    .init(color: Color.black.opacity(0.22), location: 0.22),
+                    .init(color: Color.black.opacity(0.72), location: 0),
+                    .init(color: Color.black.opacity(0.30), location: 0.25),
                     .init(color: .clear, location: 0.55)
                 ], startPoint: .top, endPoint: .bottom))
                 // The sides of the well shade the edges too
@@ -729,22 +742,33 @@ struct ClearButtonStyle: ButtonStyle {
 /// shadow that it sinks onto when pressed.
 struct PlainKeyButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        let down = configuration.isPressed
-        configuration.label
-            .font(Typeface.display(16))
-            .foregroundColor(Color(red: 0.10, green: 0.02, blue: 0.13))
-            .background(RoundedRectangle(cornerRadius: 10).fill(Skin.hotPink))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .strokeBorder(Color(red: 0.10, green: 0.02, blue: 0.13), lineWidth: 1.5)
-            )
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(red: 1.0, green: 0.89, blue: 0.36))
-                    .offset(x: down ? 0 : 4, y: down ? 0 : 4)
-            )
-            .offset(x: down ? 4 : 0, y: down ? 4 : 0)
-            .animation(.easeOut(duration: 0.08), value: down)
+        PlainKey(label: configuration.label, down: configuration.isPressed)
+    }
+
+    /// Drawn in the chosen skin's colours: its accent for the face and its
+    /// second colour for the hard shadow.
+    private struct PlainKey<Label: View>: View {
+        let label: Label
+        let down: Bool
+        @Environment(\.playerTheme) private var theme
+
+        var body: some View {
+            label
+                .font(Typeface.display(16))
+                .foregroundColor(theme.accentInkColor)
+                .background(RoundedRectangle(cornerRadius: 10).fill(theme.accentColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(theme.accentInkColor, lineWidth: 1.5)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(theme.secondaryColor)
+                        .offset(x: down ? 0 : 4, y: down ? 0 : 4)
+                )
+                .offset(x: down ? 4 : 0, y: down ? 4 : 0)
+                .animation(.easeOut(duration: 0.08), value: down)
+        }
     }
 }
 

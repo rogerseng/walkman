@@ -210,3 +210,81 @@ enum Skin: String, CaseIterable, Identifiable {
         }
     }
 }
+
+/// The colours that go with a skin everywhere outside the player itself: the
+/// shelf, the open phone, the lock screen tape and the buttons. So whichever
+/// case is chosen, the whole app is in its colours.
+struct PlayerTheme: Equatable {
+    /// Red, green and blue, 0...1.
+    typealias RGB = [Double]
+
+    /// Behind lists and screens.
+    let background: RGB
+    /// The open phone's backdrop, top to bottom.
+    let dusk: [RGB]
+    /// Buttons, icons and the play key's colour.
+    let accent: RGB
+    /// Headings and quieter highlights.
+    let secondary: RGB
+    /// Text on an accent-coloured button.
+    let accentInk: RGB
+
+    static func color(_ rgb: RGB) -> Color { Color(red: rgb[0], green: rgb[1], blue: rgb[2]) }
+
+    var backgroundColor: Color { Self.color(background) }
+    var duskColors: [Color] { dusk.map(Self.color) }
+    var accentColor: Color { Self.color(accent) }
+    var secondaryColor: Color { Self.color(secondary) }
+    var accentInkColor: Color { Self.color(accentInk) }
+
+    /// Six numbers for the lock screen: the background, then the accent.
+    var lockScreen: [Double] { background + accent }
+}
+
+extension Skin {
+    private static let orange: PlayerTheme.RGB = [0.99, 0.56, 0.18]
+    private static let darkInk: PlayerTheme.RGB = [0.10, 0.04, 0.02]
+
+    var theme: PlayerTheme {
+        switch self {
+        case .neon:
+            return PlayerTheme(background: [0.06, 0.02, 0.15],
+                               dusk: [[0.07, 0.02, 0.18], [0.20, 0.06, 0.40], [0.55, 0.12, 0.50]],
+                               accent: [1.0, 0.24, 0.64], secondary: [0.30, 0.94, 1.0],
+                               accentInk: [0.10, 0.02, 0.13])
+        case .smoke, .wheelBlack:
+            return PlayerTheme(background: [0.05, 0.05, 0.06],
+                               dusk: [[0.04, 0.04, 0.05], [0.11, 0.11, 0.12], [0.24, 0.15, 0.08]],
+                               accent: Self.orange, secondary: [0.80, 0.80, 0.82],
+                               accentInk: Self.darkInk)
+        case .yellow:
+            return PlayerTheme(background: [0.09, 0.07, 0.02],
+                               dusk: [[0.08, 0.06, 0.01], [0.22, 0.16, 0.03], [0.58, 0.42, 0.04]],
+                               accent: [1.0, 0.80, 0.12], secondary: [1.0, 0.92, 0.62],
+                               accentInk: [0.12, 0.09, 0.0])
+        case .blue:
+            return PlayerTheme(background: [0.04, 0.07, 0.15],
+                               dusk: [[0.04, 0.07, 0.15], [0.12, 0.20, 0.36], [0.30, 0.42, 0.62]],
+                               accent: Self.orange, secondary: [0.80, 0.86, 0.94],
+                               accentInk: Self.darkInk)
+        case .wheelSilver:
+            return PlayerTheme(background: [0.07, 0.07, 0.08],
+                               dusk: [[0.07, 0.07, 0.08], [0.20, 0.20, 0.22], [0.45, 0.46, 0.50]],
+                               accent: [0.35, 0.62, 1.0], secondary: [0.86, 0.87, 0.90],
+                               accentInk: [0.02, 0.05, 0.12])
+        }
+    }
+}
+
+private struct PlayerThemeKey: EnvironmentKey {
+    static let defaultValue = Skin.standard.theme
+}
+
+extension EnvironmentValues {
+    /// The colours of the chosen skin, set once at the top of the app.
+    var playerTheme: PlayerTheme {
+        get { self[PlayerThemeKey.self] }
+        set { self[PlayerThemeKey.self] = newValue }
+    }
+}
+

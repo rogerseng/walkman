@@ -1,4 +1,5 @@
 import AVFoundation
+import UIKit
 
 /// Tape deck sound effects, synthesised in code so the app ships no audio files.
 ///
@@ -7,7 +8,7 @@ import AVFoundation
 /// carries on behind the lock screen, which also means the sounds are not muted
 /// by the silent switch.
 final class TapeSounds {
-    enum Effect { case keyDown, keyUp, eject, insert }
+    enum Effect { case keyDown, keyUp, eject, insert, motorUp, motorDown }
     enum Loop { case hiss, whir, reverse }
 
     var enabled = true {
@@ -57,6 +58,20 @@ final class TapeSounds {
         effects[.keyUp] = buffer(Self.keyUp())
         effects[.eject] = buffer(Self.eject())
         effects[.insert] = buffer(Self.insert())
+        effects[.motorUp] = buffer(Self.motor(from: 0.35, to: 1.0, seconds: 0.36))
+        effects[.motorDown] = buffer(Self.motor(from: 1.0, to: 0.3, seconds: 0.4))
+        // Start the engine now, so the first key press is heard at once
+        // rather than after the engine spins up.
+        _ = start()
+        let centre = NotificationCenter.default
+        centre.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
+            // Never keep running in the background just to make silence.
+            guard let self, self.playingLoop == nil else { return }
+            self.engine.pause()
+        }
+        centre.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in
+            _ = self?.start()
+        }
         loops[.hiss] = buffer(Self.hiss())
         loops[.whir] = buffer(Self.whir())
         loops[.reverse] = buffer(Self.reverse())
@@ -71,8 +86,9 @@ final class TapeSounds {
 
     func play(_ effect: Effect) {
         guard enabled, let buffer = effects[effect], start() else { return }
+        // The player node is left running, so a sound only has to be queued.
         fxNode.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
-        fxNode.play()
+        if !fxNode.isPlaying { fxNode.play() }
     }
 
     func setLoop(_ loop: Loop?) {
@@ -110,6 +126,8 @@ final class TapeSounds {
         if !configured {
             let session = AVAudioSession.sharedInstance()
             try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            // A short buffer, so a key's clunk lands with the press.
+            try? session.setPreferredIOBufferDuration(0.005)
             try? session.setActive(true)
             configured = true
         }
@@ -276,6 +294,24 @@ final class TapeSounds {
             rumble += (Double.random(in: -1...1, using: &rng) - rumble) * 0.12
             let flutter = 0.8 + 0.2 * sin(2 * .pi * 20 * t)
             s[i] += Float(rumble * 0.07 * flutter + sin(2 * .pi * 880 * t) * 0.008)
+        }
+        return s
+    }
+
+    /// The capstan motor changing speed: a whine and rumble whose pitch
+    /// slides from one speed to another, fading in or out at the slow end.
+    private static func motor(from start: Double, to end: Double, seconds: Double) -> [Float] {
+        var s = silence(seconds)
+        var phase = 0.0
+        var low = 0.0
+        for i in 0..<s.count {
+            let t = Double(i) / rate
+            let along = t / seconds
+            let speed = start + (end - start) * along
+            phase += 2 * .pi * 620 * speed / rate
+            low += (Double.random(in: -1...1) - low) * 0.12
+            let level = min(1, speed) * min(1, (1 - along) * 12) * min(1, along * 40)
+            s[i] = Float(level * (sin(phase) * 0.035 + sin(phase * 1.5) * 0.015 + low * 0.10))
         }
         return s
     }

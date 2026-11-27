@@ -82,6 +82,11 @@ final class PlayerModel: ObservableObject {
     private var pausedSince: Date?
     private var waitingForLid = false
     private var heldSeek: TapeMotion?
+    /// What a key just asked for, shown at once while the system player
+    /// catches up, so the key latches the moment it is pressed.
+    private var promised: (motion: TapeMotion, since: Date)?
+    /// The motor running the tape up to speed or down to a stop.
+    private var rampTask: Task<Void, Never>?
     private var seekTask: Task<Void, Never>?
     /// Winding the tape by hand: where it has got to on the side, and
     /// whether to carry on playing when the key is let go.
@@ -478,10 +483,8 @@ final class PlayerModel: ObservableObject {
             }
             return
         }
-        run {
-            try await self.player.play()
-            self.refresh()
-        }
+        promise(.playing)
+        startTape()
     }
 
     /// Stops the tape where it is. Play carries on from the same place.
@@ -489,7 +492,60 @@ final class PlayerModel: ObservableObject {
         pressFeedback()
         guard hasTape else { return }
         if motion != .paused, motion != .stopped {
+            promise(.paused)
+            stopTape()
+        }
+    }
+
+    /// Shows what a key asked for straight away.
+    private func promise(_ wanted: TapeMotion) {
+        promised = (wanted, Date())
+        if motion != wanted { motion = wanted }
+    }
+
+    /// Steps of the playback rate as the capstan comes up to speed or runs
+    /// down: a short slur, like a deck's motor starting and stopping.
+    private static let rampUp: [Float] = [0.55, 0.7, 0.82, 0.92, 1.0]
+    private static let rampDown: [Float] = [0.85, 0.7, 0.55, 0.42, 0.32]
+
+    /// Plays, letting the tape run up to speed.
+    private func startTape() {
+        rampTask?.cancel()
+        rampTask = Task {
+            do {
+                if Prefs.isOn(Prefs.tapeRamp) {
+                    player.state.playbackRate = Self.rampUp[0]
+                    sounds.play(.motorUp)
+                }
+                try await player.play()
+                if Prefs.isOn(Prefs.tapeRamp) {
+                    for rate in Self.rampUp.dropFirst() {
+                        try await Task.sleep(nanoseconds: 70_000_000)
+                        player.state.playbackRate = rate
+                    }
+                }
+            } catch is CancellationError {
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            if player.state.playbackRate != 1, !Task.isCancelled { player.state.playbackRate = 1 }
+            refresh()
+        }
+    }
+
+    /// Stops, letting the tape run down first.
+    private func stopTape() {
+        rampTask?.cancel()
+        rampTask = Task {
+            if Prefs.isOn(Prefs.tapeRamp), player.state.playbackStatus == .playing {
+                sounds.play(.motorDown)
+                for rate in Self.rampDown {
+                    player.state.playbackRate = rate
+                    do { try await Task.sleep(nanoseconds: 70_000_000) } catch { break }
+                }
+            }
             player.pause()
+            player.state.playbackRate = 1
             refresh()
         }
     }
@@ -507,9 +563,11 @@ final class PlayerModel: ObservableObject {
         pressFeedback()
         guard hasTape else { return }
         if motion == .playing {
-            player.pause()
+            promise(.paused)
+            stopTape()
         } else if motion == .paused, !sideEnded {
-            run { try await self.player.play() }
+            promise(.playing)
+            startTape()
         }
     }
 
@@ -719,7 +777,7 @@ final class PlayerModel: ObservableObject {
             return
         }
 
-        let newMotion: TapeMotion
+        var newMotion: TapeMotion
         if let heldSeek {
             newMotion = heldSeek
         } else {
@@ -730,6 +788,15 @@ final class PlayerModel: ObservableObject {
             case .seekingBackward: newMotion = .rewind
             case .stopped: newMotion = .stopped
             @unknown default: newMotion = .stopped
+            }
+        }
+        // A key's promise holds until the player agrees, or for two seconds
+        // if it never does.
+        if let promised {
+            if newMotion == promised.motion || Date().timeIntervalSince(promised.since) > 2 {
+                self.promised = nil
+            } else {
+                newMotion = promised.motion
             }
         }
         if newMotion != motion { motion = newMotion }
@@ -784,6 +851,7 @@ final class PlayerModel: ObservableObject {
         sounds.keepAlive = true
         lockScreen.sync(title: tapeTitle, subtitle: trackLine, isPlaying: motion == .playing,
                         elapsed: elapsed, duration: duration,
-                        tapeProgress: progress, side: sideLetter, tint: labelColor?.rgb)
+                        tapeProgress: progress, side: sideLetter, tint: labelColor?.rgb,
+                        theme: Theme.shownSkin().theme.lockScreen)
     }
 }

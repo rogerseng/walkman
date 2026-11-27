@@ -23,16 +23,30 @@ extension EnvironmentValues {
     }
 }
 
-/// The colours the shelf is drawn in.
+/// How the shelf draws its section headings.
 enum ShelfStyle {
-    static let background = Color(red: 0.06, green: 0.02, blue: 0.15)
-
     static func header(_ title: String) -> some View {
+        ShelfHeader(title: title)
+    }
+}
+
+/// A section heading on the shelf, in the theme's heading colour.
+struct ShelfHeader: View {
+    let title: String
+    @Environment(\.playerTheme) private var theme
+
+    var body: some View {
         Text(title.uppercased())
             .font(Typeface.display(13))
             .tracking(1.5)
-            .foregroundColor(Skin.cyan)
+            .foregroundColor(theme.secondaryColor)
     }
+}
+
+/// The theme's background, behind a whole screen.
+struct ShelfBackground: View {
+    @Environment(\.playerTheme) private var theme
+    var body: some View { theme.backgroundColor.ignoresSafeArea() }
 }
 
 extension View {
@@ -47,7 +61,7 @@ extension View {
     func shelfList(_ title: String) -> some View {
         listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(ShelfStyle.background.ignoresSafeArea())
+            .background(ShelfBackground())
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
     }
@@ -115,6 +129,7 @@ enum LibraryCategory: String, CaseIterable, Identifiable {
 /// A row that opens one of the library categories.
 struct CategoryRow: View {
     let category: LibraryCategory
+    @Environment(\.playerTheme) private var theme
 
     var body: some View {
         NavigationLink {
@@ -123,7 +138,7 @@ struct CategoryRow: View {
             HStack(spacing: 14) {
                 Image(systemName: category.symbol)
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(Skin.hotPink)
+                    .foregroundColor(theme.accentColor)
                     .frame(width: 28)
                 Text(category.rawValue)
                     .font(Typeface.display(19))
@@ -285,6 +300,7 @@ struct LibrarySongRow: View {
 /// that track.
 struct CollectionDetail: View {
     let tape: Tape
+    @Environment(\.playerTheme) private var theme
     @Environment(\.pickTape) private var pick
     @State private var tracks: [Track] = []
     @State private var loading = true
@@ -311,7 +327,7 @@ struct CollectionDetail: View {
                     .multilineTextAlignment(.center)
                 Text(tape.subtitle)
                     .font(.system(size: 15))
-                    .foregroundColor(Skin.hotPink)
+                    .foregroundColor(theme.accentColor)
                     .multilineTextAlignment(.center)
                 Button {
                     pick(tape)

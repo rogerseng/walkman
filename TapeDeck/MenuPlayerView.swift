@@ -239,8 +239,11 @@ struct MenuPlayerView: View {
         let inner = max(0, width - railKeyWidth - railOuterMargin)
         return VStack(spacing: keyGap) {
             if !rail { Spacer(minLength: 0) }
-            TapeKey(symbol: "arrow.uturn.backward", label: "Back", dark: true,
-                    height: keyHeight, showsLabel: false, corner: 17, symbolSize: 21,
+            // Back up a menu; at the top menu there is nowhere further back,
+            // so the same key opens settings.
+            TapeKey(symbol: atTop ? "gearshape.fill" : "arrow.uturn.backward",
+                    label: atTop ? "Settings" : "Back", dark: true,
+                    height: keyHeight, showsLabel: false, corner: 17, symbolSize: atTop ? 23 : 21,
                     onDown: { back() })
             TapeKey(symbol: "playpause.fill", label: model.motion == .playing ? "Pause" : "Play",
                     accent: true, latched: model.motion == .playing,
@@ -567,9 +570,15 @@ struct MenuPlayerView: View {
     }
 
     /// Back one level.
+    /// At the top menu, with nothing further back.
+    private var atTop: Bool { stack.count <= 1 }
+
     private func back() {
         Haptics.keyDown()
-        guard stack.count > 1 else { return }
+        guard stack.count > 1 else {
+            showSettings = true
+            return
+        }
         stack.removeLast()
         chosen.removeLast()
         tops.removeLast()

@@ -21,6 +21,9 @@ struct TapeActivityAttributes: ActivityAttributes {
         var side: String
         /// Red, green and blue of the cover art's colour, if it has one.
         var tint: [Double]?
+        /// The chosen skin's colours, so the lock screen matches the app:
+        /// red, green and blue of the background, then of the accent.
+        var theme: [Double]?
     }
 }
 

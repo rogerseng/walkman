@@ -14,6 +14,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.levelLights) private var levelLightsOn = true
     @AppStorage(Prefs.playOnClose) private var playOnCloseOn = true
     @AppStorage(Prefs.autoFlip) private var autoFlipOn = false
+    @AppStorage(Prefs.tapeRamp) private var tapeRampOn = true
     @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
     @AppStorage(Prefs.introSeen) private var introSeen = true
@@ -36,12 +37,16 @@ struct SettingsView: View {
                     Text("Deck sounds are the key clunks, the door and the motor while winding. Hiss is the soft noise under the music. They play over the music and are not silenced by the mute switch.")
                 }
 
-                Section {
-                    ThemePicker()
-                } header: {
-                    Text("Theme")
-                } footer: {
-                    Text("The tape player shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes.")
+                ForEach(PlayerKind.offered) { kind in
+                    Section {
+                        ThemePicker(kind: kind)
+                    } header: {
+                        Text(kind.rawValue)
+                    } footer: {
+                        if kind == PlayerKind.offered.last {
+                            Text("The tape deck shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes, and the colours carry over to the shelf, the open phone and the lock screen.")
+                        }
+                    }
                 }
 
                 Section {
@@ -57,6 +62,7 @@ struct SettingsView: View {
                 Section {
                     Toggle("Play when the phone is closed", isOn: $playOnCloseOn)
                     Toggle("Flip at the end of a side", isOn: $autoFlipOn)
+                    Toggle("Tape runs up to speed and down to a stop", isOn: $tapeRampOn)
                 } header: {
                     Text("Tape")
                 } footer: {
@@ -153,7 +159,9 @@ struct SettingsView: View {
                 Text(backupNote ?? "")
             }
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                // On the Duo the trailing items sit in the rail, under the
+                // clock and status icons.
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
                 }
             }

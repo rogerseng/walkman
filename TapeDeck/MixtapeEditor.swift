@@ -68,13 +68,15 @@ struct MixtapeEditor: View {
             .navigationTitle(mixtape.name.isEmpty ? "New Mixtape" : mixtape.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                // All on the trailing side: on the Duo that is the rail under
+                // the clock, which leaves the whole bar for the tape's name.
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     EditButton()
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         model.save(mixtape)
                         dismiss()
