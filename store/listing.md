@@ -53,7 +53,7 @@ MORE
 • Open a folding iPhone and the player becomes a tape recorder, with a speaker grille, the tape behind a tinted door, and a row of chunky keys.
 • Your settings sync with iCloud.
 
-Casseti plays music from Apple Music. An Apple Music subscription is required.
+Casseti plays music from Apple Music. An Apple Music subscription is required. Spotify support is coming soon.
 
 ## Keywords (100)
 

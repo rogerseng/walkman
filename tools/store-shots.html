@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- One App Store picture: a headline over a screenshot of the app.
+     Rendered to a PNG by tools/store-shots.sh, which passes:
+       w, h      the size of the picture in pixels
+       t, s      the headline and the smaller line under it
+       img       one screenshot, or several separated by commas
+       bg        two colours for the background, separated by a comma
+       fit       how much of the width one screenshot takes (0 to 1) -->
+<meta charset="utf-8">
+<style>
+@font-face { font-family: "Righteous"; src: url("../website/fonts/righteous.woff2") format("woff2"); }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body { display: flex; flex-direction: column; align-items: center; color: #fff;
+       font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.stripes { width: 100%; flex: none;
+  background: linear-gradient(#1c9aab 0 20%, #f2ca4d 0 40%, #f29e05 0 60%, #e3572e 0 80%, #ff3da3 0); }
+h1 { font: 400 1em/1.05 "Righteous", sans-serif; text-align: center; letter-spacing: .01em; text-wrap: balance; }
+p { text-align: center; opacity: .86; font-weight: 500; text-wrap: balance; }
+.shots { flex: 1; min-height: 0; width: 100%; display: flex; justify-content: center; align-items: flex-start; }
+.shots img { display: block; height: auto; background: #0b0420; }
+</style>
+<body>
+<div class="stripes"></div>
+<h1 id="t"></h1>
+<p id="s"></p>
+<div class="shots" id="shots"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const w = +q.get('w'), h = +q.get('h');
+const u = Math.min(w, h) / 100;                    // a unit that follows the picture's size
+const wide = w > h;
+const bg = (q.get('bg') || '#5a2d91,#1d0b45').split(',');
+document.body.style.background = `radial-gradient(120% 90% at 50% 0%, ${bg[0]}, ${bg[1]})`;
+document.querySelector('.stripes').style.height = (u * 1.6) + 'px';
+const t = document.getElementById('t'), s = document.getElementById('s');
+t.textContent = q.get('t') || ''; s.textContent = q.get('s') || '';
+t.style.fontSize = (wide ? u * 8.2 : u * 9.6) + 'px';
+t.style.margin = `${wide ? u * 5 : u * 9}px ${u * 6}px 0`;
+s.style.fontSize = (wide ? u * 3.3 : u * 3.9) + 'px';
+s.style.margin = `${u * 2.2}px ${u * 8}px ${wide ? u * 4.5 : u * 6.5}px`;
+const images = (q.get('img') || '').split(',').filter(Boolean);
+const fit = +(q.get('fit') || (wide ? 0.78 : 0.8));
+const shots = document.getElementById('shots');
+shots.style.gap = (u * 3) + 'px';
+shots.style.padding = `0 ${u * 4}px`;
+for (const src of images) {
+  const img = new Image();
+  img.src = src;
+  const each = (w * fit - (images.length - 1) * u * 3) / images.length;
+  img.style.width = each + 'px';
+  // The corner and the rim of a phone, scaled to the screenshot
+  img.style.borderRadius = (each * 0.085) + 'px';
+  img.style.border = `${Math.max(4, each * 0.012)}px solid #0b0420`;
+  img.style.boxShadow = `0 ${u * 2}px ${u * 6}px rgba(0,0,0,.55), 0 0 0 ${Math.max(2, each * 0.004)}px rgba(255,255,255,.14)`;
+  shots.appendChild(img);
+  // Never taller than the room under the headline: the whole screen shows.
+  img.onload = () => {
+    const room = shots.clientHeight - u * 5;
+    const tall = each * img.naturalHeight / img.naturalWidth;
+    if (tall > room) {
+      const fitted = room * img.naturalWidth / img.naturalHeight;
+      img.style.width = fitted + 'px';
+      img.style.borderRadius = (fitted * 0.085) + 'px';
+    }
+  };
+}
+</script>
