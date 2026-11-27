@@ -13,8 +13,9 @@ import SwiftUI
 /// get a strip of their own inside the safe area.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
-    /// Shared by the fader beside the window and the mute key in the column.
+    /// The phone's volume, which the fader on the panel sets.
     @StateObject private var volume = SystemVolume()
+    @State private var showSettings = false
     var openShelf: () -> Void
 
     /// Width of the key column on phones that have no side rail.
@@ -86,9 +87,12 @@ struct DeckView: View {
             .overlay(alignment: .topLeading) {
                 VolumeFader(volume: volume)
                     .frame(width: 40, height: window.height)
-                    .offset(x: railLeading ? panelWidth - 54 : full.width - panelWidth + 14, y: window.minY)
+                    .offset(x: railLeading ? panelWidth - 66 : full.width - panelWidth + 26, y: window.minY)
             }
             .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
     }
 
@@ -237,18 +241,16 @@ struct DeckView: View {
     // MARK: Keys
 
     /// Five keys of one size: play/pause, fast forward, rewind, the tape
-    /// library, and mute.
+    /// library, and settings.
     private func keys(height: CGFloat) -> some View {
         VStack(spacing: keyGap) {
             TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
                           spacing: keyGap, onEject: openShelf)
-            TapeKey(symbol: volume.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
-                    label: volume.isMuted ? "Unmute" : "Mute",
-                    latched: volume.isMuted,
+            TapeKey(symbol: "gearshape.fill", label: "Settings",
                     height: height, showsLabel: false, corner: 17, symbolSize: 23,
                     onDown: {
                         Haptics.keyDown()
-                        volume.toggleMute()
+                        showSettings = true
                     })
         }
     }
@@ -261,13 +263,16 @@ struct DeckView: View {
     /// solid plastic, not see through, with a seam where it meets the clear
     /// part of the case.
     private func casePanel(seamOnLeading: Bool) -> some View {
-        ZStack(alignment: seamOnLeading ? .leading : .trailing) {
-            LinearGradient(colors: [Color(white: 0.20), Color(white: 0.13), Color(white: 0.09)],
-                           startPoint: .top, endPoint: .bottom)
-            LinearGradient(colors: [Color.white.opacity(0.06), .clear],
-                           startPoint: seamOnLeading ? .leading : .trailing,
-                           endPoint: seamOnLeading ? .trailing : .leading)
-            Color.white.opacity(0.22).frame(width: 1)
+        let edge = BowedPanel(bow: 26, bowOnLeading: seamOnLeading)
+        return ZStack {
+            edge.fill(LinearGradient(colors: [Color(white: 0.20), Color(white: 0.13), Color(white: 0.09)],
+                                     startPoint: .top, endPoint: .bottom))
+            edge.fill(LinearGradient(colors: [Color.white.opacity(0.07), .clear],
+                                     startPoint: seamOnLeading ? .leading : .trailing,
+                                     endPoint: .center))
+            // The seam, following the curve
+            BowedPanel(bow: 26, bowOnLeading: seamOnLeading, edgeOnly: true)
+                .stroke(Color.white.opacity(0.24), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.65), radius: 7, x: seamOnLeading ? -3 : 3)
     }
@@ -307,6 +312,34 @@ struct DeckView: View {
             }
             .frame(width: stripWidth + insets.trailing)
         }
+    }
+}
+
+/// The solid side of the case. Its inner edge is a long shallow curve that
+/// bows toward the tape at mid height and falls back at the top and bottom.
+struct BowedPanel: Shape {
+    /// How far the ends of the edge sit back from its furthest point.
+    var bow: CGFloat
+    var bowOnLeading: Bool
+    /// Just the curved edge, for drawing the seam.
+    var edgeOnly = false
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        // A quadratic curve passes a quarter of the way to its control
+        // point from the chord, so the control sits a full bow beyond the rect.
+        let ends = bowOnLeading ? rect.minX + bow : rect.maxX - bow
+        let pull = bowOnLeading ? rect.minX - bow : rect.maxX + bow
+        let far = bowOnLeading ? rect.maxX : rect.minX
+        path.move(to: CGPoint(x: ends, y: rect.minY))
+        path.addQuadCurve(to: CGPoint(x: ends, y: rect.maxY),
+                          control: CGPoint(x: pull, y: rect.midY))
+        if !edgeOnly {
+            path.addLine(to: CGPoint(x: far, y: rect.maxY))
+            path.addLine(to: CGPoint(x: far, y: rect.minY))
+            path.closeSubpath()
+        }
+        return path
     }
 }
 
