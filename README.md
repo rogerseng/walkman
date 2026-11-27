@@ -27,7 +27,7 @@ The first time it opens, Cassety shows a four page introduction: what it is, how
 The closed phone can be either, chosen in Settings or the introduction. Both play the same tapes, with the same two sides, flipping and mixtapes.
 
 * Tape player: the cassette and its reels behind a window, with the volume fader and keys beside it.
-* MP3 player: a display of menus and a jog dial. Turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The keys beside it are back, play/pause, previous, next and settings; hold previous or next to wind the tape. Menus: Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape and Settings.
+* MP3 player: a display of menus and a jog dial. Turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The four keys beside it are back, play/pause, previous and next; hold previous or next to wind the tape. Settings is in the main menu. Menus: Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape and Settings.
 
 The MP3 player is Cassety's own design: a knurled metal dial with no buttons on it, keys set apart in the same moulding as the tape player's, and an amber display. The dial is drawn as a solid object and turns under the thumb.
 

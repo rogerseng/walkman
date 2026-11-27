@@ -8,7 +8,7 @@ import SwiftUI
 /// It comes in two forms.
 ///
 /// The jog dial player is the one people choose in the app. A knurled metal
-/// dial turns to scroll and presses to select, the keys sit apart from it in
+/// dial turns to scroll and presses to select, four keys sit apart from it in
 /// the same column as the tape player's, and the display is amber on black.
 ///
 /// The click wheel player is kept for personal builds only (see
@@ -214,12 +214,13 @@ struct MenuPlayerView: View {
     }
 
     /// The keys, in the same place and the same moulding as the tape
-    /// player's: back, play/pause, previous, next and settings.
+    /// player's: back, play/pause, previous and next. Settings is a line in
+    /// the main menu, so it needs no key of its own.
     private func keyColumn(insets: EdgeInsets, rail: Bool, leading: Bool, height: CGFloat) -> some View {
         let top = rail ? railStatusHeight : insets.top + 12
         let bottom = insets.bottom + 12
         let width = rail ? max(insets.leading, insets.trailing) : stripWidth + insets.trailing
-        let keyHeight = min(84, max(36, (height - top - bottom - 4 * keyGap) / 5))
+        let keyHeight = min(84, max(36, (height - top - bottom - 3 * keyGap) / 4))
         let inner = max(0, width - railKeyWidth - railOuterMargin)
         return VStack(spacing: keyGap) {
             if !rail { Spacer(minLength: 0) }
@@ -238,12 +239,6 @@ struct MenuPlayerView: View {
                     height: keyHeight, showsLabel: false, corner: 17, symbolSize: 23,
                     onDown: { model.seekKeyDown(forward: true) },
                     onUp: { model.seekKeyUp(forward: true) })
-            TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
-                    height: keyHeight, showsLabel: false, corner: 17, symbolSize: 23,
-                    onDown: {
-                        Haptics.keyDown()
-                        showSettings = true
-                    })
             Spacer(minLength: 0)
         }
         .frame(width: rail ? railKeyWidth : stripWidth - 16)
