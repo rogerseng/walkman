@@ -659,10 +659,10 @@ struct MenuPlayerView: View {
                     .foregroundColor(lit ? look.litInk : look.ink)
                     .padding(.horizontal, 9)
                     .frame(height: rowHeight)
-                    .background(
+                    .background {
                         LinearGradient(colors: [look.litTop, look.litBottom], startPoint: .top, endPoint: .bottom)
                             .opacity(lit ? 1 : 0)
-                    )
+                    }
                 }
                 Spacer(minLength: 0)
             }
