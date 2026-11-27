@@ -186,8 +186,8 @@ struct SettingsView: View {
                 let rail = geo.safeAreaInsets.trailing
                 if rail >= 60 {
                     doneKey
-                        .frame(width: 66)
-                        .position(x: geo.size.width + rail - 15 - 33,
+                        .frame(width: min(72, rail - 12))
+                        .position(x: geo.size.width + rail / 2,
                                   // The clock takes less of the rail on the open phone
                                   y: (geo.size.width > geo.size.height ? 122 : 180) - geo.safeAreaInsets.top + 24)
                 }
@@ -212,12 +212,15 @@ struct SettingsView: View {
             dismiss()
         } label: {
             Text("Done")
+                .fontWeight(.semibold)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, 4)
         }
-        .buttonStyle(PlainKeyButtonStyle())
+        // A plain system button: it is not part of the player.
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
     }
 
     private var backupNoteShown: Binding<Bool> {
