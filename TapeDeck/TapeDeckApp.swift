@@ -7,6 +7,7 @@ struct TapeDeckApp: App {
 
     init() {
         Typeface.styleNavigationBars()
+        Theme.retireMP3IfHeldBack()
     }
 
     /// Debug builds only: `-demoTape` puts a made-up tape in the deck, for
@@ -58,7 +59,7 @@ struct ContentView: View {
                 // The MP3 player is itself on the open phone too, with its
                 // display and its dial or wheel, not the tape deck's keys.
                 let wheel = Skin.includesClickWheel && Skin(rawValue: skinName)?.isWheel == true
-                let menuPlayer = wheel || player == "mp3"
+                let menuPlayer = wheel || (Theme.includesMP3 && player == "mp3")
                 if open, whole.height > whole.width {
                     // The open phone held upright: the player has the whole
                     // screen to itself, and the shelf is a key away.
@@ -80,7 +81,7 @@ struct ContentView: View {
                 } else if Skin.includesClickWheel, Skin(rawValue: skinName)?.isWheel == true {
                     // Personal builds only: the click wheel player.
                     MenuPlayerView(jog: false)
-                } else if player == "mp3" {
+                } else if Theme.includesMP3, player == "mp3" {
                     // The MP3 player has its own menus for choosing music.
                     MenuPlayerView(jog: true)
                 } else {

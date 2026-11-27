@@ -21,7 +21,7 @@ struct BeatHaptic: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        let tapeDeck = player != "mp3" && Skin(rawValue: skinName)?.isWheel != true
+        let tapeDeck = !(Theme.includesMP3 && player == "mp3") && Skin(rawValue: skinName)?.isWheel != true
         let on = wanted && hapticsOn && tapeDeck && scenePhase == .active
             && model.motion == .playing && !model.tapeJammed
         content.task(id: Run(on: on, tempo: model.beatsPerMinute)) {

@@ -14,6 +14,10 @@ struct Theme: Identifiable, Equatable {
 
     /// The themes a person can choose from. The two click wheel themes are
     /// only in builds run from Xcode (see `Skin.includesClickWheel`).
+    /// The MP3 player is held back from this version. Its code stays, and
+    /// turning this on brings its themes back.
+    static let includesMP3 = false
+
     static var offered: [Theme] {
         var list = [
             Theme(id: "tape-neon", name: "Tape deck", detail: "Retro 80s", player: "tape", skin: .neon),
@@ -23,6 +27,7 @@ struct Theme: Identifiable, Equatable {
             Theme(id: "mp3-neon", name: "MP3 player", detail: "Retro 80s", player: "mp3", skin: .neon),
             Theme(id: "mp3-smoke", name: "MP3 player", detail: "Black", player: "mp3", skin: .smoke)
         ]
+        if !includesMP3 { list.removeAll { $0.player == "mp3" } }
         if Skin.includesClickWheel {
             list.append(Theme(id: "wheel-black", name: Skin.wheelWord.capitalized, detail: "Black",
                               player: "mp3", skin: .wheelBlack))
@@ -30,6 +35,17 @@ struct Theme: Identifiable, Equatable {
                               player: "mp3", skin: .wheelSilver))
         }
         return list
+    }
+
+    /// Puts a phone that was left on the MP3 player back on the tape deck,
+    /// while that player is held back.
+    static func retireMP3IfHeldBack() {
+        let defaults = UserDefaults.standard
+        guard !includesMP3, defaults.string(forKey: Prefs.player) == "mp3" else { return }
+        let skin = Skin(rawValue: defaults.string(forKey: Prefs.skin) ?? "")
+        // The click wheel of personal builds is stored as an MP3 player too.
+        if Skin.includesClickWheel, skin?.isWheel == true { return }
+        defaults.set("tape", forKey: Prefs.player)
     }
 
     /// The skin actually on show: the stored skin, as the chosen player

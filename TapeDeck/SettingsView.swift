@@ -37,7 +37,9 @@ struct SettingsView: View {
                         Text(kind.title)
                     } footer: {
                         if kind == PlayerKind.offered.last {
-                            Text("The tape deck shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes, and the colours carry over to the shelf and the open phone.")
+                            Text(Theme.includesMP3
+                                 ? "The tape deck shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes, and the colours carry over to the shelf and the open phone."
+                                 : "Pick a colour and the whole app follows it: the player, the shelf and the open phone.")
                         }
                     }
                 }
@@ -145,7 +147,9 @@ struct SettingsView: View {
                     Label("Tap fast forward or rewind to skip a song. Hold to wind the tape.", systemImage: "forward.fill")
                     Label("Double-tap the tape to turn it over.", systemImage: "arrow.triangle.2.circlepath")
                     Label("The music key opens your shelf. On a folding phone, open it to choose a tape and close it to start playing.", systemImage: "music.note")
+                    if Theme.includesMP3 || Skin.includesClickWheel {
                     Label("On the MP3 player, turn the dial to scroll and press it to choose. The top key goes back, or opens Settings from the first menu.", systemImage: "dial.medium")
+                    }
                     // The tour is done on the tape deck, so it is offered
                     // only while the deck is the player showing.
                     if tour.deckShowing {

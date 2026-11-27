@@ -36,7 +36,7 @@ struct OpenTrayView: View {
     private var skin: Skin { Theme.current(player: player, skinName: skinName).skin }
     /// The MP3 player is chosen: the open phone wears its case and shows
     /// its display where the tape deck has its cassette door.
-    private var isMP3: Bool { player == "mp3" || skin.isWheel }
+    private var isMP3: Bool { (Theme.includesMP3 && player == "mp3") || skin.isWheel }
     /// The case colours of whichever player is chosen.
     private var bodyColors: [Color] {
         skin.isWheel ? skin.wheelBody : (isMP3 ? skin.panel : skin.casing)
