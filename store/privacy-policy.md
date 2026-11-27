@@ -32,4 +32,4 @@ If this policy changes, the new version will be posted on this page with a new d
 
 ## Contact
 
-Questions about privacy: support@casseti.com
+Questions about privacy: hello@casseti.com

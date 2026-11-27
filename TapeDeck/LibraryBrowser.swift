@@ -371,6 +371,10 @@ struct CollectionDetail: View {
                 .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
+                ContactSupportLink(problem: "The songs of \(tape.title) could not be loaded.")
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             }
             ForEach(Array(tracks.enumerated()), id: \.element.id) { number, track in
                 // Where each side of the tape begins
@@ -537,6 +541,10 @@ struct ArtistDetail: View {
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
+                    ContactSupportLink(problem: "The albums of \(artist.name) could not be loaded.")
+                        .frame(maxWidth: .infinity)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
             }
             if !albums.isEmpty {

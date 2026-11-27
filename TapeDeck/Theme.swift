@@ -125,6 +125,50 @@ struct ThemePicker: View {
 enum AppLinks {
     static let privacyPolicy = "https://casseti.com/privacy.html"
     static let support = "https://casseti.com/support.html"
+    /// Where a listener writes when something goes wrong.
+    static let supportEmail = "hello@casseti.com"
+
+    /// A new email to support, already saying what went wrong (if anything)
+    /// and which app, phone and iOS it happened on.
+    static func supportMail(about problem: String? = nil) -> URL? {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        var body = "\n\n"
+        if let problem, !problem.isEmpty { body += "What Casseti said: \(problem)\n" }
+        body += "Casseti \(version) (\(build)), \(UIDevice.current.model), iOS \(UIDevice.current.systemVersion)"
+        var parts = URLComponents()
+        parts.scheme = "mailto"
+        parts.path = supportEmail
+        parts.queryItems = [URLQueryItem(name: "subject", value: problem == nil ? "Casseti" : "Casseti: something went wrong"),
+                            URLQueryItem(name: "body", value: body)]
+        return parts.url
+    }
+
+    /// Opens that email in the listener's mail app.
+    @MainActor
+    static func contactSupport(about problem: String? = nil) {
+        if let url = supportMail(about: problem) { UIApplication.shared.open(url) }
+    }
+}
+
+/// A small link for the foot of anything that has failed: it starts an
+/// email to support that says what went wrong.
+struct ContactSupportLink: View {
+    var problem: String
+    @Environment(\.playerTheme) private var theme
+
+    var body: some View {
+        Button {
+            AppLinks.contactSupport(about: problem)
+        } label: {
+            Label("Still stuck? Contact support", systemImage: "envelope")
+                .font(.footnote)
+        }
+        .buttonStyle(.plain)
+        .foregroundColor(theme.accentColor)
+        .accessibilityHint("Starts an email to \(AppLinks.supportEmail)")
+    }
 }
 
 /// The app's three typefaces, so every screen uses them the same way.

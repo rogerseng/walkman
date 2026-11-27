@@ -35,7 +35,7 @@ In every case you then go to wherever you bought casseti.com and point the domai
 
 ## Before you publish
 
-1. **Email.** The pages give `support@casseti.com` as the contact. Set that address up with your domain, or change it in the three pages to one you already read. Apple requires a working way to reach you.
+1. **Email.** The pages give `hello@casseti.com` as the contact. Set that address up with your domain, or change it in the three pages to one you already read. Apple requires a working way to reach you.
 2. **The date** at the top of `privacy.html`. Set it to the day you publish.
 3. **The pictures.** The `duo-*.webp` images are real screenshots of the app in Xcode's iPhone Duo simulator, showing a made-up demo tape (a debug build launched with `-demoTape`), because the simulator cannot play Apple Music. Retake them the same way after any change to the look, or replace them with screenshots from a phone.
 4. **The App Store button.** The home page says "Coming soon to the App Store". When the app is live, replace that with Apple's official "Download on the App Store" badge from Apple's marketing resources, linked to the app's page.

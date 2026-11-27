@@ -129,6 +129,12 @@ extension View {
             get: { active && model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } })
         ) {
+            // Something that went wrong can be sent straight to support.
+            // Plain notices (a blank side, an empty tape) are not faults.
+            let message = model.errorMessage ?? ""
+            if !message.hasPrefix("Side "), !message.hasPrefix("That tape has nothing") {
+                Button("Contact support") { AppLinks.contactSupport(about: message) }
+            }
             Button("OK", role: .cancel) {}
         } message: {
             Text(model.errorMessage ?? "")

@@ -18,4 +18,4 @@ Casseti is a music player that presents Apple Music albums and playlists as cass
 
 **Folding iPhone.** The app adapts to the closed and open displays of iPhone Duo and also runs on every other iPhone. It is an iPhone-only app.
 
-**Contact.** Roger Sengthavychith, support@casseti.com.
+**Contact.** Roger Sengthavychith, hello@casseti.com.

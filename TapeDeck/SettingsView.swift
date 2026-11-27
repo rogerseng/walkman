@@ -176,8 +176,9 @@ struct SettingsView: View {
                     if let url = URL(string: AppLinks.support), !AppLinks.support.isEmpty {
                         Link("Help and support", destination: url)
                     }
+                    Button("Email the developer") { AppLinks.contactSupport() }
                 } footer: {
-                    Text("Music is played by your music service and needs its subscription.")
+                    Text("Something not working, or an idea to share? Write to \(AppLinks.supportEmail). Music is played by your music service and needs its subscription.")
                 }
             }
             .navigationTitle("Settings")
