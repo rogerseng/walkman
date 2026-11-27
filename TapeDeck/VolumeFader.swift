@@ -1,0 +1,133 @@
+import AVFoundation
+import MediaPlayer
+import SwiftUI
+
+/// The phone's own volume, readable and settable.
+///
+/// iOS has no direct call for setting the system volume. The supported control
+/// is `MPVolumeView`; this keeps one out of sight and moves its slider. Reading
+/// comes from the audio session, so the fader also follows the side buttons.
+@MainActor
+final class SystemVolume: ObservableObject {
+    @Published private(set) var level: Double
+    let volumeView = MPVolumeView(frame: CGRect(x: 0, y: 0, width: 120, height: 40))
+
+    private var observation: NSKeyValueObservation?
+    private var lastSet = Date.distantPast
+
+    init() {
+        let session = AVAudioSession.sharedInstance()
+        level = Double(session.outputVolume)
+        observation = session.observe(\.outputVolume, options: [.new]) { [weak self] _, change in
+            guard let value = change.newValue else { return }
+            Task { @MainActor in
+                // Ignore echoes of our own changes while the fader is moving.
+                guard let self, Date().timeIntervalSince(self.lastSet) > 0.3 else { return }
+                self.level = Double(value)
+            }
+        }
+    }
+
+    func set(_ newLevel: Double) {
+        let clamped = min(max(newLevel, 0), 1)
+        level = clamped
+        lastSet = Date()
+        Self.slider(in: volumeView)?.value = Float(clamped)
+    }
+
+    private static func slider(in view: UIView) -> UISlider? {
+        if let slider = view as? UISlider { return slider }
+        for child in view.subviews {
+            if let found = slider(in: child) { return found }
+        }
+        return nil
+    }
+}
+
+/// Keeps the system volume view in the window, where it has to be to work,
+/// without showing it.
+private struct VolumeHost: UIViewRepresentable {
+    let view: MPVolumeView
+
+    func makeUIView(context: Context) -> MPVolumeView { view }
+    func updateUIView(_ uiView: MPVolumeView, context: Context) {}
+}
+
+/// A vertical volume fader, as on a tape deck: a groove with tick marks and a
+/// cap you slide. Up is louder. It clicks under the thumb as it passes each
+/// step, and it follows the phone's volume buttons.
+struct VolumeFader: View {
+    @StateObject private var volume = SystemVolume()
+    @State private var lastStep = -1
+
+    private let capHeight: CGFloat = 28
+    private let steps = 16.0
+
+    var body: some View {
+        GeometryReader { geo in
+            let travel = max(1, geo.size.height - capHeight)
+            let capTop = CGFloat(1 - volume.level) * travel
+            ZStack(alignment: .top) {
+                // Tick marks down the left of the groove
+                VStack(spacing: 0) {
+                    ForEach(0..<11, id: \.self) { tick in
+                        Rectangle()
+                            .fill(Color.white.opacity(tick % 5 == 0 ? 0.55 : 0.28))
+                            .frame(width: tick % 5 == 0 ? 9 : 5, height: 1)
+                        if tick < 10 { Spacer(minLength: 0) }
+                    }
+                }
+                .padding(.vertical, capHeight / 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // The groove
+                Capsule()
+                    .fill(Color.black.opacity(0.85))
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75))
+                    .frame(width: 6)
+                    .padding(.vertical, capHeight / 2 - 3)
+                    .frame(maxWidth: .infinity)
+
+                // The cap
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(LinearGradient(colors: [Color(white: 0.95), Color(white: 0.62), Color(white: 0.80)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .overlay(Rectangle().fill(Color(white: 0.15)).frame(height: 1.5))
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.black.opacity(0.5), lineWidth: 0.75))
+                    .frame(width: 30, height: capHeight)
+                    .shadow(color: .black.opacity(0.55), radius: 3, y: 2)
+                    .offset(x: 3, y: capTop)
+                    .frame(maxWidth: .infinity)
+            }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { drag in
+                        let level = 1 - Double((drag.location.y - capHeight / 2) / travel)
+                        volume.set(level)
+                        let step = Int((min(max(level, 0), 1) * steps).rounded())
+                        if step != lastStep {
+                            lastStep = step
+                            Haptics.detent()
+                        }
+                    }
+            )
+            .background(
+                VolumeHost(view: volume.volumeView)
+                    .frame(width: 1, height: 1)
+                    .opacity(0.01)
+                    .allowsHitTesting(false)
+            )
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Volume")
+        .accessibilityValue("\(Int((volume.level * 100).rounded())) percent")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: volume.set(volume.level + 1 / steps)
+            case .decrement: volume.set(volume.level - 1 / steps)
+            @unknown default: break
+            }
+        }
+    }
+}

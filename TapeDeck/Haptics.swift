@@ -38,6 +38,11 @@ enum Haptics {
         rigid.impactOccurred(intensity: 0.6)
     }
 
+    /// One notch of the volume fader.
+    static func detent() {
+        light.impactOccurred(intensity: 0.4)
+    }
+
     /// One beat of the motor while the tape winds.
     static func windTick() {
         soft.impactOccurred(intensity: 0.45)

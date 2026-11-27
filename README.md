@@ -6,7 +6,7 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
 * Closed phone (or any ordinary phone screen): the whole screen is the body of a tape player with the cassette inside it. The cassette is as large as the screen allows and runs underneath the body and the keys. The smoked casing covers most of it, dimly showing what is underneath, and a clear window over the label and reels shows the tape itself. Colours are neutral throughout: greys, black and off-white. Glare on the body moves only when the phone moves: reflections slide as it tilts left and right, and a hot spot follows both tilts.
-* Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; four large keys (play/pause, fast forward, rewind, stop/eject) and two small ones for sound effects and the tape shelf sit in that column underneath them. On other phones the keys get their own strip. Volume is on the phone's own buttons.
+* Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; four large keys (play/pause, fast forward, rewind, stop/eject) and two small ones for sound effects and the tape shelf sit in that column underneath them. On other phones the keys get their own strip. A vertical volume fader stands to the left of the keys; it sets the phone's volume and follows the side buttons.
 * Haptics: a firm tap when a key goes down, a lighter one when it springs back, a heavy thud for the cassette door, and a soft pulse four times a second while the tape winds.
 * The cassette is a clear one. The shell front is see-through artwork (bright moulded edges and ridges, stickers, a stick-on paper label, guide rollers, black screws, reflections). Under it the whole reels, their clear hubs, the tape running down to the rollers and the handwriting on the label are drawn live. The artwork source is `tools/cassette-art.html`; `node tools/render-art.js` re-renders it.
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. The shelf shows each playlist and album as a cassette spine: an off-white card with the name handwritten on it and a grey band. Pick a tape, then close the phone to start it playing. The keys are there too, for screens that cannot fold.
@@ -47,7 +47,8 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `DeckView.swift` | The closed phone: player body, cassette door and key strip |
 | `OpenTrayView.swift` | The open phone's right half, where the chosen tape waits |
 | `GlassShimmer.swift` | The glare on the case, driven by the motion sensor |
-| `Haptics.swift` | The taps for keys, door and winding |
+| `Haptics.swift` | The taps for keys, door, fader and winding |
+| `VolumeFader.swift` | The vertical volume fader and its link to the system volume |
 | `ShelfView.swift` | The tape shelf and search |
 | `LockScreenTape.swift` | Starts and updates the lock screen Live Activity |
 | `Shared/TapeActivity.swift` | Data and key actions shared by the app and the widget extension |

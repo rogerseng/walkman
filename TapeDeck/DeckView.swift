@@ -34,14 +34,20 @@ struct DeckView: View {
             let rail = max(insets.leading, insets.trailing) >= 60
             let railLeading = rail && insets.leading > insets.trailing
             HStack(spacing: 0) {
-                if railLeading { keyColumn(insets: insets, rail: true, leading: true) }
+                if railLeading {
+                    keyColumn(insets: insets, rail: true, leading: true)
+                    fader(insets: insets, rail: true)
+                }
                 // The face itself is drawn in the background, full screen.
                 Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if !model.hasTape { openShelf() }
                     }
-                if !railLeading { keyColumn(insets: insets, rail: rail, leading: false) }
+                if !railLeading {
+                    fader(insets: insets, rail: rail)
+                    keyColumn(insets: insets, rail: rail, leading: false)
+                }
             }
             .frame(width: geo.size.width + insets.leading + insets.trailing,
                    height: geo.size.height + insets.top + insets.bottom)
@@ -61,7 +67,7 @@ struct DeckView: View {
     /// The part of the cassette the window shows, in millimetres of its
     /// 100 x 63 shell: the label strip and both reels. Everything else, the
     /// ends, the guide rollers and the head opening, is under the casing.
-    private let windowOnCassette = CGRect(x: 19, y: 2.5, width: 62, height: 40)
+    private let windowOnCassette = CGRect(x: 19, y: 5.5, width: 62, height: 35.5)
 
     /// The cassette filling the whole screen (on end when the screen is
     /// taller than wide, head opening toward the keys), with the player's
@@ -171,21 +177,15 @@ struct DeckView: View {
         }
     }
 
-    /// The surface of the body: a fixed reflection, the glare that follows the
-    /// phone as it moves, and bright edges where the plastic curves.
+    /// The surface of the body: a fixed reflection and the glare that follows
+    /// the phone as it moves.
     private var clearCase: some View {
         ZStack {
             LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.02), .clear],
                            startPoint: .topLeading, endPoint: .center)
             GlassShimmer()
-            RoundedRectangle(cornerRadius: 26)
-                .strokeBorder(Color.white.opacity(0.10), lineWidth: 1.5)
-                .padding(9)
-            RoundedRectangle(cornerRadius: 34)
-                .strokeBorder(LinearGradient(colors: [Color.white.opacity(0.55), Color.white.opacity(0.10),
-                                                      Color.white.opacity(0.28)],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing),
-                              lineWidth: 3)
+            // No drawn edge here: the phone's own corners are the edge of
+            // the player, and a drawn one never quite matches their curve.
         }
         .allowsHitTesting(false)
     }
@@ -222,6 +222,24 @@ struct DeckView: View {
 
     private func keyHeight(room: CGFloat) -> CGFloat {
         min(bigKeyHeight, max(40, (room - smallKeysRoom - 3 * keyGap) / 4))
+    }
+
+    /// The volume fader, standing beside the keys and as tall as they are.
+    private func fader(insets: EdgeInsets, rail: Bool) -> some View {
+        GeometryReader { geo in
+            let top = rail ? railStatusHeight : insets.top + 12
+            let bottom = insets.bottom + 12
+            let room = geo.size.height - top - bottom
+            let column = 4 * keyHeight(room: room) + 3 * keyGap + smallKeysRoom
+            VStack(spacing: 0) {
+                if !rail { Spacer(minLength: 0) }
+                VolumeFader().frame(height: min(column, max(60, room)))
+                Spacer(minLength: 0)
+            }
+            .padding(.top, top)
+            .padding(.bottom, bottom)
+        }
+        .frame(width: 40)
     }
 
     /// The column of keys. In the Duo's rail it starts below the camera and
