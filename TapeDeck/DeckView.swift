@@ -183,6 +183,19 @@ struct DeckView: View {
         .onChange(of: model.sideLetter) { _, _ in
             tour.completed(.flip)
         }
+        // A step that is already done when it comes up is passed over: a tape
+        // picked from the shelf starts playing by itself, so play is done.
+        .onChange(of: tour.step) { _, _ in catchUpTour() }
+        .onAppear { catchUpTour() }
+    }
+
+    /// Moves the tour past whatever the deck is already doing.
+    private func catchUpTour() {
+        switch tour.step {
+        case .chooseTape where model.hasTape: tour.completed(.chooseTape)
+        case .play where model.motion == .playing: tour.completed(.play)
+        default: break
+        }
     }
 
     private var underWindowNote: String? {
