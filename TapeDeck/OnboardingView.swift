@@ -11,8 +11,6 @@ struct OnboardingView: View {
 
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
     @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
-    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
-    @AppStorage(Prefs.player) private var player = "tape"
     @State private var page = 0
 
     private let lastPage = 3
@@ -143,7 +141,7 @@ struct OnboardingView: View {
             Text("A few choices")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
-            Text("You can change all of these later with the black key.")
+            Text("You can change all of these later in Settings.")
                 .foregroundColor(.white.opacity(0.7))
 
             VStack(spacing: 0) {
@@ -153,28 +151,8 @@ struct OnboardingView: View {
                 Toggle("Show the tape on the lock screen", isOn: $lockScreenTapeOn)
                     .padding(.vertical, 10)
                 Divider().overlay(Color.white.opacity(0.15))
-                Picker("Player", selection: $player) {
-                    Text("Tape player").tag("tape")
-                    Text("MP3 player").tag("mp3")
-                }
-                .pickerStyle(.segmented)
-                .padding(.vertical, 10)
-                Divider().overlay(Color.white.opacity(0.15))
-                HStack {
-                    Text("Skin")
-                    Spacer()
-                    ForEach(Skin.offered) { skin in
-                        Button {
-                            Haptics.detent()
-                            skinName = skin.rawValue
-                        } label: {
-                            SkinSwatch(skin: skin, chosen: skinName == skin.rawValue)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(skin.name) skin")
-                    }
-                }
-                .padding(.vertical, 10)
+                ThemePicker()
+                    .padding(.vertical, 5)
             }
             .foregroundColor(.white)
             .tint(Color(white: 0.75))

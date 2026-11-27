@@ -16,9 +16,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.autoFlip) private var autoFlipOn = false
     @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
-    @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
     @AppStorage(Prefs.introSeen) private var introSeen = true
-    @AppStorage(Prefs.player) private var player = "tape"
 
     @State private var backup = BackupDocument(data: Data())
     @State private var savingBackup = false
@@ -39,33 +37,11 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Picker("Player", selection: $player) {
-                        Text("Tape player").tag("tape")
-                        Text("MP3 player").tag("mp3")
-                    }
-                    .pickerStyle(.segmented)
+                    ThemePicker()
                 } header: {
-                    Text("Player")
+                    Text("Theme")
                 } footer: {
                     Text("The tape player shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes.")
-                }
-
-                Section("Skin") {
-                    ForEach(Skin.offered) { skin in
-                        Button {
-                            Haptics.detent()
-                            skinName = skin.rawValue
-                        } label: {
-                            HStack(spacing: 12) {
-                                SkinSwatch(skin: skin, chosen: skinName == skin.rawValue)
-                                Text(skin.name).foregroundColor(.primary)
-                                Spacer()
-                                if skinName == skin.rawValue {
-                                    Image(systemName: "checkmark").foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                    }
                 }
 
                 Section {
@@ -146,6 +122,12 @@ struct SettingsView: View {
                         Text("Cassety")
                         Spacer()
                         Text(version).foregroundColor(.secondary)
+                    }
+                    if let url = URL(string: AppLinks.privacyPolicy), !AppLinks.privacyPolicy.isEmpty {
+                        Link("Privacy policy", destination: url)
+                    }
+                    if let url = URL(string: AppLinks.support), !AppLinks.support.isEmpty {
+                        Link("Help and support", destination: url)
                     }
                 } footer: {
                     Text("Music is played by Apple Music and needs a subscription.")

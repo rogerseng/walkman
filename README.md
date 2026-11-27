@@ -22,25 +22,33 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 
 The first time it opens, Cassety shows a four page introduction: what it is, how the deck works, connecting Apple Music, and a few starting choices (iCloud sync, the lock screen tape, and the skin). It can be skipped, and shown again from Settings.
 
-## Tape player or MP3 player
+## Themes
 
-The closed phone can be either, chosen in Settings or the introduction. Both play the same tapes, with the same two sides, flipping and mixtapes.
+A theme is what the closed phone looks like: which player it is and what colour its case is. Pick one in Settings, under Theme, or on the last page of the introduction. Every theme plays the same tapes, with the same two sides, flipping and mixtapes.
 
-* Tape player: the cassette and its reels behind a window, with the volume fader and keys beside it.
-* MP3 player: a display of menus and a jog dial. Turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The four keys beside it are back, play/pause, previous and next; hold previous or next to wind the tape. Settings is in the main menu. Menus: Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape and Settings.
+| Theme | What it is |
+| --- | --- |
+| Tape player, Smoke | The cassette and its reels behind a window in dark smoked plastic, with the volume fader and keys beside it. |
+| Tape player, Yellow | The same in bright yellow with dark engraved lettering. |
+| MP3 player, Smoke | A display of menus and a metal jog dial, in dark plastic. |
+| MP3 player, Yellow | The same in yellow. |
+| Click wheel, Black | A screen above a click wheel. Xcode builds only. |
+| Click wheel, Silver | The same in silver with a white wheel. Xcode builds only. |
 
-The MP3 player is Cassety's own design: a knurled metal dial with no buttons on it, keys set apart in the same moulding as the tape player's, and an amber display. The dial is drawn as a solid object and turns under the thumb.
+On the MP3 player, turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The four keys beside it are back, play/pause, previous and next; hold previous or next to wind the tape. Its menus are Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape, and Settings and Themes. It is Cassety's own design: a knurled dial with no buttons on it, keys set apart, and an amber display.
 
-## Skins
+The two click wheel themes resemble the iPod closely enough to risk rejection from the App Store, so they are for your own phone only. They appear when the app is run from Xcode onto a device (a Debug build) and are left out of the build archived for the App Store (a Release build). The switch is `includesClickWheel` in `Skin.swift`.
 
-The colour of the case, for either player:
+On a pale case a dark plate sits behind the Duo's clock so it stays readable. Themes apply to the closed screen.
 
-* Smoke: dark plastic. On the tape player it is smoked clear and shows the tape dimly through the casing.
-* Yellow: bright yellow with dark engraved lettering.
+### Getting to Settings and themes from anywhere
 
-On a pale skin a dark plate sits behind the Duo's clock so it stays readable. Skins apply to the closed screen. A new colour is one more case in `Skin.swift`.
-
-Two more skins, a black and a silver click-wheel player, are for your own phone only. They resemble the iPod closely enough to risk rejection from the App Store. They appear in the skin list when the app is run from Xcode onto a device (a Debug build) and are left out of the build archived for the App Store (a Release build). The switch is `includesClickWheel` in `Skin.swift`.
+| Where you are | How to get to Settings |
+| --- | --- |
+| Tape player | The black key with the gear, at the foot of the keys. |
+| MP3 player or click wheel | "Settings and Themes" in the main menu. Press back (or MENU) until you reach it. |
+| Open phone | The black key with the gear in the row of keys, or the gear at the top of the tape shelf. |
+| Tape shelf | The gear at the top right. |
 
 ## Settings
 
@@ -110,7 +118,8 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `Haptics.swift` | The taps for keys, door, fader and winding |
 | `SettingsView.swift` | The settings screen |
 | `Prefs.swift` | The stored settings and their defaults |
-| `Skin.swift` | The skins and their colours |
+| `Skin.swift` | The case colours |
+| `Theme.swift` | The themes people choose from, the theme list, and the web links shown in Settings |
 | `MenuPlayerView.swift` | The MP3 player: its display, menus and jog dial (and the click-wheel form kept for personal builds) |
 | `OnboardingView.swift` | The first-run introduction |
 | `CloudSync.swift` | iCloud sync of mixtapes and settings, and the backup file format |

@@ -6,7 +6,8 @@
 * **Export compliance.** The app declares it uses no non-exempt encryption, so App Store Connect will not ask each time.
 * **No silent background audio.** The app used to play silence to stay awake behind the Lock Screen. App Review rejects that, so it is gone. The Lock Screen tape now keeps in step with the music while tape hiss is on.
 * **Click-wheel skins held back.** They are built but switched off for the store build (see Risks).
-* **App icon.** A new icon in Cassety's own style.
+* **App icon.** In the project, with the dark and tinted versions newer iPhones can show. A copy is in this folder as `app-icon-1024.png`.
+* **Settings reachable everywhere.** Every screen and theme has a way to Settings, where the theme is changed.
 * **Listing text, privacy policy and review notes.** In this folder.
 
 ## Left for you, in order
@@ -17,7 +18,7 @@
 4. **Test on a real phone** with an Apple Music subscription: playing, flipping, winding, mixtapes, sync between two devices, backup and restore, the Lock Screen tape.
 5. **Set the bundle identifier** to one you own, and turn on MusicKit and iCloud for it at developer.apple.com.
 6. **Take real screenshots** (see `listing.md`).
-7. **Publish the privacy policy** and a support page on the web, and note their addresses.
+7. **Publish the privacy policy** and a support page on the web. Put their addresses into `AppLinks` in `Theme.swift` so Settings links to them, and into App Store Connect.
 8. **Create the app in App Store Connect**: paste in the listing, set the price to $4.99, answer the age rating and privacy questions, add the review notes.
 9. **Archive and upload** from Xcode, then submit for review.
 

@@ -13,6 +13,7 @@ struct ShelfView: View {
     @State private var term = ""
     /// The mixtape being recorded or edited, if any.
     @State private var editing: Mixtape?
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -36,6 +37,19 @@ struct ShelfView: View {
             }
             .navigationTitle("Tape Shelf")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
+                    .accessibilityLabel("Settings and themes")
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+            }
             .background(Color(white: 0.05).ignoresSafeArea())
         }
     }

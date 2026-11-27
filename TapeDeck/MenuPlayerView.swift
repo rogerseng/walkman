@@ -487,7 +487,7 @@ struct MenuPlayerView: View {
             if model.authStatus != .authorized {
                 list.append(Row(id: "connect", title: "Connect Apple Music", action: .connect))
             }
-            list.append(Row(id: "settings", title: "Settings", action: .settings))
+            list.append(Row(id: "settings", title: "Settings and Themes", action: .settings))
             return list
         case .music:
             return [Row(id: "mixtapes", title: "Mixtapes", action: .open(.mixtapes)),
