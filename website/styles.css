@@ -58,6 +58,7 @@ header.site nav a[aria-current="page"] { background: var(--orange); color: var(-
 .button.soon { cursor: default; }
 a.button:hover { background: #fff; color: var(--night); }
 .price { display: block; margin-top: 18px; font-size: 15px; }
+.made-for { display: inline-block; margin-top: 14px; padding: 7px 14px; border-radius: 999px; background: var(--night); color: var(--text); font: 14px/1 "Righteous", sans-serif; letter-spacing: 0.5px; }
 .price b { color: #fff; font: 22px/1 "Righteous", sans-serif; }
 
 /* Pictures of the app */

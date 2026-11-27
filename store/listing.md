@@ -38,18 +38,18 @@ YOUR TAPES
 • Every tape is labelled in marker pen. Albums wear a label in the colours of their cover art.
 • Open an album or playlist to see its songs, and start the tape at any one of them.
 
-MADE FOR FOLDING PHONES
-• Closed, the whole screen is the player.
+DESIGNED FOR IPHONE DUO AND IPHONE
+• On iPhone Duo, closed, the whole cover screen is the player.
 • Open, your tape shelf is on one side and the tape on the other. Choose one and close the phone to start it playing.
-• Works on every iPhone, not only folding ones.
+• Works fully on every iPhone.
 
 MORE
 • Retro 80s, black, yellow or blue. The colours carry through the whole app.
 • A hands-on tour teaches the keys by having you press them.
-• Open a folding iPhone and the player becomes a tape recorder, with a speaker grille, the tape behind a tinted door, and a row of chunky keys.
+• Open an iPhone Duo and the player becomes a tape recorder, with a speaker grille, the tape behind a tinted door, and a row of chunky keys.
 • Your settings sync with iCloud.
 
-Casseti plays music from Apple Music. An Apple Music subscription is required. Spotify support is coming soon.
+Casseti plays music from Apple Music. An Apple Music subscription is required.
 
 ## Keywords (100)
 
