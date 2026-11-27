@@ -91,7 +91,7 @@ struct ShelfView: View {
     /// note shown in builds run from Xcode.
     private static func diagnosis(of error: Error) async -> String {
         let plain = error as NSError
-        var parts = ["\(type(of: error)).\(error)", "\(plain.domain) \(plain.code)"]
+        var parts = ["\(type(of: error)).\(String(describing: error).prefix(160))", "\(plain.domain) \(plain.code)"]
         if let under = plain.userInfo[NSUnderlyingErrorKey] as? NSError {
             parts.append("under: \(under.domain) \(under.code) \(under.localizedDescription)")
         }
@@ -106,6 +106,14 @@ struct ShelfView: View {
             parts.append("catalog play \(subscription.canPlayCatalogContent)")
         } else {
             parts.append("subscription unknown")
+        }
+        do {
+            let country = try await MusicDataRequest.currentCountryCode
+            let direct = try await SearchFindings.direct(term: "love")
+            parts.append("direct \(country) http \(direct.status) bytes \(direct.bytes)")
+        } catch {
+            let failed = error as NSError
+            parts.append("direct failed: \(type(of: error)).\(error) \(failed.domain) \(failed.code)")
         }
         return parts.joined(separator: " | ")
     }

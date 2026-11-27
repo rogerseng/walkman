@@ -565,9 +565,15 @@ struct SearchFindings {
             let types: [any MusicCatalogSearchable.Type] = [Artist.self, Album.self, Playlist.self, Song.self]
             var request = MusicCatalogSearchRequest(term: term, types: types)
             request.limit = 10
-            let found = try await request.response()
-            return SearchFindings(artists: Array(found.artists), albums: Array(found.albums),
-                                  playlists: Array(found.playlists), songs: Array(found.songs))
+            do {
+                let found = try await request.response()
+                return SearchFindings(artists: Array(found.artists), albums: Array(found.albums),
+                                      playlists: Array(found.playlists), songs: Array(found.songs))
+            } catch is DecodingError {
+                // The search request sometimes comes back with nothing in
+                // it at all. Ask Apple Music the same thing directly.
+                return try await direct(term: term).findings
+            }
         case .library:
             let types: [any MusicLibrarySearchable.Type] = [Artist.self, Album.self, Playlist.self, Song.self]
             var request = MusicLibrarySearchRequest(term: term, types: types)
@@ -576,6 +582,44 @@ struct SearchFindings {
             return SearchFindings(artists: Array(found.artists), albums: Array(found.albums),
                                   playlists: Array(found.playlists), songs: Array(found.songs))
         }
+    }
+}
+
+extension SearchFindings {
+    /// The answer to a search asked of the Apple Music web service itself.
+    struct Direct {
+        var findings = SearchFindings()
+        var status = 0
+        var bytes = 0
+    }
+
+    private struct Page: Decodable {
+        struct Results: Decodable {
+            var artists: MusicItemCollection<Artist>?
+            var albums: MusicItemCollection<Album>?
+            var playlists: MusicItemCollection<Playlist>?
+            var songs: MusicItemCollection<Song>?
+        }
+        var results: Results
+    }
+
+    static func direct(term: String) async throws -> Direct {
+        let country = try await MusicDataRequest.currentCountryCode
+        var parts = URLComponents(string: "https://api.music.apple.com/v1/catalog/\(country)/search")!
+        parts.queryItems = [URLQueryItem(name: "term", value: term),
+                            URLQueryItem(name: "types", value: "artists,albums,playlists,songs"),
+                            URLQueryItem(name: "limit", value: "10")]
+        guard let url = parts.url else { throw URLError(.badURL) }
+        let response = try await MusicDataRequest(urlRequest: URLRequest(url: url)).response()
+        var answer = Direct(status: response.urlResponse.statusCode, bytes: response.data.count)
+        // Nothing found comes back as an empty page, which is not an error.
+        guard !response.data.isEmpty else { return answer }
+        let page = try JSONDecoder().decode(Page.self, from: response.data)
+        answer.findings = SearchFindings(artists: Array(page.results.artists ?? []),
+                                         albums: Array(page.results.albums ?? []),
+                                         playlists: Array(page.results.playlists ?? []),
+                                         songs: Array(page.results.songs ?? []))
+        return answer
     }
 }
 
