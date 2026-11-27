@@ -274,8 +274,9 @@ final class PlayerModel: ObservableObject {
 
     /// Ejects whatever is in the deck and drops the new tape in. With
     /// `autoPlay` it then presses play; without, it waits for the play key or
-    /// for the phone to be closed.
-    func insert(_ tape: Tape, autoPlay: Bool = true) {
+    /// for the phone to be closed. With `startingAt`, the tape is wound on to
+    /// that track first, on whichever side it is recorded.
+    func insert(_ tape: Tape, autoPlay: Bool = true, startingAt trackID: MusicItemID? = nil) {
         guard !swapping else { return }
         swapping = true
         lastKeyPress = Date()
@@ -290,15 +291,26 @@ final class PlayerModel: ObservableObject {
             }
             do {
                 let loaded = try await loadSides(of: tape)
-                guard let first = loaded.firstIndex(where: { !$0.isBlank }) else {
+                guard var first = loaded.firstIndex(where: { !$0.isBlank }) else {
                     errorMessage = "That tape has nothing on it."
                     return
+                }
+                var startIndex = 0
+                if let trackID {
+                    for (number, side) in loaded.enumerated() {
+                        if let found = side.index(of: trackID) {
+                            first = number
+                            startIndex = found
+                            break
+                        }
+                    }
                 }
                 sides = loaded
                 sideIndex = first
                 sideEnded = false
-                progress = 0
-                trackIndex = 0
+                let side = loaded[first]
+                progress = side.duration > 0 ? side.start(of: startIndex) / side.duration : 0
+                trackIndex = startIndex
                 tapeTitle = tape.title
                 tapeSubtitle = tape.subtitle
                 printedLabel = tape.hasPrintedLabel
@@ -310,7 +322,7 @@ final class PlayerModel: ObservableObject {
                 elapsed = 0
                 duration = 0
                 lastEntryID = nil
-                setQueue(side: sides[first], startAt: 0)
+                setQueue(side: sides[first], startAt: startIndex)
                 sounds.play(.insert)
                 Haptics.seat()
                 Task {
@@ -548,6 +560,7 @@ final class PlayerModel: ObservableObject {
             held += 0.1
             // Seconds of tape per second: slow off the mark, then quick.
             let rate = min(45, 12 + held * 14)
+            sounds.setWindSpeed((rate - 12) / 33)
             windPosition += (forward ? 1 : -1) * rate * 0.1
             let hitEnd = windPosition <= 0 || windPosition >= side.duration
             windPosition = min(max(windPosition, 0), side.duration)
@@ -653,7 +666,8 @@ final class PlayerModel: ObservableObject {
     private func motionChanged(from old: TapeMotion) {
         switch motion {
         case .playing: sounds.setLoop(.hiss)
-        case .fastForward, .rewind: sounds.setLoop(.whir)
+        case .fastForward: sounds.setLoop(.whir)
+        case .rewind: sounds.setLoop(.reverse)
         case .paused, .stopped: sounds.setLoop(nil)
         }
         pausedSince = motion == .paused ? Date() : nil

@@ -8,7 +8,7 @@ import AVFoundation
 /// by the silent switch.
 final class TapeSounds {
     enum Effect { case keyDown, keyUp, eject, insert }
-    enum Loop { case hiss, whir }
+    enum Loop { case hiss, whir, reverse }
 
     var enabled = true {
         didSet { applyLoop() }
@@ -36,6 +36,8 @@ final class TapeSounds {
     private let engine = AVAudioEngine()
     private let fxNode = AVAudioPlayerNode()
     private let loopNode = AVAudioPlayerNode()
+    /// Speeds the winding sounds up as the reels gather speed.
+    private let varispeed = AVAudioUnitVarispeed()
     private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
     private var effects: [Effect: AVAudioPCMBuffer] = [:]
     private var loops: [Loop: AVAudioPCMBuffer] = [:]
@@ -46,8 +48,10 @@ final class TapeSounds {
     init() {
         engine.attach(fxNode)
         engine.attach(loopNode)
+        engine.attach(varispeed)
         engine.connect(fxNode, to: engine.mainMixerNode, format: format)
-        engine.connect(loopNode, to: engine.mainMixerNode, format: format)
+        engine.connect(loopNode, to: varispeed, format: format)
+        engine.connect(varispeed, to: engine.mainMixerNode, format: format)
 
         effects[.keyDown] = buffer(Self.keyDown())
         effects[.keyUp] = buffer(Self.keyUp())
@@ -55,6 +59,14 @@ final class TapeSounds {
         effects[.insert] = buffer(Self.insert())
         loops[.hiss] = buffer(Self.hiss())
         loops[.whir] = buffer(Self.whir())
+        loops[.reverse] = buffer(Self.reverse())
+    }
+
+    /// How fast the tape is being wound, 0 just off the mark to 1 at full
+    /// speed. The winding sounds rise in pitch with it.
+    func setWindSpeed(_ speed: Double) {
+        let clamped = min(max(speed, 0), 1)
+        varispeed.rate = Float(1 + clamped * 0.9)
     }
 
     func play(_ effect: Effect) {
@@ -66,6 +78,7 @@ final class TapeSounds {
     func setLoop(_ loop: Loop?) {
         guard loop != currentLoop else { return }
         currentLoop = loop
+        varispeed.rate = 1
         applyLoop()
     }
 
@@ -74,7 +87,11 @@ final class TapeSounds {
         var volume: Float = 1
         if enabled, let loop = currentLoop, hissEnabled || loop != .hiss {
             wanted = loops[loop]
-            volume = loop == .hiss ? 0.5 : 0.9
+            switch loop {
+            case .hiss: volume = 0.5
+            case .whir: volume = 0.9
+            case .reverse: volume = 1.0
+            }
         }
         guard wanted !== playingLoop else { return }
         guard let wanted, start() else {
@@ -192,6 +209,73 @@ final class TapeSounds {
             let flutter = 0.7 + 0.3 * sin(2 * .pi * 24 * t)
             let whine = sin(2 * .pi * 880 * t) * 0.03 + sin(2 * .pi * 1320 * t) * 0.015
             s[i] = Float(low * 0.22 * flutter + whine)
+        }
+        return s
+    }
+
+    /// Rewinding with the tape against the heads: music running backwards
+    /// and fast. Every note swells up out of nothing and stops dead, the way
+    /// a played note sounds reversed, over garbled backwards voices and the
+    /// motor underneath. Apple Music's own audio cannot be reached by an app,
+    /// so the music here is made up. Loops seamlessly.
+    private static func reverse() -> [Float] {
+        let length = 2.4
+        var s = silence(length)
+        let count = s.count
+        // A minor pentatonic, up an octave and a half for the tape speed
+        let scale = [440.0, 523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.7, 1318.5]
+        var rng = SystemRandomNumberGenerator()
+
+        // Notes, each laid down reversed: a rising swell cut off sharply
+        var start = 0.0
+        while start < length {
+            let duration = Double.random(in: 0.09...0.22, using: &rng)
+            let freq = scale[Int.random(in: 0..<scale.count, using: &rng)]
+            let gain = Double.random(in: 0.05...0.11, using: &rng)
+            let first = Int(start * rate)
+            let frames = Int(duration * rate)
+            for k in 0..<frames {
+                let i = (first + k) % count // wrap so the loop has no seam
+                let t = Double(k) / rate
+                let left = duration - t
+                // A pluck decays as exp(-t * 18); reversed, it grows into the cut.
+                let envelope = exp(-left * 18) * min(1, left * 400)
+                let phase = 2 * .pi * freq * t
+                let tone = sin(phase) + 0.45 * sin(2 * phase) + 0.25 * sin(3 * phase)
+                s[i] += Float(gain * envelope * tone)
+            }
+            start += Double.random(in: 0.05...0.12, using: &rng)
+        }
+
+        // Backwards voices: filtered noise in syllables that swell and stop
+        var band = 0.0
+        var low = 0.0
+        var syllable = 0.0
+        var syllableLength = 0.12
+        for i in 0..<count {
+            let t = Double(i) / rate
+            syllable += 1 / rate
+            if syllable >= syllableLength {
+                syllable = 0
+                syllableLength = Double.random(in: 0.07...0.16, using: &rng)
+            }
+            let left = syllableLength - syllable
+            let shape = exp(-left * 22) * min(1, left * 300)
+            let noise = Double.random(in: -1...1, using: &rng)
+            // A rough band pass that wanders like a vowel
+            let centre = 0.10 + 0.06 * sin(2 * .pi * 3.3 * t)
+            low += (noise - low) * centre
+            band += (low - band) * 0.35
+            s[i] += Float((low - band) * shape * 0.22)
+        }
+
+        // The motor and the tape rubbing past the heads
+        var rumble = 0.0
+        for i in 0..<count {
+            let t = Double(i) / rate
+            rumble += (Double.random(in: -1...1, using: &rng) - rumble) * 0.12
+            let flutter = 0.8 + 0.2 * sin(2 * .pi * 20 * t)
+            s[i] += Float(rumble * 0.07 * flutter + sin(2 * .pi * 880 * t) * 0.008)
         }
         return s
     }

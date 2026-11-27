@@ -8,6 +8,8 @@ enum Haptics {
     private static let light = UIImpactFeedbackGenerator(style: .light)
     private static let heavy = UIImpactFeedbackGenerator(style: .heavy)
     private static let soft = UIImpactFeedbackGenerator(style: .soft)
+    private static let medium = UIImpactFeedbackGenerator(style: .medium)
+    private static let notch = UIImpactFeedbackGenerator(style: .rigid)
 
     /// Where the on/off setting is kept. Settings writes it; this reads it.
     static let settingKey = Prefs.haptics
@@ -18,20 +20,28 @@ enum Haptics {
         rigid.prepare()
         light.prepare()
         heavy.prepare()
+        medium.prepare()
+        notch.prepare()
     }
 
-    /// A key driven down to its latch.
+    /// A key driven down to its latch: a heavy thud as it gives, then the
+    /// sharp knock of it hitting the bottom.
     static func keyDown() {
         guard on else { return }
-        rigid.impactOccurred(intensity: 1.0)
-        light.prepare()
+        heavy.impactOccurred(intensity: 1.0)
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 45_000_000)
+            rigid.impactOccurred(intensity: 1.0)
+            medium.prepare()
+            heavy.prepare()
+        }
     }
 
     /// A key springing back up.
     static func keyUp() {
         guard on else { return }
-        light.impactOccurred(intensity: 0.7)
-        rigid.prepare()
+        medium.impactOccurred(intensity: 0.9)
+        heavy.prepare()
     }
 
     /// The cassette door opening or shutting.
@@ -46,10 +56,11 @@ enum Haptics {
         rigid.impactOccurred(intensity: 0.6)
     }
 
-    /// One notch of the volume fader.
+    /// The volume fader clicking into a notch.
     static func detent() {
         guard on else { return }
-        light.impactOccurred(intensity: 0.4)
+        notch.impactOccurred(intensity: 0.85)
+        notch.prepare()
     }
 
     /// One beat of the motor while the tape winds.

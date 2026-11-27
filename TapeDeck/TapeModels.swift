@@ -225,6 +225,14 @@ struct TapeSide {
         duration = entries.reduce(0) { $0 + $1.duration }
     }
 
+    /// Where a track or song sits on this side, if it is on it.
+    func index(of id: MusicItemID) -> Int? {
+        switch items {
+        case .tracks(let tracks): return tracks.firstIndex { $0.id == id }
+        case .songs(let songs): return songs.firstIndex { $0.id == id }
+        }
+    }
+
     /// How far into the side a track starts.
     func start(of index: Int) -> TimeInterval {
         entries.prefix(max(0, index)).reduce(0) { $0 + $1.duration }

@@ -67,8 +67,9 @@ struct VolumeHost: UIViewRepresentable {
 }
 
 /// A vertical volume fader, as on a tape deck: a groove with tick marks and a
-/// cap you slide. Up is louder. It clicks under the thumb as it passes each
-/// step, and it follows the phone's volume buttons.
+/// cap you slide. Up is louder. The cap clicks into each engraved notch as it
+/// is slid, with a tap under the thumb, and it follows the phone's volume
+/// buttons.
 struct VolumeFader: View {
     @ObservedObject var volume: SystemVolume
     /// A tape is playing, so the level lights should move.
@@ -82,7 +83,8 @@ struct VolumeFader: View {
 
     private let capHeight: CGFloat = 22
     private let capWidth: CGFloat = 38
-    private let steps = 16.0
+    /// One step per engraved notch: eleven marks, ten steps between them.
+    private let steps = 10.0
 
     var body: some View {
         GeometryReader { geo in
@@ -156,14 +158,18 @@ struct VolumeFader: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { drag in
-                        let level = 1 - Double((drag.location.y - capHeight / 2) / travel)
-                        volume.set(level)
-                        let step = Int((min(max(level, 0), 1) * steps).rounded())
-                        if step != lastStep {
-                            lastStep = step
-                            Haptics.detent()
+                        let raw = 1 - Double((drag.location.y - capHeight / 2) / travel)
+                        let step = Int((min(max(raw, 0), 1) * steps).rounded())
+                        if lastStep < 0 { lastStep = Int((volume.level * steps).rounded()) }
+                        guard step != lastStep else { return }
+                        lastStep = step
+                        // The cap jumps into the notch, as a detented fader does.
+                        withAnimation(.spring(response: 0.12, dampingFraction: 0.75)) {
+                            volume.set(Double(step) / steps)
                         }
+                        Haptics.detent()
                     }
+                    .onEnded { _ in lastStep = -1 }
             )
             .background(
                 VolumeHost(view: volume.volumeView)

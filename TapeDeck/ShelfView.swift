@@ -2,8 +2,10 @@ import SwiftUI
 import MusicKit
 import UIKit
 
-/// The tape shelf: your Apple Music playlists and albums as cassette spines,
-/// plus a search of the Apple Music catalogue.
+/// The tape shelf: your mixtapes, then your Apple Music library browsed the
+/// way the Music app does it (playlists, artists, albums, songs), and a
+/// search of Apple Music or your library. Albums and playlists sit on the
+/// shelf as cassette spines.
 struct ShelfView: View {
     @EnvironmentObject private var model: PlayerModel
     /// False on the open phone, where the tape waits for the phone to close.
@@ -11,6 +13,10 @@ struct ShelfView: View {
     var onPick: () -> Void
 
     @State private var term = ""
+    @State private var scope = SearchScope.catalog
+    @State private var findings = SearchFindings()
+    @State private var searching = false
+    @State private var recent: [Album] = []
     /// The mixtape being recorded or edited, if any.
     @State private var editing: Mixtape?
     @State private var showSettings = false
@@ -50,35 +56,90 @@ struct ShelfView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
             }
-            .background(Color(red: 0.06, green: 0.02, blue: 0.15).ignoresSafeArea())
+            .background(ShelfStyle.background.ignoresSafeArea())
         }
+        .environment(\.pickTape, PickTape { tape, track in
+            model.insert(tape, autoPlay: playOnPick, startingAt: track)
+            onPick()
+        })
     }
+
+    private var isSearching: Bool { !term.trimmingCharacters(in: .whitespaces).isEmpty }
 
     private var shelf: some View {
         List {
-            if !term.trimmingCharacters(in: .whitespaces).isEmpty {
-                section("Apple Music", tapes: model.searchResults, empty: "Searching…")
-            } else {
-                if model.isLoadingLibrary && model.libraryPlaylists.isEmpty && model.libraryAlbums.isEmpty {
-                    ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
+            if isSearching {
+                if findings.isEmpty {
+                    Text(searching ? "Searching…" : "No results.")
+                        .foregroundColor(.secondary)
+                        .listRowBackground(Color.clear)
                 }
+                SearchResultsSections(findings: findings, scope: scope)
+            } else {
                 mixtapes
-                section("Your Playlists", tapes: model.libraryPlaylists, empty: nil)
-                section("Your Albums", tapes: model.libraryAlbums, empty: nil)
+                Section {
+                    ForEach(LibraryCategory.allCases) { category in
+                        CategoryRow(category: category)
+                    }
+                } header: {
+                    ShelfStyle.header("Library")
+                }
+                if !recent.isEmpty {
+                    Section {
+                        ForEach(recent) { album in
+                            CollectionLink(tape: .album(album)).shelfRow()
+                        }
+                    } header: {
+                        ShelfStyle.header("Recently Added")
+                    }
+                }
             }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .searchable(text: $term, placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "Search Apple Music")
-        .task(id: term) {
+                    prompt: scope == .catalog ? "Search Apple Music" : "Search your library")
+        .searchScopes($scope, activation: .onSearchPresentation) {
+            ForEach(SearchScope.allCases) { scope in
+                Text(scope.rawValue).tag(scope)
+            }
+        }
+        .task(id: "\(scope.rawValue)|\(term)") {
+            let wanted = term.trimmingCharacters(in: .whitespaces)
+            guard !wanted.isEmpty else {
+                findings = SearchFindings()
+                return
+            }
+            searching = true
             // Wait for a pause in typing before searching.
             do { try await Task.sleep(nanoseconds: 400_000_000) } catch { return }
-            await model.search(term)
+            do {
+                let found = try await SearchFindings.look(for: wanted, in: scope)
+                guard !Task.isCancelled else { return }
+                findings = found
+            } catch {
+                if !Task.isCancelled { findings = SearchFindings() }
+            }
+            searching = false
         }
-        .refreshable { await model.loadLibrary() }
+        .task { await loadRecent() }
+        .refreshable {
+            await loadRecent()
+            await model.loadLibrary()
+        }
         .sheet(item: $editing) { mixtape in
             MixtapeEditor(mixtape: mixtape)
+        }
+    }
+
+    /// The albums most lately added to the library, as on the Music app's
+    /// library page.
+    private func loadRecent() async {
+        var request = MusicLibraryRequest<Album>()
+        request.sort(by: \.libraryAddedDate, ascending: false)
+        request.limit = 12
+        if let items = try? await request.response().items {
+            recent = Array(items)
         }
     }
 
@@ -135,34 +196,6 @@ struct ShelfView: View {
                 .font(.system(size: 11, weight: .bold))
                 .tracking(1.5)
                 .foregroundColor(Skin.cyan)
-        }
-    }
-
-    @ViewBuilder
-    private func section(_ title: String, tapes: [Tape], empty: String?) -> some View {
-        if !tapes.isEmpty || empty != nil {
-            Section {
-                if tapes.isEmpty, let empty {
-                    Text(empty).foregroundColor(.secondary).listRowBackground(Color.clear)
-                }
-                ForEach(tapes) { tape in
-                    Button {
-                        model.insert(tape, autoPlay: playOnPick)
-                        onPick()
-                    } label: {
-                        TapeSpine(tape: tape)
-                    }
-                    .buttonStyle(.plain)
-                    .listRowInsets(EdgeInsets(top: 3, leading: 12, bottom: 3, trailing: 12))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                }
-            } header: {
-                Text(title.uppercased())
-                    .font(.system(size: 11, weight: .bold))
-                    .tracking(1.5)
-                    .foregroundColor(Skin.cyan)
-            }
         }
     }
 

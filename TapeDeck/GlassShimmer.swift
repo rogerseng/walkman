@@ -3,21 +3,30 @@ import SwiftUI
 
 /// Reads how the phone is being held: tilt left/right and forward/back, each
 /// as -1...1 around a natural holding angle, smoothed so the glare glides.
+/// It only reports a change once the phone has really moved, so a phone held
+/// still costs nothing to draw.
+@Observable
 final class TiltSensor {
-    private let manager = CMMotionManager()
+    @ObservationIgnored private let manager = CMMotionManager()
+    @ObservationIgnored private var smoothRoll = 0.0
+    @ObservationIgnored private var smoothPitch = 0.0
     private(set) var roll = 0.0
     private(set) var pitch = 0.0
 
     func start() {
         guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
-        manager.deviceMotionUpdateInterval = 1.0 / 60.0
+        manager.deviceMotionUpdateInterval = 1.0 / 30.0
         manager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
             guard let self, let motion else { return }
             let targetRoll = max(-1, min(1, motion.attitude.roll / 0.6))
             // A phone in the hand leans back about 45 degrees; call that level.
             let targetPitch = max(-1, min(1, (motion.attitude.pitch - 0.8) / 0.6))
-            self.roll += (targetRoll - self.roll) * 0.18
-            self.pitch += (targetPitch - self.pitch) * 0.18
+            self.smoothRoll += (targetRoll - self.smoothRoll) * 0.2
+            self.smoothPitch += (targetPitch - self.smoothPitch) * 0.2
+            if abs(self.smoothRoll - self.roll) > 0.004 || abs(self.smoothPitch - self.pitch) > 0.004 {
+                self.roll = self.smoothRoll
+                self.pitch = self.smoothPitch
+            }
         }
     }
 
@@ -26,10 +35,10 @@ final class TiltSensor {
     }
 }
 
-/// Glare on the clear case. It is driven only by how the phone is moved: a
-/// broad reflection and a thin bright streak slide across as it is tilted
-/// left and right, and a soft hot spot travels with both tilts, the way a
-/// ceiling light does on a real piece of plastic. With Reduce Motion on, or
+/// Glare on the clear case, kept faint. It is driven only by how the phone is
+/// moved: a broad sheen and a thin streak slide across as it is tilted left
+/// and right, and a soft hot spot travels with both tilts, the way a ceiling
+/// light does on a real piece of plastic. With Reduce Motion on, or
 /// with no motion sensor, the glare stays still.
 struct GlassShimmer: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -40,25 +49,26 @@ struct GlassShimmer: View {
     var strength = 1.0
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60.0,
-                                paused: still || scenePhase != .active)) { _ in
-            GeometryReader { geo in
-                let size = geo.size
-                ZStack {
-                    band(at: 0.35 + tilt.roll * 0.65, width: 0.50, strength: 0.13, in: size)
-                    band(at: 0.62 + tilt.roll * 0.95, width: 0.10, strength: 0.30, in: size)
-                    // Hot spot
-                    Circle()
-                        .fill(RadialGradient(colors: [Color.white.opacity(min(1, 0.26 * strength)), .clear],
-                                             center: .center, startRadius: 0,
-                                             endRadius: size.width * 0.45))
-                        .frame(width: size.width * 0.9, height: size.width * 0.9)
-                        .position(x: size.width * (0.5 - tilt.roll * 0.55),
-                                  y: size.height * (0.32 + tilt.pitch * 0.45))
-                }
-                .frame(width: size.width, height: size.height)
-                .clipped()
+        GeometryReader { geo in
+            let size = geo.size
+            let roll = still ? 0 : tilt.roll
+            let pitch = still ? 0 : tilt.pitch
+            ZStack {
+                band(at: 0.35 + roll * 0.45, width: 0.55, strength: 0.05, in: size)
+                band(at: 0.62 + roll * 0.6, width: 0.08, strength: 0.09, in: size)
+                // Hot spot
+                Circle()
+                    .fill(RadialGradient(colors: [Color.white.opacity(min(1, 0.09 * strength)), .clear],
+                                         center: .center, startRadius: 0,
+                                         endRadius: size.width * 0.45))
+                    .frame(width: size.width * 0.9, height: size.width * 0.9)
+                    .position(x: size.width * (0.5 - roll * 0.4),
+                              y: size.height * (0.32 + pitch * 0.3))
             }
+            .frame(width: size.width, height: size.height)
+            .clipped()
+            // Flattened into one layer, so a tilt redraws a single image.
+            .drawingGroup()
         }
         .allowsHitTesting(false)
         .onAppear { if !still { tilt.start() } }
