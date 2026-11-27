@@ -18,6 +18,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
     @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
     @AppStorage(Prefs.introSeen) private var introSeen = true
+    @AppStorage(Prefs.player) private var player = "tape"
 
     @State private var backup = BackupDocument(data: Data())
     @State private var savingBackup = false
@@ -35,6 +36,18 @@ struct SettingsView: View {
                     Text("Sound")
                 } footer: {
                     Text("Deck sounds are the key clunks, the door and the motor while winding. Hiss is the soft noise under the music. They play over the music and are not silenced by the mute switch.")
+                }
+
+                Section {
+                    Picker("Player", selection: $player) {
+                        Text("Tape player").tag("tape")
+                        Text("MP3 player").tag("mp3")
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Player")
+                } footer: {
+                    Text("The tape player shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes.")
                 }
 
                 Section("Skin") {

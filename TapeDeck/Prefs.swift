@@ -15,6 +15,8 @@ enum Prefs {
     static let iCloudSync = "iCloudSyncOn"
     /// Which skin the case wears: a `Skin` raw value.
     static let skin = "skin"
+    /// Which player the closed phone is: "tape" or "mp3".
+    static let player = "player"
     /// Set once the introduction has been seen.
     static let introSeen = "introSeen"
 

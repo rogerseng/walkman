@@ -43,9 +43,13 @@ MADE FOR FOLDING PHONES
 • Open, your tape shelf is on one side and the tape on the other. Choose one and close the phone to start it playing.
 • Works on every iPhone, not only folding ones.
 
+TWO PLAYERS IN ONE
+• Tape player: the cassette and its reels, a fader and a row of keys.
+• MP3 player: an amber display of menus and a metal jog dial. Turn to scroll, press to choose.
+
 MORE
 • The tape on your Lock Screen, with keys.
-• Two looks: smoked clear plastic, or bright yellow.
+• Two colours of case: smoked dark plastic, or bright yellow.
 • Your mixtapes and settings sync with iCloud, and can be saved to a backup file.
 
 Cassety plays music from Apple Music. An Apple Music subscription is required.

@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var showShelf = false
     @AppStorage(Prefs.introSeen) private var introSeen = false
     @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.player) private var player = "tape"
     @Environment(\.horizontalSizeClass) private var horizontalSize
     @Environment(\.verticalSizeClass) private var verticalSize
 
@@ -40,8 +41,11 @@ struct ContentView: View {
                         OpenTrayView()
                     }
                 } else if Skin.includesClickWheel, Skin(rawValue: skinName)?.isWheel == true {
-                    // The click-wheel skins have their own menus for choosing music.
-                    WheelPlayerView()
+                    // Personal builds only: the click wheel player.
+                    MenuPlayerView(jog: false)
+                } else if player == "mp3" {
+                    // The MP3 player has its own menus for choosing music.
+                    MenuPlayerView(jog: true)
                 } else {
                     DeckView(openShelf: { showShelf = true })
                         .sheet(isPresented: $showShelf) {

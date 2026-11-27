@@ -20,7 +20,7 @@ final class CloudSync {
                               Prefs.playOnClose, Prefs.autoFlip, Prefs.lockScreenTape]
 
     /// Settings that are words rather than switches.
-    static let syncedChoices = [Prefs.skin]
+    static let syncedChoices = [Prefs.skin, Prefs.player]
 
     var isSignedIn: Bool { FileManager.default.ubiquityIdentityToken != nil }
     var isOn: Bool { Prefs.isOn(Prefs.iCloudSync) }

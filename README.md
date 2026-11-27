@@ -22,26 +22,25 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 
 The first time it opens, Cassety shows a four page introduction: what it is, how the deck works, connecting Apple Music, and a few starting choices (iCloud sync, the lock screen tape, and the skin). It can be skipped, and shown again from Settings.
 
+## Tape player or MP3 player
+
+The closed phone can be either, chosen in Settings or the introduction. Both play the same tapes, with the same two sides, flipping and mixtapes.
+
+* Tape player: the cassette and its reels behind a window, with the volume fader and keys beside it.
+* MP3 player: a display of menus and a jog dial. Turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The keys beside it are back, play/pause, previous, next and settings; hold previous or next to wind the tape. Menus: Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape and Settings.
+
+The MP3 player is Cassety's own design: a knurled metal dial with no buttons on it, keys set apart in the same moulding as the tape player's, and an amber display. The dial is drawn as a solid object and turns under the thumb.
+
 ## Skins
 
-Four to choose from, in Settings or the introduction.
+The colour of the case, for either player:
 
-Cassette players, which differ in the colour of the case:
+* Smoke: dark plastic. On the tape player it is smoked clear and shows the tape dimly through the casing.
+* Yellow: bright yellow with dark engraved lettering.
 
-* Smoke: dark smoked plastic that shows the tape dimly through the casing.
-* Yellow: bright, nearly solid yellow, with dark engraved lettering.
+On a pale skin a dark plate sits behind the Duo's clock so it stays readable. Skins apply to the closed screen. A new colour is one more case in `Skin.swift`.
 
-Click-wheel players, in black or silver, which replace the deck with a small screen and a wheel:
-
-* Run a thumb round the wheel to scroll a menu. While a song is showing, the wheel changes the volume.
-* The middle button chooses the highlighted line, or plays and pauses while a song is showing.
-* The top of the wheel is MENU, which goes back a level. The bottom is play/pause.
-* The left and right of the wheel are previous and next. Hold either to wind the tape.
-* Menus: Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape and Settings.
-
-Underneath, a click-wheel skin is the same tape deck: tapes still have two sides, run out and need flipping, and mixtapes work the same. The skins are in that style but are Cassety's own design. They do not use the iPod name, the Apple logo or Apple's screen graphics.
-
-On pale skins a dark plate sits behind the Duo's clock so it stays readable. Skins apply to the closed screen. A new cassette player colour is one more case in `Skin.swift`.
+Two more skins, a black and a silver click-wheel player, are in the code but switched off (`includesClickWheel` in `Skin.swift`). They resemble the iPod closely enough to risk rejection from the App Store, so they are for personal builds only.
 
 ## Settings
 
@@ -112,7 +111,7 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `SettingsView.swift` | The settings screen |
 | `Prefs.swift` | The stored settings and their defaults |
 | `Skin.swift` | The skins and their colours |
-| `WheelPlayerView.swift` | The click-wheel player: its screen, menus and wheel |
+| `MenuPlayerView.swift` | The MP3 player: its display, menus and jog dial (and the click-wheel form kept for personal builds) |
 | `OnboardingView.swift` | The first-run introduction |
 | `CloudSync.swift` | iCloud sync of mixtapes and settings, and the backup file format |
 | `VolumeFader.swift` | The vertical volume fader and its link to the system volume |

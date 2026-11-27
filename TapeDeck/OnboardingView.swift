@@ -12,6 +12,7 @@ struct OnboardingView: View {
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
     @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
     @AppStorage(Prefs.skin) private var skinName = Skin.smoke.rawValue
+    @AppStorage(Prefs.player) private var player = "tape"
     @State private var page = 0
 
     private let lastPage = 3
@@ -151,6 +152,13 @@ struct OnboardingView: View {
                 Divider().overlay(Color.white.opacity(0.15))
                 Toggle("Show the tape on the lock screen", isOn: $lockScreenTapeOn)
                     .padding(.vertical, 10)
+                Divider().overlay(Color.white.opacity(0.15))
+                Picker("Player", selection: $player) {
+                    Text("Tape player").tag("tape")
+                    Text("MP3 player").tag("mp3")
+                }
+                .pickerStyle(.segmented)
+                .padding(.vertical, 10)
                 Divider().overlay(Color.white.opacity(0.15))
                 HStack {
                     Text("Skin")
