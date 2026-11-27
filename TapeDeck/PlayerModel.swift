@@ -40,7 +40,9 @@ final class PlayerModel: ObservableObject {
     @Published private(set) var libraryAlbums: [Tape] = []
     @Published private(set) var searchResults: [Tape] = []
     @Published private(set) var isLoadingLibrary = false
-    @Published private(set) var mixtapes: [Mixtape] = MixtapeStore.load()
+    @Published private(set) var mixtapes: [Mixtape] = []
+    /// A line saying how iCloud sync stands, for the settings screen.
+    @Published private(set) var cloudStatus = ""
 
     @Published var errorMessage: String?
     @Published var soundEffectsOn: Bool {
@@ -71,6 +73,8 @@ final class PlayerModel: ObservableObject {
     private let player = ApplicationMusicPlayer.shared
     private let sounds = TapeSounds()
     private let lockScreen = LockScreenTape()
+    private let cloud = CloudSync()
+    private var library = MixtapeStore.load()
     private var sides: [TapeSide] = []
     private var trackIndex = 0
     private var pausedSince: Date?
@@ -93,6 +97,10 @@ final class PlayerModel: ObservableObject {
         soundEffectsOn = stored ?? true
         sounds.enabled = soundEffectsOn
         Haptics.warmUp()
+        mixtapes = library.mixtapes
+        cloud.onRemoteChange = { [weak self] in self?.syncWithCloud() }
+        cloud.start()
+        syncWithCloud()
 
         Task { [weak self] in
             while !Task.isCancelled {
@@ -175,17 +183,75 @@ final class PlayerModel: ObservableObject {
     }
 
     func save(_ mixtape: Mixtape) {
-        if let index = mixtapes.firstIndex(where: { $0.id == mixtape.id }) {
-            mixtapes[index] = mixtape
-        } else {
-            mixtapes.insert(mixtape, at: 0)
-        }
-        MixtapeStore.save(mixtapes)
+        library.put(mixtape)
+        libraryChanged()
     }
 
     func delete(_ mixtape: Mixtape) {
-        mixtapes.removeAll { $0.id == mixtape.id }
-        MixtapeStore.save(mixtapes)
+        library.remove(mixtape)
+        libraryChanged()
+    }
+
+    private func libraryChanged() {
+        mixtapes = library.mixtapes
+        MixtapeStore.save(library)
+        cloud.push(library)
+        cloudStatus = cloud.status
+    }
+
+    // MARK: iCloud and backup
+
+    /// Brings this device and iCloud into line: whatever either has that the
+    /// other lacks is kept, and the newer copy of anything they share wins.
+    func syncWithCloud() {
+        if cloud.isOn {
+            cloud.pullSettings()
+            cloud.pushSettings()
+            let sounds = Prefs.isOn(Prefs.sounds)
+            if soundEffectsOn != sounds { soundEffectsOn = sounds }
+            if let remote = cloud.remoteLibrary() {
+                let merged = library.merged(with: remote)
+                if merged != library {
+                    library = merged
+                    mixtapes = library.mixtapes
+                    MixtapeStore.save(library)
+                }
+            }
+            cloud.push(library)
+        }
+        cloudStatus = cloud.status
+    }
+
+    /// Everything worth keeping, as the contents of a backup file.
+    func makeBackup() -> Data? {
+        var settings: [String: Bool] = [:]
+        for key in CloudSync.syncedPrefs { settings[key] = Prefs.isOn(key) }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        return try? encoder.encode(Backup(library: library, settings: settings))
+    }
+
+    /// Restores from a backup file. Settings are set to what the backup holds.
+    /// Mixtapes are merged in: tapes in the backup come back, and tapes made
+    /// since are kept. Returns how many mixtapes the backup held.
+    func restore(from data: Data) throws -> Int {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let backup = try decoder.decode(Backup.self, from: data)
+        for (key, value) in backup.settings where CloudSync.syncedPrefs.contains(key) {
+            UserDefaults.standard.set(value, forKey: key)
+        }
+        let sounds = Prefs.isOn(Prefs.sounds)
+        if soundEffectsOn != sounds { soundEffectsOn = sounds }
+        // A restore is a deliberate act: bring back tapes even if they were
+        // deleted after the backup was made.
+        var incoming = backup.library
+        incoming.deleted = [:]
+        for tape in incoming.mixtapes { library.deleted[tape.id.uuidString] = nil }
+        library = library.merged(with: incoming)
+        libraryChanged()
+        return backup.library.mixtapes.count
     }
 
     // MARK: Loading tapes

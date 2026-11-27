@@ -1,6 +1,7 @@
 import MusicKit
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 /// Everything that can be switched, how the deck works, and what the app is.
 struct SettingsView: View {
@@ -14,6 +15,12 @@ struct SettingsView: View {
     @AppStorage(Prefs.playOnClose) private var playOnCloseOn = true
     @AppStorage(Prefs.autoFlip) private var autoFlipOn = false
     @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
+    @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
+
+    @State private var backup = BackupDocument(data: Data())
+    @State private var savingBackup = false
+    @State private var choosingBackup = false
+    @State private var backupNote: String?
 
     var body: some View {
         NavigationStack {
@@ -55,6 +62,24 @@ struct SettingsView: View {
                     Text("To show it, Cassety stays awake in the background while a tape is in.")
                 }
 
+                Section {
+                    Toggle("Sync with iCloud", isOn: $iCloudOn)
+                    LabeledContent("Status", value: model.cloudStatus)
+                    Button("Save a backup file") {
+                        if let data = model.makeBackup() {
+                            backup = BackupDocument(data: data)
+                            savingBackup = true
+                        }
+                    }
+                    Button("Restore from a backup file") {
+                        choosingBackup = true
+                    }
+                } header: {
+                    Text("iCloud and backup")
+                } footer: {
+                    Text("Sync keeps your mixtapes and these settings the same on every device signed in to your iCloud account. A backup file holds the same things and can be saved anywhere. Restoring brings back the tapes in the file and keeps any you have made since. Your Apple Music library is kept by Apple Music itself.")
+                }
+
                 Section("Apple Music") {
                     switch model.authStatus {
                     case .authorized:
@@ -91,11 +116,47 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: iCloudOn) { _, _ in
+                model.syncWithCloud()
+            }
+            .fileExporter(isPresented: $savingBackup, document: backup, contentType: .json,
+                          defaultFilename: "Cassety backup") { result in
+                if case .failure(let error) = result {
+                    backupNote = "The backup could not be saved. \(error.localizedDescription)"
+                }
+            }
+            .fileImporter(isPresented: $choosingBackup, allowedContentTypes: [.json]) { result in
+                restore(result)
+            }
+            .alert("Backup", isPresented: backupNoteShown) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(backupNote ?? "")
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }
+        }
+    }
+
+    private var backupNoteShown: Binding<Bool> {
+        Binding(get: { backupNote != nil }, set: { if !$0 { backupNote = nil } })
+    }
+
+    private func restore(_ result: Result<URL, Error>) {
+        do {
+            let url = try result.get()
+            // Files outside the app need permission to be opened.
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            let count = try model.restore(from: Data(contentsOf: url))
+            backupNote = count == 1
+                ? "Restored your settings and 1 mixtape."
+                : "Restored your settings and \(count) mixtapes."
+        } catch {
+            backupNote = "That file could not be restored. \(error.localizedDescription)"
         }
     }
 

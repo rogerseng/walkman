@@ -27,6 +27,8 @@ struct Mixtape: Codable, Identifiable {
     var minutesPerSide = 45
     var sideA: [MixSong] = []
     var sideB: [MixSong] = []
+    /// When it was last changed. Decides which copy wins when two devices differ.
+    var modified = Date()
 
     var lengthName: String { "C-\(minutesPerSide * 2)" }
     var sideLength: TimeInterval { Double(minutesPerSide) * 60 }
@@ -46,20 +48,84 @@ struct Mixtape: Codable, Identifiable {
     }
 }
 
-/// Keeps mixtapes in a small file in the app's documents folder.
+extension Mixtape {
+    /// Reads a mixtape saved by any version, filling in what older ones lacked.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        name = try values.decodeIfPresent(String.self, forKey: .name) ?? ""
+        minutesPerSide = try values.decodeIfPresent(Int.self, forKey: .minutesPerSide) ?? 45
+        sideA = try values.decodeIfPresent([MixSong].self, forKey: .sideA) ?? []
+        sideB = try values.decodeIfPresent([MixSong].self, forKey: .sideB) ?? []
+        modified = try values.decodeIfPresent(Date.self, forKey: .modified) ?? .distantPast
+    }
+}
+
+/// All the mixtapes, plus a note of which have been deleted and when. The
+/// note is what stops a deleted tape coming back from another device.
+struct MixtapeLibrary: Codable, Equatable {
+    var mixtapes: [Mixtape] = []
+    var deleted: [String: Date] = [:]
+
+    static func == (a: MixtapeLibrary, b: MixtapeLibrary) -> Bool {
+        a.deleted == b.deleted && a.mixtapes.map(\.id) == b.mixtapes.map(\.id)
+            && a.mixtapes.map(\.modified) == b.mixtapes.map(\.modified)
+    }
+
+    mutating func put(_ mixtape: Mixtape) {
+        var copy = mixtape
+        copy.modified = Date()
+        mixtapes.removeAll { $0.id == copy.id }
+        mixtapes.insert(copy, at: 0)
+        deleted[copy.id.uuidString] = nil
+    }
+
+    mutating func remove(_ mixtape: Mixtape) {
+        mixtapes.removeAll { $0.id == mixtape.id }
+        deleted[mixtape.id.uuidString] = Date()
+    }
+
+    /// Combines two copies of the library. For a tape both have, the one
+    /// changed most recently wins; a tape deleted after its last change stays
+    /// deleted. Nothing is lost just because one side had not heard of it.
+    func merged(with other: MixtapeLibrary) -> MixtapeLibrary {
+        var result = MixtapeLibrary()
+        result.deleted = deleted.merging(other.deleted) { max($0, $1) }
+        var newest: [UUID: Mixtape] = [:]
+        for mixtape in mixtapes + other.mixtapes {
+            if let have = newest[mixtape.id], have.modified >= mixtape.modified { continue }
+            newest[mixtape.id] = mixtape
+        }
+        result.mixtapes = newest.values
+            .filter { tape in
+                guard let gone = result.deleted[tape.id.uuidString] else { return true }
+                return tape.modified > gone
+            }
+            .sorted { $0.modified > $1.modified }
+        // Forget deletions that a later edit has overridden.
+        for tape in result.mixtapes { result.deleted[tape.id.uuidString] = nil }
+        return result
+    }
+}
+
+/// Keeps the mixtape library in a small file in the app's documents folder,
+/// which is also covered by the phone's own iCloud or computer backup.
 enum MixtapeStore {
     private static var file: URL {
         let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         return folder.appendingPathComponent("mixtapes.json")
     }
 
-    static func load() -> [Mixtape] {
-        guard let data = try? Data(contentsOf: file) else { return [] }
-        return (try? JSONDecoder().decode([Mixtape].self, from: data)) ?? []
+    static func load() -> MixtapeLibrary {
+        guard let data = try? Data(contentsOf: file) else { return MixtapeLibrary() }
+        if let library = try? JSONDecoder().decode(MixtapeLibrary.self, from: data) { return library }
+        // The first version of the file was a plain list of mixtapes.
+        let list = (try? JSONDecoder().decode([Mixtape].self, from: data)) ?? []
+        return MixtapeLibrary(mixtapes: list, deleted: [:])
     }
 
-    static func save(_ mixtapes: [Mixtape]) {
-        guard let data = try? JSONEncoder().encode(mixtapes) else { return }
+    static func save(_ library: MixtapeLibrary) {
+        guard let data = try? JSONEncoder().encode(library) else { return }
         try? data.write(to: file, options: .atomic)
     }
 }

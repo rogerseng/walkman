@@ -11,6 +11,8 @@ enum Prefs {
     static let playOnClose = "playOnCloseOn"
     static let autoFlip = "autoFlipOn"
     static let lockScreenTape = "lockScreenTapeOn"
+    /// Kept on each device separately, so one can opt out without the others.
+    static let iCloudSync = "iCloudSyncOn"
 
     static func isOn(_ key: String) -> Bool {
         UserDefaults.standard.object(forKey: key) as? Bool ?? (key != autoFlip)

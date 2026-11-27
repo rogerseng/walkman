@@ -32,8 +32,18 @@ Opened from the black key at the foot of the column.
 | Play when the phone is closed | A tape chosen with the phone open starts when it shuts | On |
 | Flip at the end of a side | Turns the tape over by itself when a side runs out | Off |
 | Show the tape on the lock screen | The Live Activity, and staying awake in the background to feed it | On |
+| Sync with iCloud | Keeps mixtapes and settings the same across your devices | On |
 
 Settings also shows whether Apple Music is connected, with a button to connect or to open the system settings, and a short guide to the deck.
+
+## iCloud sync and backup
+
+* Sync. Mixtapes and settings are kept in iCloud's key-value store and merged on every device signed in to the same account. If two devices have changed the same mixtape, the more recent change wins. A deleted mixtape stays deleted everywhere. The sync switch itself is per device.
+* Backup file. Settings has "Save a backup file", which writes one JSON file holding the mixtapes and settings to wherever you choose: Files, iCloud Drive, AirDrop and so on. "Restore from a backup file" reads one back. Restoring sets the settings to the backup's and brings back its mixtapes, keeping any made since.
+* The mixtape file also lives in the app's documents folder, so the phone's own iCloud or computer backup includes it.
+* Not covered: your Apple Music library and playlists, which Apple Music keeps itself, and which tape was in the deck.
+
+Sync needs the iCloud capability on the app's identifier. The project carries the entitlement in `Config/TapeDeck.entitlements`; with automatic signing Xcode registers it when you pick your team.
 
 ## Running it on your iPhone
 
@@ -72,6 +82,7 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `Haptics.swift` | The taps for keys, door, fader and winding |
 | `SettingsView.swift` | The settings screen |
 | `Prefs.swift` | The stored settings and their defaults |
+| `CloudSync.swift` | iCloud sync of mixtapes and settings, and the backup file format |
 | `VolumeFader.swift` | The vertical volume fader and its link to the system volume |
 | `ShelfView.swift` | The tape shelf and search |
 | `LockScreenTape.swift` | Starts and updates the lock screen Live Activity |
