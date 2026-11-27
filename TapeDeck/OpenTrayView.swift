@@ -255,7 +255,7 @@ struct OpenTrayView: View {
     private func keyTrough(height: CGFloat) -> some View {
         let keys: [(symbol: String, word: String)] = [
             ("play.fill", "PLAY"), ("stop.fill", "STOP"), ("forward.fill", "F.FWD"),
-            ("backward.fill", "REW"), (BeamedNotes.symbol, "MUSIC"), ("gearshape.fill", "SET UP")
+            ("backward.fill", "REW"), (BeamedNotes.symbol, "MUSIC"), ("gearshape.fill", "SETTINGS")
         ]
         // The corner of the case beside the end keys, less the gap to it
         let corner: CGFloat = 20
@@ -300,7 +300,7 @@ struct OpenTrayView: View {
                 PianoKey(symbol: "gearshape.fill", label: "Settings", dark: true, height: height,
                          lowerRight: corner - 7,
                          onDown: {
-                             Haptics.keyDown()
+                             model.keyClick()
                              TransportKeys.afterKeyGoesDown { showSettings = true }
                          })
             }

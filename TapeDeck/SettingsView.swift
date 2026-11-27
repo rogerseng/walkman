@@ -30,16 +30,6 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Toggle("Deck sounds", isOn: $model.soundEffectsOn)
-                    Toggle("Tape hiss", isOn: $hissOn)
-                        .disabled(!model.soundEffectsOn)
-                } header: {
-                    Text("Sound")
-                } footer: {
-                    Text("Deck sounds are the key clunks, the door and the motor while winding. Hiss is the soft noise under the music. They play over the music and are not silenced by the mute switch.")
-                }
-
                 ForEach(PlayerKind.offered) { kind in
                     Section {
                         ThemePicker(kind: kind)
@@ -47,60 +37,9 @@ struct SettingsView: View {
                         Text(kind.title)
                     } footer: {
                         if kind == PlayerKind.offered.last {
-                            Text("The tape deck shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes, and the colours carry over to the shelf, the open phone and the lock screen.")
+                            Text("The tape deck shows the cassette and its reels. The MP3 player has a display of menus and a dial to scroll them. Both play the same tapes, and the colours carry over to the shelf and the open phone.")
                         }
                     }
-                }
-
-                Section {
-                    Toggle("Haptics", isOn: $hapticsOn)
-                    Toggle("Tap along with the music", isOn: $beatHapticsOn)
-                        .disabled(!hapticsOn)
-                    if beatHapticsOn, hapticsOn {
-                        // How hard each tap lands. Letting go gives one tap
-                        // at the chosen strength, to feel it.
-                        HStack(spacing: 12) {
-                            Text("Strength")
-                            Slider(value: $beatStrength, in: 0...1) { editing in
-                                if !editing { Haptics.beat() }
-                            }
-                            .accessibilityLabel("Tap strength")
-                        }
-                    }
-                    Toggle("Glare follows the phone", isOn: $glareOn)
-                    Toggle("Level lights in the volume slot", isOn: $levelLightsOn)
-                } header: {
-                    Text("Look and feel")
-                } footer: {
-                    Text("The level lights move in time while a tape plays, and with Tap along the phone gives a light tap on each beat. They are for show: Apple Music does not let an app listen to the music itself.")
-                }
-
-                Section {
-                    Toggle("Play when a folding phone is closed", isOn: $playOnCloseOn)
-                    Toggle("Flip at the end of a side", isOn: $autoFlipOn)
-                    Toggle("Tape runs up to speed and down to a stop", isOn: $tapeRampOn)
-                } header: {
-                    Text("Tape")
-                } footer: {
-                    Text("With flipping off, the music stops when a side runs out and you turn the tape over yourself.")
-                }
-
-                Section {
-                    Toggle("Sync with iCloud", isOn: $iCloudOn)
-                    LabeledContent("Status", value: model.cloudStatus)
-                    Button("Save a backup file") {
-                        if let data = model.makeBackup() {
-                            backup = BackupDocument(data: data)
-                            savingBackup = true
-                        }
-                    }
-                    Button("Restore from a backup file") {
-                        choosingBackup = true
-                    }
-                } header: {
-                    Text("iCloud and backup")
-                } footer: {
-                    Text("Sync keeps these settings the same on every device signed in to your iCloud account. A backup file holds the same settings and can be saved anywhere. Your music library is kept by your music service.")
                 }
 
                 // One music service at a time. Apple Music is the one built
@@ -130,7 +69,75 @@ struct SettingsView: View {
                     Text("Cassety plays from one music service at a time. Apple Music needs a subscription. To disconnect, iOS asks you to switch off Media & Apple Music for Cassety in the Settings app.")
                 }
 
-                Section("How the deck works") {
+                Section {
+                    Toggle("Deck sounds", isOn: $model.soundEffectsOn)
+                    Toggle("Tape hiss", isOn: $hissOn)
+                        .disabled(!model.soundEffectsOn)
+                } header: {
+                    Text("Sound")
+                } footer: {
+                    Text("Deck sounds are the clunk of the keys, the cassette door, and the motor while a tape winds or stops. Tape hiss is the soft noise under the music while a tape plays. Both play on top of your music and are not silenced by the mute switch, so turn them off here if you want quiet.")
+                }
+
+                Section {
+                    Toggle("Haptics", isOn: $hapticsOn)
+                    Toggle("Tap along with the music", isOn: $beatHapticsOn)
+                        .disabled(!hapticsOn)
+                    if beatHapticsOn, hapticsOn {
+                        // How hard each tap lands. Letting go gives one tap
+                        // at the chosen strength, to feel it.
+                        HStack(spacing: 12) {
+                            Text("Strength")
+                            Slider(value: $beatStrength, in: 0...1) { editing in
+                                if !editing { Haptics.beat() }
+                            }
+                            .accessibilityLabel("Tap strength")
+                        }
+                    }
+                } header: {
+                    Text("Haptics")
+                } footer: {
+                    Text("Haptics are the clicks you feel from the keys, the door and the volume fader. Tap along adds a light tap on each beat while a tape plays, on the tape deck only. It keeps a steady beat and cannot hear the music, so it will not always match the song.")
+                }
+
+                Section {
+                    Toggle("Glare follows the phone", isOn: $glareOn)
+                    Toggle("Level lights in the volume slot", isOn: $levelLightsOn)
+                } header: {
+                    Text("Display")
+                } footer: {
+                    Text("Glare is the soft light on the case that shifts as you tilt the phone. The level lights are the row of lamps in the volume slot, which move in time while a tape plays. They are for show and do not measure the music.")
+                }
+
+                Section {
+                    Toggle("Flip at the end of a side", isOn: $autoFlipOn)
+                    Toggle("Tape runs up to speed and down to a stop", isOn: $tapeRampOn)
+                    Toggle("Play when a folding phone is closed", isOn: $playOnCloseOn)
+                } header: {
+                    Text("Playback")
+                } footer: {
+                    Text("With flipping off, the music stops when a side runs out and you turn the tape over yourself. Running up and down makes the music slur for a moment as the tape starts and stops, as a real deck does. On a folding phone, a tape chosen while it is open starts when you close it.")
+                }
+
+                Section {
+                    Toggle("Sync with iCloud", isOn: $iCloudOn)
+                    LabeledContent("Status", value: model.cloudStatus)
+                    Button("Save a backup file") {
+                        if let data = model.makeBackup() {
+                            backup = BackupDocument(data: data)
+                            savingBackup = true
+                        }
+                    }
+                    Button("Restore from a backup file") {
+                        choosingBackup = true
+                    }
+                } header: {
+                    Text("iCloud and backup")
+                } footer: {
+                    Text("Sync keeps these settings the same on every device signed in to your iCloud account. A backup file holds the same settings and can be saved anywhere. Your music library is kept by your music service.")
+                }
+
+                Section {
                     Label("Play and stop are a pair. Press one in and the other pops out.", systemImage: "play.fill")
                     Label("Tap fast forward or rewind to skip a song. Hold to wind the tape.", systemImage: "forward.fill")
                     Label("Double-tap the tape to turn it over.", systemImage: "arrow.triangle.2.circlepath")
@@ -148,6 +155,10 @@ struct SettingsView: View {
                         dismiss()
                         introSeen = false
                     }
+                } header: {
+                    Text("How the deck works")
+                } footer: {
+                    Text("The tour walks you through the keys on the tape deck itself. The introduction is the short welcome shown the first time Cassety opens.")
                 }
 
                 Section {

@@ -577,7 +577,7 @@ struct DeckView: View {
             TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
                     height: height, showsLabel: false, corner: 17, symbolSize: 23,
                     onDown: {
-                        Haptics.keyDown()
+                        model.keyClick()
                         TransportKeys.afterKeyGoesDown { showSettings = true }
                     })
         }
@@ -803,7 +803,7 @@ struct TransportKeys: View {
                 TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
                         height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                         onDown: {
-                            Haptics.keyDown()
+                            model.keyClick()
                             Self.afterKeyGoesDown(onSettings)
                         })
             }

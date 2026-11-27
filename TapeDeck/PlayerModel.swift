@@ -731,6 +731,12 @@ final class PlayerModel: ObservableObject {
         }
     }
 
+    /// The clunk and click of a key that does nothing to the tape, such
+    /// as the one that opens Settings.
+    func keyClick() {
+        pressFeedback()
+    }
+
     /// Stops, letting the tape run down first.
     private func stopTape() {
         ramp { [self] in
