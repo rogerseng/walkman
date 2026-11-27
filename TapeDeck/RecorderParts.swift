@@ -197,6 +197,8 @@ struct PianoKey: View {
     @State private var pressed = false
     @GestureState private var touching = false
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
+    /// The tour lights up the key it wants pressed.
+    @Environment(\.tourKey) private var tourKey
 
     private var skin: Skin { Skin(rawValue: skinName) ?? Skin.standard }
     /// The lamp behind the play key while it is in.
@@ -250,6 +252,9 @@ struct PianoKey: View {
         .frame(height: height, alignment: .bottom)
         .shadow(color: .black.opacity(down ? 0.2 : 0.65), radius: down ? 1 : 5, y: down ? 1 : 5)
         .animation(.easeOut(duration: 0.08), value: down)
+        .overlay {
+            if tourKey == symbol { TourPulse(corner: 13) }
+        }
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 0)

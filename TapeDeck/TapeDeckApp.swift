@@ -84,11 +84,16 @@ struct ContentView: View {
                 } else if Theme.includesMP3, player == "mp3" {
                     // The MP3 player has its own menus for choosing music.
                     MenuPlayerView(jog: true)
-                } else {
+                } else if max(geo.safeAreaInsets.leading, geo.safeAreaInsets.trailing) >= 60 {
+                    // The Duo's cover screen, with its rail of keys
                     DeckView(openShelf: { showShelf = true })
                         .fullScreenCover(isPresented: $showShelf) {
                             ShelfView(onPick: { showShelf = false }, onClose: { showShelf = false })
                         }
+                } else {
+                    // Every other iPhone: the upright recorder, as on the
+                    // open Duo, fitted to a narrower screen.
+                    OpenTrayView(upright: true, compact: true)
                 }
             }
             .onChange(of: open) { wasOpen, isOpen in

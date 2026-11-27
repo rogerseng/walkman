@@ -12,8 +12,12 @@ struct OpenTrayView: View {
     /// carrying handle at the top, the same keys as the closed phone along
     /// the foot, and the shelf behind the music key.
     var upright = false
+    /// An ordinary iPhone: the same recorder on a narrower screen, where
+    /// the status bar is left clear and the hands-on tour runs.
+    var compact = false
 
     @EnvironmentObject private var model: PlayerModel
+    @EnvironmentObject private var tour: Tour
     @StateObject private var volume = SystemVolume()
     @State private var showShelf = false
     @State private var showSettings = false
@@ -67,19 +71,26 @@ struct OpenTrayView: View {
         GeometryReader { geo in
             let width = geo.size.width
             let height = geo.size.height
-            let side: CGFloat = 26
-            let keysHeight: CGFloat = 104
+            let side: CGFloat = compact ? 14 : 26
+            let keysHeight: CGFloat = compact ? 88 : 104
             // From the top: speaker, the strip of small controls, the tape,
             // what is playing, and the keys. The tape gets all the height
             // the rest can spare.
             // The speaker runs up beside the clock, into the space above
             // the safe area, so it is large without costing the tape room.
-            let above = max(0, geo.safeAreaInsets.top - 20)
-            let grilleHeight = min(120, max(80, height * 0.12))
+            // (On an ordinary iPhone the status bar runs the whole width, so
+            // the speaker starts below it.)
+            let above = compact ? 0 : max(0, geo.safeAreaInsets.top - 20)
+            let widest = min(width - side * 2 - (compact ? 0 : 8), 640)
+            // A narrow phone's tape is as wide as the case; the speaker
+            // takes the height that is left, which is a good deal.
+            let spare = height - (widest * 0.63 + 26) - 44 - 52 - (keysHeight + 42) - 5 * 12 - 6
+            let grilleHeight = compact ? max(90, spare - max(0, side - geo.safeAreaInsets.bottom))
+                                       : min(120, max(80, height * 0.12))
             // The keys sit as far from the foot of the screen as from its sides.
             let foot = max(0, side - geo.safeAreaInsets.bottom)
             let fixed = grilleHeight + 44 + 44 + (keysHeight + 42) + foot + 5 * 12
-            let doorWidth = min(width - side * 2 - 8, 640, (height - fixed - 26) / 0.63)
+            let doorWidth = min(widest, (height - fixed - 26) / 0.63)
             let doorHeight = doorWidth * 0.63 + 26
             VStack(spacing: 12) {
                 SpeakerGrille(colors: skin.isWheel ? skin.wheelBody : skin.panel,
@@ -112,6 +123,10 @@ struct OpenTrayView: View {
                 .animation(model.tapeJammed ? .spring(response: 0.35, dampingFraction: 0.8).delay(1.3)
                                             : .easeOut(duration: 0.15),
                            value: model.tapeJammed)
+                // The tour lights the tape when it is the thing to touch
+                .overlay {
+                    if compact, tour.step?.onTape == true { TourPulse(corner: 18) }
+                }
                 uprightLine
                     .frame(maxHeight: .infinity)
                 keyTrough(height: keysHeight)
@@ -121,7 +136,31 @@ struct OpenTrayView: View {
             .padding(.bottom, foot)
             .frame(width: width, height: height)
             .background(recorderCase(top: geo.safeAreaInsets.top).ignoresSafeArea())
+            // The tour's card lies over the speaker, clear of the tape and
+            // the keys it asks for.
+            .overlay(alignment: .top) {
+                if compact {
+                    TourCard(tour: tour)
+                        .frame(width: min(width - 20, 420))
+                        .padding(.top, 8)
+                }
+            }
+            .environment(\.tourKey, compact ? tour.step?.key : nil)
         }
+        // The tour moves on when the listener has really done what it asked
+        .onReceive(model.events) { event in
+            guard compact else { return }
+            switch event {
+            case .inserted: tour.completed(.chooseTape)
+            case .played: tour.completed(.play)
+            case .stopped: tour.completed(.stop)
+            case .skipped: tour.completed(.skip)
+            case .wound: tour.completed(.wind)
+            case .flipped: tour.completed(.flip)
+            }
+        }
+        .onChange(of: tour.step) { _, _ in catchUpTour() }
+        .onAppear { catchUpTour() }
         // Keeps the system volume control in the window so the fader can set it.
         .background(
             VolumeHost(view: volume.volumeView)
@@ -138,6 +177,16 @@ struct OpenTrayView: View {
         }
         .fullScreenCover(isPresented: $showSongs) {
             CurrentTapeView(onClose: { showSongs = false })
+        }
+    }
+
+    /// Moves the tour past whatever the deck is already doing.
+    private func catchUpTour() {
+        guard compact else { return }
+        switch tour.step {
+        case .chooseTape where model.hasTape: tour.completed(.chooseTape)
+        case .play where model.motion == .playing: tour.completed(.play)
+        default: break
         }
     }
 
@@ -234,7 +283,7 @@ struct OpenTrayView: View {
 
     private var controlStrip: some View {
         HStack(spacing: 12) {
-            Wordmark(size: 21)
+            Wordmark(size: compact ? 18 : 21)
                 .foregroundColor(skin.mark.opacity(1))
                 .shadow(color: skin.engravingEdge.opacity(0.6), radius: 0.3, y: skin.engravingEdgeOffset)
                 .accessibilityHidden(true)
@@ -248,12 +297,14 @@ struct OpenTrayView: View {
                 .frame(width: 9, height: 9)
                 .overlay(Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 1))
                 .shadow(color: model.motion == .playing ? theme.accentColor : .clear, radius: 5)
-            Spacer(minLength: 8)
-            Text("VOLUME")
-                .font(Typeface.displayFixed(8))
-                .tracking(1.6)
-                .foregroundColor(caseLettering)
-                .shadow(color: Color.black.opacity(0.55), radius: 0.3, y: -0.7)
+            Spacer(minLength: compact ? 2 : 8)
+            if !compact {
+                Text("VOLUME")
+                    .font(Typeface.displayFixed(8))
+                    .tracking(1.6)
+                    .foregroundColor(caseLettering)
+                    .shadow(color: Color.black.opacity(0.55), radius: 0.3, y: -0.7)
+            }
             // Laid on its side: the loud end is on the right.
             GeometryReader { room in
                 VolumeFader(volume: volume, playing: model.motion == .playing,
@@ -264,9 +315,9 @@ struct OpenTrayView: View {
                     .rotationEffect(.degrees(90))
                     .frame(width: room.size.width, height: room.size.height)
             }
-            .frame(maxWidth: 300)
+            .frame(maxWidth: compact ? 150 : 300)
         }
-        .padding(.horizontal, 6)
+        .padding(.horizontal, compact ? 2 : 6)
     }
 
     /// The keys: play, stop, fast forward, rewind, the music library and
@@ -284,8 +335,8 @@ struct OpenTrayView: View {
             HStack(spacing: 6) {
                 ForEach(keys, id: \.word) { key in
                     Text(key.word)
-                        .font(Typeface.displayFixed(9.5))
-                        .tracking(1.2)
+                        .font(Typeface.displayFixed(compact ? 7.5 : 9.5))
+                        .tracking(compact ? 0.6 : 1.2)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .frame(maxWidth: .infinity)
@@ -297,7 +348,7 @@ struct OpenTrayView: View {
             .frame(height: 16)
             .accessibilityHidden(true)
             // The keys, each its own, a finger's gap apart
-            HStack(alignment: .bottom, spacing: 6) {
+            HStack(alignment: .bottom, spacing: compact ? 4 : 6) {
                 PianoKey(symbol: "play.fill", label: "Play", accent: true,
                          latched: model.motion == .playing, height: height, lowerLeft: corner - 7,
                          onDown: { model.playKey() })
