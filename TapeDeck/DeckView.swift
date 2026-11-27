@@ -17,6 +17,7 @@ struct DeckView: View {
     /// The phone's volume, which the fader on the panel sets.
     @StateObject private var volume = SystemVolume()
     @State private var showSettings = false
+    @State private var showSongs = false
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
     var openShelf: () -> Void
 
@@ -106,6 +107,25 @@ struct DeckView: View {
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
+            // Level with the name, at the window's far corner: the songs on
+            // the tape that is in the deck
+            .overlay(alignment: .topLeading) {
+                if hasSongList {
+                    Button {
+                        Haptics.detent()
+                        showSongs = true
+                    } label: {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(skin.note)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Songs on this tape")
+                    .offset(x: window.maxX - 44, y: insets.top + 6)
+                }
+            }
             // A word in outline lettering above the window, on cases that have one
             .overlay(alignment: .topLeading) {
                 if let word = skin.caseWord {
@@ -191,6 +211,9 @@ struct DeckView: View {
         .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
         }
+        .fullScreenCover(isPresented: $showSongs) {
+            CurrentTapeView(onClose: { showSongs = false })
+        }
         // The tour moves on when the listener has really done what it asked
         .onReceive(model.events) { event in
             switch event {
@@ -206,6 +229,14 @@ struct DeckView: View {
         // picked from the shelf starts playing by itself, so play is done.
         .onChange(of: tour.step) { _, _ in catchUpTour() }
         .onAppear { catchUpTour() }
+    }
+
+    /// An album or playlist is in the deck, so there is a list of its songs.
+    private var hasSongList: Bool {
+        switch model.currentTape {
+        case .album?, .playlist?: return model.hasTape
+        default: return false
+        }
     }
 
     /// Moves the tour past whatever the deck is already doing.

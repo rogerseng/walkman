@@ -23,6 +23,8 @@ struct ShelfView: View {
     @State private var recent: [Album] = []
     @State private var showSettings = false
     @State private var showCurrent = false
+    /// The tape whose songs were last opened without being asked.
+    @State private var openedTape: String?
     @Environment(\.playerTheme) private var theme
 
     var body: some View {
@@ -156,7 +158,15 @@ struct ShelfView: View {
 
     /// Goes to the songs of the album or playlist that is in the deck.
     private func openCurrentTape() {
-        guard showsCurrentTape, let tape = model.currentTape else { return }
+        guard showsCurrentTape else { return }
+        guard let tape = model.currentTape else {
+            openedTape = nil
+            return
+        }
+        // Once for each tape. Going back to the shelf must stay on the shelf,
+        // and the shelf coming back on screen is not a reason to leave it.
+        guard tape.id != openedTape else { return }
+        openedTape = tape.id
         switch tape {
         case .album, .playlist:
             // Close and reopen so a different tape replaces the last page.
@@ -265,3 +275,40 @@ struct TapeSpine: View {
         .contentShape(Rectangle())
     }
 }
+
+/// The songs of the tape that is in the deck, as a page of its own: for the
+/// closed phone, where the shelf is not on screen. A song that is tapped
+/// plays, and the page closes.
+struct CurrentTapeView: View {
+    @EnvironmentObject private var model: PlayerModel
+    var onClose: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if let tape = model.currentTape {
+                    CollectionDetail(tape: tape)
+                } else {
+                    Text("There is no tape in the deck.")
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(ShelfBackground())
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel("Close")
+                }
+            }
+        }
+        .errorAlert(model)
+        .environment(\.pickTape, PickTape { tape, track in
+            model.put(tape, startingAt: track, autoPlay: true)
+            onClose()
+        })
+    }
+}
+

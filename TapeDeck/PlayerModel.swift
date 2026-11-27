@@ -910,8 +910,34 @@ final class PlayerModel: ObservableObject {
         }
     }
 
+    #if DEBUG
+    /// For taking pictures of the app in the simulator, which cannot play
+    /// Apple Music: a made-up tape, shown as playing. Launch with the
+    /// argument `-demoTape`. Never in the build that goes to the App Store.
+    private var demo = false
+
+    func loadDemoTape() {
+        demo = true
+        authStatus = .authorized
+        tapeTitle = "Summer Drive '86"
+        tapeSubtitle = "Mixed for the road"
+        printedLabel = false
+        trackTitle = "Neon Coastline"
+        trackArtist = "The Night Shift"
+        elapsed = 74
+        duration = 221
+        sideIndex = 0
+        progress = 0.34
+        hasTape = true
+        motion = .playing
+    }
+    #endif
+
     /// Mirrors the system player's state into published properties.
     private func refresh() {
+        #if DEBUG
+        if demo { return }
+        #endif
         guard hasTape, !swapping else {
             if !hasTape {
                 if motion != .stopped { motion = .stopped }

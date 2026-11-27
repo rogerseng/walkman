@@ -9,12 +9,21 @@ struct TapeDeckApp: App {
         Typeface.styleNavigationBars()
     }
 
+    /// Debug builds only: `-demoTape` puts a made-up tape in the deck, for
+    /// taking pictures in the simulator.
+    private func loadDemoIfAsked() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-demoTape") { model.loadDemoTape() }
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(model)
                 .environmentObject(tour)
                 .preferredColorScheme(.dark)
+                .onAppear { loadDemoIfAsked() }
         }
     }
 }
