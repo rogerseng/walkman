@@ -127,14 +127,14 @@ struct ShelfView: View {
                         .font(.footnote)
                         .foregroundColor(.secondary)
                         .listRowBackground(Color.clear)
+                    ContactSupportLink(problem: searchNote)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
                 if findings.isEmpty {
                     Text(searching ? "Searching…" : "No results.")
                         .foregroundColor(.secondary)
                         .listRowBackground(Color.clear)
-                    ContactSupportLink(problem: searchNote)
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
                 }
                 SearchResultsSections(findings: findings, scope: resultsScope)
             } else {
