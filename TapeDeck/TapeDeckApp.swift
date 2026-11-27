@@ -51,15 +51,27 @@ struct ContentView: View {
             let open = (horizontalSize == .regular && verticalSize == .regular)
                 || (geo.size.width >= 600 && geo.size.height >= 500)
             Group {
+                // The MP3 player is itself on the open phone too, with its
+                // display and its dial or wheel, not the tape deck's keys.
+                let wheel = Skin.includesClickWheel && Skin(rawValue: skinName)?.isWheel == true
+                let menuPlayer = wheel || player == "mp3"
                 if open, geo.size.height > geo.size.width {
                     // The open phone held upright: the player has the whole
                     // screen to itself, and the shelf is a key away.
-                    OpenTrayView(upright: true)
+                    if menuPlayer {
+                        MenuPlayerView(jog: !wheel)
+                    } else {
+                        OpenTrayView(upright: true)
+                    }
                 } else if open {
                     HStack(spacing: 0) {
-                        ShelfView(playOnPick: false, onPick: {}, showsCurrentTape: true)
+                        ShelfView(playOnPick: menuPlayer, onPick: {}, showsCurrentTape: true)
                             .frame(width: geo.size.width * 0.5)
-                        OpenTrayView()
+                        if menuPlayer {
+                            MenuPlayerView(jog: !wheel)
+                        } else {
+                            OpenTrayView()
+                        }
                     }
                 } else if Skin.includesClickWheel, Skin(rawValue: skinName)?.isWheel == true {
                     // Personal builds only: the click wheel player.
