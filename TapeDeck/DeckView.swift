@@ -129,8 +129,11 @@ struct DeckView: View {
                         // On the Duo, the solid side of the case starts just
                         // past the tape window and runs to the edge, so it
                         // carries the volume fader and the keys.
-                        casePanel(seam: plan.railLeading ? .trailing : .leading)
-                            .frame(width: plan.panelWidth)
+                        // On a phone the panel bows only a little, and reaches
+                        // far enough in that the keys sit inside it top to
+                        // bottom.
+                        casePanel(seam: plan.railLeading ? .trailing : .leading, bow: phone ? 10 : nil)
+                            .frame(width: phone ? plan.panelWidth + 16 : plan.panelWidth)
                             .frame(maxWidth: .infinity, alignment: plan.railLeading ? .leading : .trailing)
                     } else {
                         // Along the foot, the panel the keys sit in
@@ -258,8 +261,11 @@ struct DeckView: View {
             }
             .overlay(alignment: plan.railLeading ? .topLeading : .topTrailing) {
                 if plan.rail {
+                    // On a phone the keys sit at the foot, under the thumb;
+                    // on the Duo they start a little below the clock.
                     railKeyColumn(insets: insets, leading: plan.railLeading,
-                                  statusHeight: phone ? real.top + 10 : railStatusHeight)
+                                  statusHeight: phone ? real.top + 10 : railStatusHeight + 14,
+                                  fromFoot: phone)
                 }
             }
             // On other phones, the panel along the foot: the fader lying
@@ -482,7 +488,7 @@ struct DeckView: View {
         if phone {
             // The window takes all the width the keys leave, or all the
             // height under the name, whichever runs out first.
-            let roomWide = full.width - railWidth - 20
+            let roomWide = full.width - railWidth - 32
             let roomTall = full.height - insets.top - 58 - insets.bottom - 132 - (skin.hasStripes ? 30 : 0)
             let scale = min(roomWide / windowMinWidth, roomTall / windowLength)
             let windowX = 10 + (roomWide - windowMinWidth * scale) / 2
@@ -656,19 +662,33 @@ struct DeckView: View {
     }
 
     /// The column of keys in the Duo's rail, starting below the camera and clock.
-    private func railKeyColumn(insets: EdgeInsets, leading: Bool, statusHeight: CGFloat) -> some View {
+    private func railKeyColumn(insets: EdgeInsets, leading: Bool, statusHeight: CGFloat,
+                               fromFoot: Bool = false) -> some View {
         let width = max(insets.leading, insets.trailing)
-        let inner = max(0, width - railKeyWidth - railOuterMargin)
+        // On a phone the panel reaches further in, so the keys sit in its middle
+        let outer: CGFloat = fromFoot ? 20 : railOuterMargin
+        let inner = max(0, width - railKeyWidth - outer)
+        // The gap kept under the last key
+        let foot: CGFloat = fromFoot ? insets.bottom + 6 : insets.bottom + 4
         return GeometryReader { geo in
-            let room = geo.size.height - statusHeight - insets.bottom - 12
+            let room = geo.size.height - statusHeight - foot
+            let keyHeight = min(fromFoot ? 78 : railKeyMaxHeight, max(36, (room - 5 * keyGap) / 6))
             VStack(spacing: 0) {
-                Color.clear.frame(height: statusHeight)
-                railKeys(height: min(railKeyMaxHeight, max(36, (room - 5 * keyGap) / 6)))
-                Spacer(minLength: 0)
+                if fromFoot {
+                    Spacer(minLength: statusHeight)
+                } else {
+                    Color.clear.frame(height: statusHeight)
+                }
+                railKeys(height: keyHeight)
+                if fromFoot {
+                    Color.clear.frame(height: foot)
+                } else {
+                    Spacer(minLength: 0)
+                }
             }
             .frame(width: railKeyWidth)
-            .padding(.leading, leading ? railOuterMargin : inner)
-            .padding(.trailing, leading ? inner : railOuterMargin)
+            .padding(.leading, leading ? outer : inner)
+            .padding(.trailing, leading ? inner : outer)
         }
         .frame(width: width)
     }
@@ -686,8 +706,8 @@ struct DeckView: View {
     /// A solid part of the player: the panel along the foot that carries the
     /// keys, or the Duo's side column that carries the fader. Solid plastic,
     /// not see through, with a seam where it meets the clear part of the case.
-    private func casePanel(seam: BowedPanel.Seam) -> some View {
-        let bow = seam == .top ? panelBow : 26
+    private func casePanel(seam: BowedPanel.Seam, bow wanted: CGFloat? = nil) -> some View {
+        let bow = wanted ?? (seam == .top ? panelBow : 26)
         let edge = BowedPanel(bow: bow, seam: seam)
         let lit: UnitPoint = seam == .top ? .top : (seam == .leading ? .leading : .trailing)
         let lip: CGSize = switch seam {
