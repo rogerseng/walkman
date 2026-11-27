@@ -26,6 +26,9 @@ struct OpenTrayView: View {
     @State private var doorOpen = false
     /// Flashes when the empty door is pressed.
     @State private var doorKnocked = false
+    /// Where the timeline is being dragged to, from 0 to 1, while a finger
+    /// is on it.
+    @State private var scrubbing: Double?
     /// The height the speakers have with the keyboard down. They keep it
     /// when the keyboard comes up, and the door gives way instead.
     @State private var speakerRest: CGFloat = 0
@@ -732,7 +735,10 @@ struct OpenTrayView: View {
     /// How far through the song the tape is: a bar, with the time gone and
     /// the time left under its ends.
     private var timeline: some View {
-        let done = min(1, max(0, model.elapsed / model.duration))
+        // While it is dragged, the bar and the times follow the finger;
+        // the music moves there when the finger lifts.
+        let done = scrubbing ?? min(1, max(0, model.elapsed / model.duration))
+        let shown = done * model.duration
         return VStack(spacing: 5) {
             GeometryReader { bar in
                 ZStack(alignment: .leading) {
@@ -742,19 +748,48 @@ struct OpenTrayView: View {
                         .fill(theme.accentColor)
                         .frame(width: max(6, bar.size.width * CGFloat(done)))
                         .shadow(color: theme.accentColor.opacity(0.6), radius: 4)
+                    // The knob, which grows under the finger
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: scrubbing == nil ? 12 : 18, height: scrubbing == nil ? 12 : 18)
+                        .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
+                        .position(x: min(bar.size.width - 6, max(6, bar.size.width * CGFloat(done))),
+                                  y: bar.size.height / 2)
                 }
+                .frame(height: 6)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { drag in
+                            if scrubbing == nil { Haptics.detent() }
+                            scrubbing = min(1, max(0, Double(drag.location.x / max(1, bar.size.width))))
+                        }
+                        .onEnded { _ in
+                            if let scrubbing { model.scrub(to: scrubbing) }
+                            Haptics.detent()
+                            scrubbing = nil
+                        }
+                )
             }
-            .frame(height: 6)
+            // Taller than the bar, so it is easy to take hold of
+            .frame(height: 30)
+            .animation(.easeOut(duration: 0.1), value: scrubbing == nil)
             HStack {
-                Text(TransportKeys.clock(model.elapsed))
+                Text(TransportKeys.clock(shown))
                 Spacer()
-                Text("-" + TransportKeys.clock(max(0, model.duration - model.elapsed)))
+                Text("-" + TransportKeys.clock(max(0, model.duration - shown)))
             }
             .font(.system(size: 11, weight: .semibold).monospacedDigit())
             .foregroundColor(skin.note.opacity(0.85))
         }
         .frame(maxWidth: 360)
         .accessibilityElement(children: .ignore)
+        .accessibilityAdjustableAction { direction in
+            let step = 10 / max(1, model.duration)
+            let now = model.elapsed / max(1, model.duration)
+            model.scrub(to: direction == .increment ? now + step : now - step)
+        }
         .accessibilityLabel("Song position")
         .accessibilityValue("\(TransportKeys.clock(model.elapsed)) of \(TransportKeys.clock(model.duration))")
     }

@@ -731,6 +731,17 @@ final class PlayerModel: ObservableObject {
         }
     }
 
+    /// Moves to a place in the song that is playing, given as a part of
+    /// its length from 0 to 1: the timeline being dragged.
+    func scrub(to fraction: Double) {
+        guard hasTape, !swapping, !tapeJammed, duration > 0 else { return }
+        // Short of the very end, so the song is not skipped by a slip.
+        let time = min(max(0, fraction), 0.995) * duration
+        player.playbackTime = time
+        elapsed = time
+        lastKeyPress = Date()
+    }
+
     /// The clunk and click of a key that does nothing to the tape, such
     /// as the one that opens Settings.
     func keyClick() {
