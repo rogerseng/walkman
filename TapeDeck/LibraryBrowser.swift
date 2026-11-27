@@ -449,9 +449,9 @@ struct CollectionDetail: View {
             do {
                 switch tape {
                 case .album(let album):
-                    tracks = try await PlayerModel.everything(in: album.with([.tracks]).tracks)
+                    tracks = try await PlayerModel.allTracks(of: album)
                 case .playlist(let playlist):
-                    tracks = try await PlayerModel.everything(in: playlist.with([.tracks]).tracks)
+                    tracks = try await PlayerModel.allTracks(of: playlist)
                 default:
                     break
                 }
@@ -529,8 +529,7 @@ struct ArtistDetail: View {
         .task {
             guard albums.isEmpty else { return }
             do {
-                let full = try await artist.with([.albums], preferredSource: source)
-                albums = Array(full.albums ?? []).sorted {
+                albums = try await PlayerModel.albums(of: artist, source: source).sorted {
                     ($0.releaseDate ?? .distantPast) > ($1.releaseDate ?? .distantPast)
                 }
             } catch {

@@ -412,11 +412,9 @@ final class PlayerModel: ObservableObject {
     private func loadSides(of tape: Tape) async throws -> [TapeSide] {
         switch tape {
         case .album(let album):
-            let full = try await album.with([.tracks])
-            return TapeSide.split(try await Self.everything(in: full.tracks))
+            return TapeSide.split(try await Self.allTracks(of: album))
         case .playlist(let playlist):
-            let full = try await playlist.with([.tracks])
-            return TapeSide.split(try await Self.everything(in: full.tracks))
+            return TapeSide.split(try await Self.allTracks(of: playlist))
         case .song(let song):
             return [TapeSide(songs: [song]), TapeSide(songs: [])]
         case .mixtape(let mixtape):
