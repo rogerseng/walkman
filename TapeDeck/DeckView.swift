@@ -153,9 +153,10 @@ struct DeckView: View {
     // MARK: Tape and casing
 
     /// The part of the cassette the window shows, in millimetres of its
-    /// 100 x 63 shell: the label strip and both reels. Everything else, the
-    /// ends, the guide rollers and the head opening, is under the casing.
-    private let windowOnCassette = CGRect(x: 19, y: 5.5, width: 62, height: 33.5)
+    /// 100 x 63 shell: the label strip and both reels, and most of the shell
+    /// at either end of them, out to the corner screws. The guide rollers
+    /// and the head opening stay under the casing, next to the keys.
+    private let windowOnCassette = CGRect(x: 11, y: 2.5, width: 78, height: 36.5)
 
     /// The cassette filling the whole screen (on end when the screen is
     /// taller than wide, head opening toward the keys), with the player's
@@ -400,12 +401,22 @@ struct RetroStripes: View {
 /// The name of the app, as lettering.
 struct Wordmark: View {
     var size: CGFloat = 22
+    /// The app icon beside the name, as in the logo on the website.
+    var showsIcon = true
 
     var body: some View {
-        Text("Cassety")
-            .font(.system(size: size, weight: .heavy, design: .rounded))
-            .italic()
-            .tracking(0.4)
+        HStack(spacing: size * 0.42) {
+            if showsIcon {
+                Image("LogoIcon")
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: size * 1.45, height: size * 1.45)
+                    .clipShape(RoundedRectangle(cornerRadius: size * 0.34, style: .continuous))
+            }
+            Text("Cassety")
+                .font(.custom("Righteous-Regular", fixedSize: size))
+                .tracking(size * 0.02)
+        }
     }
 }
 
@@ -566,9 +577,13 @@ struct TapeKey: View {
             }
         }
         // The symbol is engraved and filled with paint, so it has a thin
-        // edge of shadow or light where the cut catches it.
-        .foregroundColor(Color(white: 0.96))
+        // edge of shadow or light where the cut catches it. Pressed in, it
+        // lights up from behind: amber on the grey keys, and dark on the
+        // coloured play key, where amber would not show.
+        .foregroundColor(symbolColor(down: down))
         .shadow(color: Color.black.opacity(accent ? 0.45 : 0.75), radius: 0.4, y: -0.8)
+        .shadow(color: down && !accent ? Self.lit.opacity(0.9) : .clear, radius: 6)
+        .scaleEffect(down ? 0.92 : 1)
         .padding(.horizontal, 2)
         .frame(maxWidth: .infinity)
         // The face is shorter than the key, leaving its side showing below.
@@ -624,6 +639,14 @@ struct TapeKey: View {
         if accent { return skin.accentWall }
         if dark { return [Color(white: 0.05), Color(white: 0.02)] }
         return [Color(white: 0.17), Color(white: 0.09)]
+    }
+
+    /// The amber of a lamp behind a pressed key.
+    private static let lit = Color(red: 1.0, green: 0.66, blue: 0.18)
+
+    private func symbolColor(down: Bool) -> Color {
+        guard down else { return Color(white: 0.96) }
+        return accent ? Color(white: 0.10) : Self.lit
     }
 
     private func keyColors(down: Bool) -> [Color] {

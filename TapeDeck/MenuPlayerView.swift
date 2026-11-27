@@ -187,6 +187,11 @@ struct MenuPlayerView: View {
                         .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
                         .padding(.top, 14)
                         .accessibilityHidden(true)
+                    // The maker's logo, under the dial
+                    Wordmark(size: 18)
+                        .foregroundColor(skin.engraving)
+                        .padding(.top, 12)
+                        .accessibilityHidden(true)
                     Spacer(minLength: 10)
                 }
                 .padding(.bottom, insets.bottom)

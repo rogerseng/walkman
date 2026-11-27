@@ -128,14 +128,14 @@ struct CassetteView: View {
         } else {
             // Handwriting on the paper label's ruled lines
             Text(title.isEmpty ? " " : title)
-                .font(.custom("BradleyHandITCTT-Bold", fixedSize: 4.5 * u))
+                .font(.custom("PermanentMarker-Regular", fixedSize: 4.5 * u))
                 .foregroundColor(ink.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
                 .frame(width: 58 * u, height: 5.0 * u, alignment: .bottomLeading)
                 .position(x: 56 * u, y: 6.3 * u)
             Text(subtitle.isEmpty ? " " : subtitle)
-                .font(.custom("BradleyHandITCTT-Bold", fixedSize: 3.0 * u))
+                .font(.custom("PermanentMarker-Regular", fixedSize: 3.0 * u))
                 .foregroundColor(ink.opacity(0.80))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)

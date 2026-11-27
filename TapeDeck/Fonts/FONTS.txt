@@ -1,0 +1,3 @@
+Righteous by Astigmatic, SIL Open Font License 1.1 (https://openfontlicense.org).
+Permanent Marker by Font Diner, Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Both are from https://github.com/google/fonts and are bundled unmodified.

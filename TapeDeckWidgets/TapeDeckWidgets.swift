@@ -125,7 +125,7 @@ struct MiniCassette: View {
                 .position(x: 22.6 * u, y: 8.4 * u)
 
             Text(state.title.isEmpty ? " " : state.title)
-                .font(.custom("BradleyHandITCTT-Bold", fixedSize: 4.5 * u))
+                .font(.custom("PermanentMarker-Regular", fixedSize: 4.5 * u))
                 .foregroundColor(Palette.ink.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)

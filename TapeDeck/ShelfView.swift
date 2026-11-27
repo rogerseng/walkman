@@ -254,7 +254,7 @@ struct TapeSpine: View {
             .clipShape(RoundedRectangle(cornerRadius: 3))
             VStack(alignment: .leading, spacing: 0) {
                 Text(tape.title)
-                    .font(.custom("BradleyHandITCTT-Bold", size: 18))
+                    .font(.custom("PermanentMarker-Regular", size: 18))
                     .foregroundColor(ink.opacity(0.92))
                 Text(tape.subtitle)
                     .font(.system(size: 12))
