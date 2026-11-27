@@ -160,13 +160,25 @@ struct DeckView: View {
                     } label: {
                         Image(systemName: "list.bullet")
                             .font(.system(size: 17, weight: .bold))
-                            .foregroundColor(skin.note)
-                            .frame(width: 44, height: 44)
+                            .foregroundColor(skin.note.opacity(0.7))
+                            .frame(width: 46, height: 38)
+                            // Cut out of the case: flush with it, with only
+                            // the fine gap round the key to show where it is
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(Color.white.opacity(0.16), lineWidth: 1)
+                                    .offset(y: 1.2)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(Color.black.opacity(0.78), lineWidth: 1.6)
+                            )
+                            .frame(width: 46, height: 44)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Songs on this tape")
-                    .offset(x: window.maxX - 44, y: insets.top + 6)
+                    .offset(x: window.maxX - 46, y: insets.top + 6)
                 }
             }
             // A word in outline lettering above the window, on cases that have one
