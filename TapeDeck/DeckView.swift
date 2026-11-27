@@ -146,6 +146,7 @@ struct DeckView: View {
                 let faderX = railLeading ? panelWidth - 70
                     : min(full.width - panelWidth + 22, keysLeft - 48 - 4)
                 VolumeFader(volume: volume, playing: model.motion == .playing,
+                            tempo: model.beatsPerMinute,
                             engraving: skin.engraving, engravingEdge: skin.engravingEdge,
                             engravingEdgeOffset: skin.engravingEdgeOffset)
                     .frame(width: 48, height: window.height)
@@ -580,7 +581,7 @@ struct TransportKeys: View {
             // On the closed phone this key opens the tape library; where it
             // takes the tape out, it is an eject key.
             // The two-note mark is the one Apple Music itself goes by.
-            TapeKey(symbol: ejectRemovesTape ? "eject.fill" : "music.note",
+            TapeKey(symbol: ejectRemovesTape ? "eject.fill" : BeamedNotes.symbol,
                     label: ejectRemovesTape ? "EJECT" : "Apple Music library",
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: {
@@ -635,7 +636,12 @@ struct TapeKey: View {
     var body: some View {
         let down = pressed || latched
         VStack(spacing: 4) {
-            Image(systemName: symbol).font(.system(size: symbolSize, weight: .bold))
+            if symbol == BeamedNotes.symbol {
+                // The library key: a pair of joined notes, drawn here
+                BeamedNotes().frame(width: symbolSize * 1.05, height: symbolSize * 1.1)
+            } else {
+                Image(systemName: symbol).font(.system(size: symbolSize, weight: .bold))
+            }
             if showsLabel, height >= 50 {
                 Text(label).font(Typeface.displayFixed(8)).lineLimit(1).minimumScaleFactor(0.6)
             }
@@ -912,6 +918,44 @@ struct EndOfSideCard: View {
                 .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(theme.accentColor.opacity(0.7), lineWidth: 1.5))
         )
         .shadow(color: .black.opacity(0.5), radius: 10, y: 5)
+    }
+}
+
+/// Two notes joined by a beam: the mark on the key that opens the library.
+/// It takes the colour of the text around it.
+struct BeamedNotes: View {
+    /// The name the library key goes by where keys are told apart by symbol.
+    nonisolated static let symbol = "cassety.notes"
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            let head = CGSize(width: w * 0.36, height: h * 0.25)
+            let stem = w * 0.085
+            ZStack {
+                // Stems and the beam across their tops
+                Path { path in
+                    path.addRect(CGRect(x: w * 0.36 - stem, y: h * 0.17, width: stem, height: h * 0.66))
+                    path.addRect(CGRect(x: w * 0.98 - stem, y: h * 0.05, width: stem, height: h * 0.66))
+                    path.move(to: CGPoint(x: w * 0.36 - stem, y: h * 0.14))
+                    path.addLine(to: CGPoint(x: w * 0.98, y: h * 0.02))
+                    path.addLine(to: CGPoint(x: w * 0.98, y: h * 0.20))
+                    path.addLine(to: CGPoint(x: w * 0.36 - stem, y: h * 0.32))
+                    path.closeSubpath()
+                }
+                // Heads, tilted as on a stave
+                Ellipse()
+                    .frame(width: head.width, height: head.height)
+                    .rotationEffect(.degrees(-22))
+                    .position(x: w * 0.19, y: h * 0.85)
+                Ellipse()
+                    .frame(width: head.width, height: head.height)
+                    .rotationEffect(.degrees(-22))
+                    .position(x: w * 0.81, y: h * 0.73)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 

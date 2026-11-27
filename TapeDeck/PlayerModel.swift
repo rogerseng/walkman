@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import MediaPlayer
 import MusicKit
 import SwiftUI
 import UIKit
@@ -14,6 +15,11 @@ final class PlayerModel: ObservableObject {
         didSet { if motion != oldValue { motionChanged(from: oldValue) } }
     }
     @Published private(set) var hasTape = false
+    /// The tempo the lights and speakers move to. It is the song's own when
+    /// the music library knows it, and a steady default when it does not:
+    /// an app cannot listen to the music to work it out.
+    @Published private(set) var beatsPerMinute = PlayerModel.defaultTempo
+    static let defaultTempo = 123.0
     /// The album or playlist in the deck, for showing its songs.
     @Published private(set) var currentTape: Tape?
     @Published private(set) var trackTitle = ""
@@ -968,6 +974,9 @@ final class PlayerModel: ObservableObject {
             let side = sides[sideIndex]
             if entry.id != lastEntryID {
                 lastEntryID = entry.id
+                let known = MPMusicPlayerController.applicationQueuePlayer.nowPlayingItem?.beatsPerMinute ?? 0
+                let tempo = (50...220).contains(known) ? Double(known) : Self.defaultTempo
+                if tempo != beatsPerMinute { beatsPerMinute = tempo }
                 trackTitle = entry.title
                 trackArtist = entry.subtitle ?? ""
                 // Find this track on the side, looking forward from the last one first.

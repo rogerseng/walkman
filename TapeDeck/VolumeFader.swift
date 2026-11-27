@@ -74,6 +74,8 @@ struct VolumeFader: View {
     @ObservedObject var volume: SystemVolume
     /// A tape is playing, so the level lights should move.
     var playing = false
+    /// Beats a minute for the lights to move to.
+    var tempo = PlayerModel.defaultTempo
     /// Colour of the tick marks, and of the edge that makes them look cut in.
     var engraving = Color.white.opacity(0.55)
     var engravingEdge = Color.black.opacity(0.8)
@@ -121,7 +123,7 @@ struct VolumeFader: View {
                 // Level lights down inside the slot. They only ever light
                 // from the bottom up to the cap, never past it.
                 if lightsOn {
-                    LevelLights(level: volume.level, playing: playing)
+                    LevelLights(level: volume.level, playing: playing, tempo: tempo)
                         .frame(width: 4)
                         .padding(.vertical, capHeight / 2 - 2)
                         .frame(maxWidth: .infinity)
@@ -197,6 +199,7 @@ struct VolumeFader: View {
 private struct LevelLights: View {
     let level: Double
     let playing: Bool
+    let tempo: Double
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !playing)) { timeline in
@@ -205,7 +208,7 @@ private struct LevelLights: View {
                 // Where the middle of the cap sits, measured from the top
                 let capY = 2 + CGFloat(1 - min(max(level, 0), 1)) * (size.height - 4)
                 let room = max(0, size.height - capY)
-                let lit = playing ? room * CGFloat(Self.pulse(at: time)) : room
+                let lit = playing ? room * CGFloat(Self.pulse(at: time, tempo: tempo)) : room
                 var y = size.height
                 while y - 3 > capY {
                     let on = size.height - y < lit
@@ -225,8 +228,8 @@ private struct LevelLights: View {
     }
 
     /// 0...1: a kick on each beat that dies away, with some movement between.
-    private static func pulse(at time: Double) -> Double {
-        let beat = time * 2.05
+    private static func pulse(at time: Double, tempo: Double) -> Double {
+        let beat = time * tempo / 60
         let kick = exp(-(beat - floor(beat)) * 4.5)
         let sway = 0.5 + 0.5 * sin(time * 7.3) * sin(time * 3.1 + 1.7)
         return min(1, 0.38 + 0.44 * kick + 0.18 * sway)

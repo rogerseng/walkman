@@ -42,9 +42,9 @@ struct OpenTrayView: View {
                 GeometryReader { room in
                     let pair = room.size.width > room.size.height * 1.5
                     HStack(spacing: 18) {
-                        Speaker(skin: skin, playing: model.motion == .playing)
+                        Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
                         if pair {
-                            Speaker(skin: skin, playing: model.motion == .playing)
+                            Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
                         }
                     }
                     .frame(width: room.size.width, height: room.size.height)
@@ -235,6 +235,7 @@ struct OpenTrayView: View {
 private struct Speaker: View {
     let skin: Skin
     let playing: Bool
+    var tempo = PlayerModel.defaultTempo
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -249,7 +250,7 @@ private struct Speaker: View {
                 // The cone, seen through the grille
                 TimelineView(.animation(minimumInterval: 1.0 / 20.0, paused: !playing || reduceMotion)) { timeline in
                     let time = timeline.date.timeIntervalSinceReferenceDate
-                    let beat = time * 2.05
+                    let beat = time * tempo / 60
                     let kick = playing && !reduceMotion ? exp(-(beat - floor(beat)) * 5) : 0
                     ZStack {
                         Circle()

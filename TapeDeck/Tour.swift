@@ -42,7 +42,7 @@ final class Tour: ObservableObject {
         /// The symbol of the key to press, so that key can be lit up.
         var key: String? {
             switch self {
-            case .chooseTape: return "music.note"
+            case .chooseTape: return BeamedNotes.symbol
             case .play: return "play.fill"
             case .stop: return "stop.fill"
             case .skip: return "forward.fill"
