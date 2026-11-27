@@ -38,6 +38,10 @@ struct DeckView: View {
             let full = CGSize(width: geo.size.width + insets.leading + insets.trailing,
                               height: geo.size.height + insets.top + insets.bottom)
             let window = windowRect(in: full)
+            // The solid side of the case starts just past the tape window and
+            // runs to the edge, so it carries the volume fader and the keys.
+            let column = rail ? max(insets.leading, insets.trailing) : stripWidth + insets.trailing
+            let panelWidth = max(column, railLeading ? window.minX - 6 : full.width - window.maxX - 6)
             HStack(spacing: 0) {
                 if railLeading { keyColumn(insets: insets, rail: true, leading: true) }
                 // The face itself is drawn in the background, full screen.
@@ -58,6 +62,9 @@ struct DeckView: View {
                     Color(white: 0.03)
                     tapeUnderCasing
                     clearCase
+                    casePanel(seamOnLeading: !railLeading)
+                        .frame(width: panelWidth)
+                        .frame(maxWidth: .infinity, alignment: railLeading ? .leading : .trailing)
                 }
             )
             // Under the window: the song that is playing on an album tape
@@ -75,11 +82,11 @@ struct DeckView: View {
                         .allowsHitTesting(false)
                 }
             }
-            // Volume: beside the window and exactly as tall as it is
+            // Volume: on the solid panel, level with the window and as tall as it
             .overlay(alignment: .topLeading) {
                 VolumeFader(volume: volume)
                     .frame(width: 40, height: window.height)
-                    .offset(x: railLeading ? window.minX - 52 : window.maxX + 12, y: window.minY)
+                    .offset(x: railLeading ? panelWidth - 54 : full.width - panelWidth + 14, y: window.minY)
             }
             .ignoresSafeArea()
         }
@@ -250,8 +257,9 @@ struct DeckView: View {
         min(bigKeyHeight, max(40, (room - 4 * keyGap) / 5))
     }
 
-    /// The side of the player that carries the keys: solid plastic, not see
-    /// through, with a seam where it meets the clear part of the case.
+    /// The side of the player that carries the volume fader and the keys:
+    /// solid plastic, not see through, with a seam where it meets the clear
+    /// part of the case.
     private func casePanel(seamOnLeading: Bool) -> some View {
         ZStack(alignment: seamOnLeading ? .leading : .trailing) {
             LinearGradient(colors: [Color(white: 0.20), Color(white: 0.13), Color(white: 0.09)],
@@ -283,7 +291,6 @@ struct DeckView: View {
                 .padding(.trailing, leading ? inner : railOuterMargin)
             }
             .frame(width: width)
-            .background(casePanel(seamOnLeading: !leading))
         } else {
             GeometryReader { geo in
                 let room = geo.size.height - insets.top - insets.bottom - 24
@@ -299,7 +306,6 @@ struct DeckView: View {
                 .frame(width: stripWidth + insets.trailing, height: geo.size.height)
             }
             .frame(width: stripWidth + insets.trailing)
-            .background(casePanel(seamOnLeading: true))
         }
     }
 }
