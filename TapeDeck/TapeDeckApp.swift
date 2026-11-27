@@ -51,7 +51,11 @@ struct ContentView: View {
             let open = (horizontalSize == .regular && verticalSize == .regular)
                 || (geo.size.width >= 600 && geo.size.height >= 500)
             Group {
-                if open {
+                if open, geo.size.height > geo.size.width {
+                    // The open phone held upright: the player has the whole
+                    // screen to itself, and the shelf is a key away.
+                    OpenTrayView(upright: true)
+                } else if open {
                     HStack(spacing: 0) {
                         ShelfView(playOnPick: false, onPick: {}, showsCurrentTape: true)
                             .frame(width: geo.size.width * 0.5)

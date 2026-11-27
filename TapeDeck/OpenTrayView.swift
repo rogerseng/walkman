@@ -8,7 +8,15 @@ import SwiftUI
 /// The door swings open and the tape slides out or in whenever a tape is
 /// ejected or put in.
 struct OpenTrayView: View {
+    /// The open phone held upright: the player fills the screen, with a
+    /// carrying handle at the top, the same keys as the closed phone along
+    /// the foot, and the shelf behind the music key.
+    var upright = false
+
     @EnvironmentObject private var model: PlayerModel
+    @StateObject private var volume = SystemVolume()
+    @State private var showShelf = false
+    @State private var showSettings = false
     @Environment(\.playerTheme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(Prefs.player) private var player = "tape"
@@ -42,6 +50,103 @@ struct OpenTrayView: View {
     }
 
     var body: some View {
+        if upright {
+            uprightPlayer
+        } else {
+            besideShelf
+        }
+    }
+
+    // MARK: Upright
+
+    private var uprightPlayer: some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let keyHeight: CGFloat = 84
+            // The handle stands in the space beside the clock, above the
+            // safe area, so it costs the player no room.
+            let handleHeight = max(64, geo.safeAreaInsets.top)
+            let doorWidth = min(width - 56, 560, (geo.size.height * 0.40 - 26) / 0.63)
+            let doorHeight = doorWidth * 0.63 + 26
+            VStack(spacing: 14) {
+                topStrip
+                if isMP3 {
+                    playerScreen(width: doorWidth, height: doorHeight)
+                } else {
+                    door(width: doorWidth, height: doorHeight)
+                }
+                nowPlaying
+                // A speaker either side of the volume fader
+                HStack(spacing: 14) {
+                    Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
+                    VolumeFader(volume: volume, playing: model.motion == .playing,
+                                tempo: model.beatsPerMinute,
+                                engraving: skin.engraving, engravingEdge: skin.engravingEdge,
+                                engravingEdgeOffset: skin.engravingEdgeOffset)
+                        .frame(width: 64)
+                        .padding(.vertical, 6)
+                    Speaker(skin: skin, playing: model.motion == .playing, tempo: model.beatsPerMinute)
+                }
+                .padding(.horizontal, 6)
+                uprightKeys(height: keyHeight)
+            }
+            .padding(.horizontal, 22)
+            .padding(.top, 10)
+            .padding(.bottom, 14)
+            .frame(width: width, height: geo.size.height)
+            .background(
+                ZStack(alignment: .top) {
+                    bodyShell(railWidth: 0, seam: false)
+                    CarryHandle(skin: skin)
+                        .frame(width: min(360, width * 0.5), height: handleHeight - 6)
+                        .padding(.top, 8)
+                }
+                .ignoresSafeArea()
+            )
+        }
+        // Keeps the system volume control in the window so the fader can set it.
+        .background(
+            VolumeHost(view: volume.volumeView)
+                .frame(width: 1, height: 1)
+                .opacity(0.01)
+                .allowsHitTesting(false)
+        )
+        .onChange(of: model.hasTape) { _, _ in swingDoor() }
+        .fullScreenCover(isPresented: $showShelf) {
+            ShelfView(onPick: { showShelf = false }, onClose: { showShelf = false })
+        }
+        .fullScreenCover(isPresented: $showSettings) {
+            SettingsView()
+        }
+    }
+
+    /// The closed phone's keys, in a row in their bed: play, stop, fast
+    /// forward, rewind, the music library, and settings.
+    private func uprightKeys(height: CGFloat) -> some View {
+        TransportKeys(vertical: false, keyHeight: height, bare: true, big: true, spacing: 12,
+                      onSettings: { showSettings = true },
+                      onEject: { showShelf = true })
+            .frame(maxWidth: 6 * 84 + 5 * 12)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(LinearGradient(colors: skin.isWheel ? skin.wheelBody : skin.panel,
+                                         startPoint: .top, endPoint: .bottom))
+                    .overlay(Color.black.opacity(isMP3 ? 0.22 : 0).clipShape(RoundedRectangle(cornerRadius: 18)))
+                    .overlay(PlasticGrain(strength: 0.5).clipShape(RoundedRectangle(cornerRadius: 18)))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .strokeBorder(LinearGradient(colors: [Color.black.opacity(0.8), Color.white.opacity(0.22)],
+                                                         startPoint: .top, endPoint: .bottom), lineWidth: 1.5)
+                    )
+            )
+    }
+
+    // MARK: Beside the shelf
+
+    private var besideShelf: some View {
         GeometryReader { geo in
             let width = geo.size.width
             // The Duo keeps a rail clear down the right for its camera and
@@ -161,7 +266,7 @@ struct OpenTrayView: View {
     }
 
     /// The moulded body: the skin's case colour, grain, and light from above.
-    private func bodyShell(railWidth: CGFloat) -> some View {
+    private func bodyShell(railWidth: CGFloat, seam: Bool = true) -> some View {
         ZStack {
             Color.black
             LinearGradient(colors: bodyColors, startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -169,10 +274,12 @@ struct OpenTrayView: View {
             LinearGradient(colors: [Color.white.opacity(0.10), .clear, Color.black.opacity(0.25)],
                            startPoint: .top, endPoint: .bottom)
             // The seam where this half meets the shelf
+            if seam {
             HStack {
                 Rectangle().fill(Color.black.opacity(0.7)).frame(width: 2)
                 Rectangle().fill(Color.white.opacity(0.18)).frame(width: 1)
                 Spacer()
+            }
             }
             if railWidth > 0 {
                 keyPanel(width: railWidth + railPanelReach)
@@ -480,6 +587,75 @@ struct OpenTrayView: View {
             try? await Task.sleep(nanoseconds: 650_000_000)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { doorOpen = false }
         }
+    }
+}
+
+/// The boombox's carrying handle, folded down against the top of the case:
+/// a metal bar bent up and over between two sockets, with a grip along its
+/// top.
+private struct CarryHandle: View {
+    let skin: Skin
+
+    var body: some View {
+        GeometryReader { geo in
+            let bar: CGFloat = 13
+            let arch = Path { path in
+                let inset = bar / 2 + 6
+                let top = bar / 2 + 2
+                let bend = min(26, geo.size.height * 0.4)
+                path.move(to: CGPoint(x: inset, y: geo.size.height))
+                path.addLine(to: CGPoint(x: inset, y: top + bend))
+                path.addQuadCurve(to: CGPoint(x: inset + bend, y: top), control: CGPoint(x: inset, y: top))
+                path.addLine(to: CGPoint(x: geo.size.width - inset - bend, y: top))
+                path.addQuadCurve(to: CGPoint(x: geo.size.width - inset, y: top + bend),
+                                  control: CGPoint(x: geo.size.width - inset, y: top))
+                path.addLine(to: CGPoint(x: geo.size.width - inset, y: geo.size.height))
+            }
+            ZStack(alignment: .top) {
+                // The bar: bright metal, with shadow under it on the case
+                arch.stroke(Color.black.opacity(0.5), style: StrokeStyle(lineWidth: bar + 3, lineCap: .butt))
+                    .blur(radius: 5)
+                    .offset(y: 5)
+                arch.stroke(LinearGradient(colors: [Color(white: 0.95), Color(white: 0.55), Color(white: 0.80)],
+                                           startPoint: .top, endPoint: .bottom),
+                            style: StrokeStyle(lineWidth: bar, lineCap: .butt, lineJoin: .round))
+                arch.stroke(Color.white.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, lineCap: .butt))
+                    .offset(x: -bar / 2 + 2.5, y: -bar / 2 + 2.5)
+                    .mask(arch.stroke(style: StrokeStyle(lineWidth: bar, lineCap: .butt, lineJoin: .round)))
+                // The grip: ribbed rubber over the middle of the bar
+                Capsule()
+                    .fill(LinearGradient(colors: [Color(white: 0.24), Color(white: 0.07)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .overlay(
+                        HStack(spacing: 5) {
+                            ForEach(0..<Int(geo.size.width * 0.5 / 7), id: \.self) { _ in
+                                Rectangle().fill(Color.black.opacity(0.55)).frame(width: 2)
+                            }
+                        }
+                        .clipShape(Capsule())
+                    )
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
+                    .frame(width: geo.size.width * 0.5, height: bar + 7)
+                    .offset(y: -1.5)
+                    .shadow(color: .black.opacity(0.5), radius: 3, y: 2)
+                // The sockets the bar goes into
+                HStack {
+                    socket
+                    Spacer()
+                    socket
+                }
+                .frame(maxHeight: .infinity, alignment: .bottom)
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private var socket: some View {
+        RoundedRectangle(cornerRadius: 5)
+            .fill(LinearGradient(colors: [Color(white: 0.16), Color(white: 0.04)], startPoint: .top, endPoint: .bottom))
+            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
+            .frame(width: 31, height: 16)
+            .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
     }
 }
 
