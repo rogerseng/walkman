@@ -101,7 +101,7 @@ struct OpenTrayView: View {
     }
 
     /// The cassette door: a chrome bezel round a smoked window. Behind it is
-    /// the well with its two spindles, and the tape when there is one.
+    /// the dark well, and the tape when there is one.
     private func door(width: CGFloat, height: CGFloat) -> some View {
         let shape = RoundedRectangle(cornerRadius: 18)
         let tapeWidth = width - 26
@@ -109,12 +109,6 @@ struct OpenTrayView: View {
         return ZStack {
             // The well
             shape.fill(Color(white: 0.04))
-            HStack(spacing: 33 * u) {
-                DriveSpindle(u: u)
-                DriveSpindle(u: u)
-            }
-            .opacity(model.hasTape ? 0 : 0.28)
-            .offset(y: (28.5 - 31.5) * u)
             if !model.hasTape {
                 VStack(spacing: 5) {
                     Image(systemName: "eject.fill").font(.system(size: 22))

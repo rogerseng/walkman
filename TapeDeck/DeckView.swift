@@ -433,10 +433,9 @@ struct DeckView: View {
                         .position(plan.cassetteCenter)
                         .frame(width: size.width, height: size.height)
                 } else {
-                    emptyWell(length: 100 * scale)
-                        .position(plan.cassetteCenter)
-                    // The prompt sits in the middle of the window, not of
-                    // the well behind it.
+                    // The empty well is left dark; the drive spindles show
+                    // only through a tape. The prompt sits in the middle of
+                    // the window.
                     VStack(spacing: 6) {
                         Image(systemName: "eject.fill").font(.system(size: 24))
                         Text("NO TAPE").font(Typeface.display(16)).tracking(3)
@@ -488,17 +487,6 @@ struct DeckView: View {
             }
             .frame(width: size.width, height: size.height)
             .clipped()
-        }
-    }
-
-    /// The well with nothing in it: the two drive spindles, one above the other.
-    private func emptyWell(length: CGFloat) -> some View {
-        let u = length / 100
-        // Faint in the empty well; they show properly once a tape is on them.
-        let spindle = DriveSpindle(u: u).opacity(0.28)
-        return VStack(spacing: 33 * u) {
-            spindle
-            spindle
         }
     }
 
