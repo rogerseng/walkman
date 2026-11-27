@@ -390,21 +390,6 @@ struct MenuPlayerView: View {
                                    startPoint: .top, endPoint: .bottom)
                     GlassShimmer(strength: 0.45)
                     }
-                    // Where the body ends at the bar, its edge is chamfered
-                    // and catches the light, so even the black one stands
-                    // clear of the black beside it.
-                    .overlay(alignment: railLeading ? .leading : .trailing) {
-                        if rail {
-                            HStack(spacing: 0) {
-                                LinearGradient(colors: [.clear, Color.white.opacity(0.22)],
-                                               startPoint: .leading, endPoint: .trailing)
-                                    .frame(width: 7)
-                                Color.white.opacity(skin == .wheelSilver ? 0.9 : 0.6).frame(width: 1.5)
-                            }
-                            .scaleEffect(x: railLeading ? -1 : 1)
-                            .allowsHitTesting(false)
-                        }
-                    }
                     .padding(railLeading ? .leading : .trailing,
                              rail ? max(insets.leading, insets.trailing) : 0)
                 }
