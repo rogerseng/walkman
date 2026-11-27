@@ -227,6 +227,11 @@ struct OpenTrayView: View {
 
     /// The narrow strip between the speaker and the tape: which side is up,
     /// the lamp, and the volume laid on its side.
+    /// Lettering moulded into the body of the case. The skin's engraving
+    /// colour is made for its key panel, which on some skins is pale where
+    /// the body is not, so the body takes the colour of the song line.
+    private var caseLettering: Color { skin.note.opacity(0.85) }
+
     private var controlStrip: some View {
         HStack(spacing: 12) {
             Wordmark(size: 21)
@@ -236,8 +241,8 @@ struct OpenTrayView: View {
             Text(model.hasTape ? "SIDE \(model.sideLetter)" : (isMP3 ? "MP3 PLAYER" : "CASSETTE DECK"))
                 .font(Typeface.displayFixed(10))
                 .tracking(1.6)
-                .foregroundColor(skin.engraving)
-                .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
+                .foregroundColor(caseLettering)
+                .shadow(color: Color.black.opacity(0.55), radius: 0.3, y: -0.7)
             Circle()
                 .fill(model.motion == .playing ? theme.accentColor : Color.black.opacity(0.6))
                 .frame(width: 9, height: 9)
@@ -247,14 +252,14 @@ struct OpenTrayView: View {
             Text("VOLUME")
                 .font(Typeface.displayFixed(8))
                 .tracking(1.6)
-                .foregroundColor(skin.engraving)
-                .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
+                .foregroundColor(caseLettering)
+                .shadow(color: Color.black.opacity(0.55), radius: 0.3, y: -0.7)
             // Laid on its side: the loud end is on the right.
             GeometryReader { room in
                 VolumeFader(volume: volume, playing: model.motion == .playing,
                             tempo: model.beatsPerMinute,
-                            engraving: skin.engraving, engravingEdge: skin.engravingEdge,
-                            engravingEdgeOffset: skin.engravingEdgeOffset)
+                            engraving: caseLettering, engravingEdge: Color.black.opacity(0.55),
+                            engravingEdgeOffset: -0.7)
                     .frame(width: 44, height: room.size.width)
                     .rotationEffect(.degrees(90))
                     .frame(width: room.size.width, height: room.size.height)
@@ -286,8 +291,8 @@ struct OpenTrayView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .foregroundColor(skin.engraving)
-            .shadow(color: skin.engravingEdge, radius: 0.3, y: skin.engravingEdgeOffset)
+            .foregroundColor(caseLettering)
+            .shadow(color: Color.black.opacity(0.55), radius: 0.3, y: -0.7)
             .padding(.horizontal, 7)
             .frame(height: 16)
             .accessibilityHidden(true)
@@ -754,7 +759,8 @@ struct OpenTrayView: View {
                         .frame(width: scrubbing == nil ? 12 : 18, height: scrubbing == nil ? 12 : 18)
                         .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
                         .position(x: min(bar.size.width - 6, max(6, bar.size.width * CGFloat(done))),
-                                  y: bar.size.height / 2)
+                                  // The middle of the bar, which is 6 points tall
+                                  y: 3)
                 }
                 .frame(height: 6)
                 .frame(maxHeight: .infinity)
