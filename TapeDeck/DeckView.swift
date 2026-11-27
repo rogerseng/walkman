@@ -13,6 +13,8 @@ import SwiftUI
 /// get a strip of their own inside the safe area.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
+    /// Shared by the fader beside the window and the mute key in the column.
+    @StateObject private var volume = SystemVolume()
     var openShelf: () -> Void
 
     /// Width of the key column on phones that have no side rail.
@@ -22,7 +24,7 @@ struct DeckView: View {
     private let railKeyWidth: CGFloat = 66
     private let railOuterMargin: CGFloat = 15
     private let bigKeyHeight: CGFloat = 84
-    private let keyGap: CGFloat = 16
+    private let keyGap: CGFloat = 12
     /// Height kept clear at the top of the rail for the camera, clock and
     /// status icons. Measured from a Duo screenshot, where the status pill
     /// ends about 154 points down; not a published figure.
@@ -75,7 +77,7 @@ struct DeckView: View {
             }
             // Volume: beside the window and exactly as tall as it is
             .overlay(alignment: .topLeading) {
-                VolumeColumn()
+                VolumeFader(volume: volume)
                     .frame(width: 40, height: window.height)
                     .offset(x: railLeading ? window.minX - 52 : window.maxX + 12, y: window.minY)
             }
@@ -227,14 +229,39 @@ struct DeckView: View {
 
     // MARK: Keys
 
-    /// Four big keys: play/pause, fast forward, rewind and eject.
+    /// Five keys of one size: play/pause, fast forward, rewind, the tape
+    /// library, and mute.
     private func keys(height: CGFloat) -> some View {
-        TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
-                      spacing: keyGap, onEject: openShelf)
+        VStack(spacing: keyGap) {
+            TransportKeys(vertical: true, keyHeight: height, bare: true, big: true,
+                          spacing: keyGap, onEject: openShelf)
+            TapeKey(symbol: volume.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
+                    label: volume.isMuted ? "Unmute" : "Mute",
+                    latched: volume.isMuted,
+                    height: height, showsLabel: false, corner: 17, symbolSize: 23,
+                    onDown: {
+                        Haptics.keyDown()
+                        volume.toggleMute()
+                    })
+        }
     }
 
     private func keyHeight(room: CGFloat) -> CGFloat {
-        min(bigKeyHeight, max(40, (room - 3 * keyGap) / 4))
+        min(bigKeyHeight, max(40, (room - 4 * keyGap) / 5))
+    }
+
+    /// The side of the player that carries the keys: solid plastic, not see
+    /// through, with a seam where it meets the clear part of the case.
+    private func casePanel(seamOnLeading: Bool) -> some View {
+        ZStack(alignment: seamOnLeading ? .leading : .trailing) {
+            LinearGradient(colors: [Color(white: 0.20), Color(white: 0.13), Color(white: 0.09)],
+                           startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [Color.white.opacity(0.06), .clear],
+                           startPoint: seamOnLeading ? .leading : .trailing,
+                           endPoint: seamOnLeading ? .trailing : .leading)
+            Color.white.opacity(0.22).frame(width: 1)
+        }
+        .shadow(color: .black.opacity(0.65), radius: 7, x: seamOnLeading ? -3 : 3)
     }
 
     /// The column of keys. In the Duo's rail it starts below the camera and
@@ -256,6 +283,7 @@ struct DeckView: View {
                 .padding(.trailing, leading ? inner : railOuterMargin)
             }
             .frame(width: width)
+            .background(casePanel(seamOnLeading: !leading))
         } else {
             GeometryReader { geo in
                 let room = geo.size.height - insets.top - insets.bottom - 24
@@ -269,9 +297,9 @@ struct DeckView: View {
                 .padding(.leading, 8)
                 .padding(.trailing, 8 + insets.trailing)
                 .frame(width: stripWidth + insets.trailing, height: geo.size.height)
-
             }
             .frame(width: stripWidth + insets.trailing)
+            .background(casePanel(seamOnLeading: true))
         }
     }
 }
@@ -337,7 +365,10 @@ struct TransportKeys: View {
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: { model.seekKeyDown(forward: false) },
                     onUp: { model.seekKeyUp(forward: false) })
-            TapeKey(symbol: "eject.fill", label: "EJECT",
+            // On the closed phone this key opens the tape library; where it
+            // takes the tape out, it is an eject key.
+            TapeKey(symbol: ejectRemovesTape ? "eject.fill" : "music.note.list",
+                    label: ejectRemovesTape ? "EJECT" : "Tape library",
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: {
                         model.ejectKey(removeTape: ejectRemovesTape)
@@ -354,7 +385,7 @@ struct TransportKeys: View {
     }
 }
 
-/// One mechanical key, moulded in clear plastic. It reports press and release separately so rewind and
+/// One mechanical key, moulded in solid plastic. It reports press and release separately so rewind and
 /// fast forward can tell a tap from a hold, and stays down while latched.
 struct TapeKey: View {
     var symbol: String
@@ -386,7 +417,6 @@ struct TapeKey: View {
             RoundedRectangle(cornerRadius: corner)
                 .fill(LinearGradient(colors: keyColors(down: down), startPoint: .top, endPoint: .bottom))
         )
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: corner))
         .overlay(RoundedRectangle(cornerRadius: corner).strokeBorder(Color.white.opacity(0.30), lineWidth: 0.75))
         // Light catching the moulded top edge
         .overlay(alignment: .top) {
@@ -430,9 +460,10 @@ struct TapeKey: View {
                 ? [Color(white: 0.62).opacity(0.95), Color(white: 0.74).opacity(0.95)]
                 : [Color(white: 0.96).opacity(0.95), Color(white: 0.74).opacity(0.95)]
         }
+        // Solid plastic, like the panel the keys sit in
         return down
-            ? [Color.white.opacity(0.10), Color.white.opacity(0.18)]
-            : [Color.white.opacity(0.36), Color.white.opacity(0.14)]
+            ? [Color(white: 0.15), Color(white: 0.21)]
+            : [Color(white: 0.42), Color(white: 0.25)]
     }
 }
 

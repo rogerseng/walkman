@@ -144,22 +144,3 @@ struct VolumeFader: View {
         }
     }
 }
-
-/// The fader with a mute key under it.
-struct VolumeColumn: View {
-    @StateObject private var volume = SystemVolume()
-
-    var body: some View {
-        VStack(spacing: 10) {
-            VolumeFader(volume: volume)
-            TapeKey(symbol: volume.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
-                    label: volume.isMuted ? "Unmute" : "Mute",
-                    latched: volume.isMuted,
-                    height: 34, showsLabel: false, corner: 10, symbolSize: 13,
-                    onDown: {
-                        Haptics.keyDown()
-                        volume.toggleMute()
-                    })
-        }
-    }
-}
