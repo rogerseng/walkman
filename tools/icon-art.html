@@ -4,12 +4,12 @@ const bg='<defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset=
 // The app's icon: a cassette in white neon outline over a striped eighties
 // sun, on a starry night.
 let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
-const stars=[...Array(70)].map(()=>{const x=rnd()*1024,y=rnd()*1024,r=1.5+rnd()*rnd()*5;return `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#fff" opacity="${(.35+rnd()*.6).toFixed(2)}"/>`}).join('');
+const stars='';
 const spark=(x,y,r)=>`<path d="M${x} ${y-r}Q${x} ${y} ${x+r} ${y}Q${x} ${y} ${x} ${y+r}Q${x} ${y} ${x-r} ${y}Q${x} ${y} ${x} ${y-r}Z" fill="#fff"/>`;
-const sparks=spark(150,170,46)+spark(880,120,30)+spark(900,860,54)+spark(110,900,26);
-const slats=[[452,8],[520,12],[586,16],[650,20],[712,24],[772,28],[830,32]].map(([y,h])=>`<rect x="0" y="${y}" width="1024" height="${h}" fill="#000"/>`).join('');
-const ring=(d,w)=>`<rect x="${132+d}" y="${292+d}" width="${760-2*d}" height="${440-2*d}" rx="${64-d*.7}" fill="none" stroke="#fff" stroke-width="${w}"/>`;
-const reel=x=>[86,54].map(r=>`<circle cx="${x}" cy="566" r="${r}" fill="none" stroke="#fff" stroke-width="12"/>`).join('')+[...Array(6)].map((_,i)=>`<line x1="${x}" y1="${566-54}" x2="${x}" y2="${566-34}" stroke="#fff" stroke-width="12" stroke-linecap="round" transform="rotate(${i*60} ${x} 566)"/>`).join('');
+const sparks=spark(140,150,52)+spark(896,884,40);
+const slats=[[560,22],[668,34],[784,46]].map(([y,h])=>`<rect x="0" y="${y}" width="1024" height="${h}" fill="#000"/>`).join('');
+const ring=(d,w)=>`<rect x="${142+d}" y="${302+d}" width="${740-2*d}" height="${420-2*d}" rx="${84-d*.7}" fill="none" stroke="#fff" stroke-width="${w}"/>`;
+const reel=x=>`<circle cx="${x}" cy="512" r="82" fill="none" stroke="#fff" stroke-width="38"/>`;
 const sky=`<defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22083f"/><stop offset=".5" stop-color="#170a45"/><stop offset="1" stop-color="#0a0a33"/></linearGradient>
 <radialGradient id="halo" cx=".5" cy=".5" r=".5"><stop offset=".6" stop-color="#b03cff" stop-opacity=".5"/><stop offset="1" stop-color="#3a6bff" stop-opacity="0"/></radialGradient>
 <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2fe0d0"/><stop offset=".35" stop-color="#6a4be8"/><stop offset=".68" stop-color="#ff3da6"/><stop offset="1" stop-color="#ffb347"/></linearGradient>
@@ -19,8 +19,8 @@ const sky=`<defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offs
 <rect width="1024" height="1024" fill="url(#sky)"/>${stars}
 ${sparks}
 <circle cx="512" cy="512" r="470" fill="url(#halo)"/>
-<circle cx="512" cy="512" r="372" fill="url(#sun)" mask="url(#sl)"/>`;
-const tape=`${ring(0,13)}${ring(26,11)}${ring(52,11)}${reel(352)}${reel(672)}<g fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round"><rect x="250" y="372" width="524" height="64" rx="10"/></g>`;
+<circle cx="512" cy="512" r="410" fill="url(#sun)" mask="url(#sl)"/>`;
+const tape=`${ring(0,38)}${reel(362)}${reel(662)}`;
 const A=sky+`<g filter="url(#glow)" opacity=".75" stroke="#ff4fc3">${tape.replaceAll('#fff','#ff6ad0')}</g>`+tape;
 const B=bg+`<g fill="none" stroke="#f2efe8" stroke-width="44"><circle cx="352" cy="512" r="150"/><circle cx="672" cy="512" r="150"/></g>
 <circle cx="352" cy="512" r="46" fill="#f57a21"/><circle cx="672" cy="512" r="46" fill="#f2efe8"/>`;
