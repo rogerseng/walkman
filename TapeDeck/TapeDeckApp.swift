@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct TapeDeckApp: App {
     @StateObject private var model = PlayerModel()
+    @StateObject private var tour = Tour()
 
     init() {
         Typeface.styleNavigationBars()
@@ -12,6 +13,7 @@ struct TapeDeckApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(model)
+                .environmentObject(tour)
                 .preferredColorScheme(.dark)
         }
     }
@@ -24,6 +26,7 @@ struct TapeDeckApp: App {
 ///    tape on the right. Closing the phone starts it playing.
 struct ContentView: View {
     @EnvironmentObject private var model: PlayerModel
+    @EnvironmentObject private var tour: Tour
     @State private var showShelf = false
     @AppStorage(Prefs.introSeen) private var introSeen = false
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
@@ -64,7 +67,11 @@ struct ContentView: View {
         .environment(\.playerTheme, Theme.current(player: player, skinName: skinName).skin.theme)
         // The introduction, the first time the app is opened
         .fullScreenCover(isPresented: introShown) {
-            OnboardingView(done: { introSeen = true })
+            OnboardingView(done: {
+                introSeen = true
+                // Then try the keys for real, on the deck
+                if player == "tape" { tour.start(hasTape: model.hasTape) }
+            })
         }
         .alert("Cassety", isPresented: errorShown) {
             Button("OK", role: .cancel) {}

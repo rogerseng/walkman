@@ -171,7 +171,7 @@ enum Skin: String, CaseIterable, Identifiable {
     var needsStatusPlate: Bool { hasPalePanel }
 
     /// A word in outline lettering above the tape window, if the case has one.
-    var caseWord: String? { self == .blue ? "STEREO" : nil }
+    var caseWord: String? { nil }
 
     /// The body of a click-wheel player, top to bottom.
     var wheelBody: [Color] {

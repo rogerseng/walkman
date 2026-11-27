@@ -7,9 +7,11 @@ struct OpenTrayView: View {
     @EnvironmentObject private var model: PlayerModel
     @State private var showSettings = false
     @Environment(\.playerTheme) private var theme
+    @AppStorage(Prefs.player) private var player = "tape"
+    @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
 
     private var hint: String {
-        if !model.hasTape { return "Choose a tape" }
+        if !model.hasTape { return "Pick a tape from the shelf" }
         if let note = model.endOfSideNote { return note }
         if model.motion == .playing { return model.trackLine.isEmpty ? " " : model.trackLine }
         return "Close the phone, or press PLAY, to start the music"
@@ -31,9 +33,8 @@ struct OpenTrayView: View {
                             .onTapGesture(count: 2) { model.flipTape() }
                             .transition(.opacity)
                     } else {
-                        RoundedRectangle(cornerRadius: 14)
-                            .strokeBorder(Color.white.opacity(0.3),
-                                          style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
+                        EmptyTray(skin: Theme.current(player: player, skinName: skinName).skin,
+                                  width: width)
                             .frame(width: width, height: height)
                     }
                 }
@@ -70,3 +71,41 @@ struct OpenTrayView: View {
         }
     }
 }
+
+/// The empty tray on the open phone, drawn like the empty well on the closed
+/// one: a dark window cut in the case, the two drive spindles faint inside,
+/// and the same prompt.
+private struct EmptyTray: View {
+    let skin: Skin
+    let width: CGFloat
+
+    var body: some View {
+        let u = width / 100
+        let opening = RoundedRectangle(cornerRadius: 20)
+        ZStack {
+            opening.fill(Color(white: 0.04))
+            opening.strokeBorder(Color.black.opacity(0.75), lineWidth: 8).blur(radius: 5).clipShape(opening)
+            opening.fill(LinearGradient(colors: [Color.white.opacity(0.10), Color.white.opacity(0.02), .clear],
+                                        startPoint: .topLeading, endPoint: .center))
+            // The spindles, where a tape's hubs would sit on them
+            HStack(spacing: 33 * u) {
+                DriveSpindle(u: u)
+                DriveSpindle(u: u)
+            }
+            .opacity(0.28)
+            .offset(y: (28.5 - 31.5) * u)
+            VStack(spacing: 6) {
+                Image(systemName: "eject.fill").font(.system(size: 24))
+                Text("NO TAPE").font(Typeface.display(16)).tracking(3)
+            }
+            .foregroundColor(Color.white.opacity(0.5))
+            .offset(y: 10 * u)
+            opening.strokeBorder(LinearGradient(colors: skin.windowEdge,
+                                                startPoint: .topLeading, endPoint: .bottomTrailing),
+                                 lineWidth: 2.5)
+                .shadow(color: skin.hasStripes ? Skin.hotPink.opacity(0.8) : .clear, radius: 6)
+            opening.strokeBorder(Color.black.opacity(0.55), lineWidth: 1.5).padding(2.5)
+        }
+    }
+}
+

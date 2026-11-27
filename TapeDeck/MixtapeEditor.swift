@@ -24,7 +24,7 @@ struct MixtapeEditor: View {
                     }
                 }
 
-                Section("Recorded") {
+                Section {
                     Picker("Side", selection: $side) {
                         Text("Side A").tag(0)
                         Text("Side B").tag(1)
@@ -46,6 +46,14 @@ struct MixtapeEditor: View {
                     .onMove { from, to in
                         change { $0.move(fromOffsets: from, toOffset: to) }
                     }
+                } header: {
+                    // Reordering lives with the songs it reorders, which
+                    // keeps the bar clear for the tape's name.
+                    HStack {
+                        Text("Recorded")
+                        Spacer()
+                        EditButton().font(.footnote.weight(.semibold))
+                    }
                 }
 
                 Section("Add songs to side \(side == 0 ? "A" : "B")") {
@@ -66,15 +74,13 @@ struct MixtapeEditor: View {
                 }
             }
             .navigationTitle(mixtape.name.isEmpty ? "New Mixtape" : mixtape.name)
-            .navigationBarTitleDisplayMode(.inline)
+            // A title on its own line, under the bar, so its keys never crowd it
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 // All on the trailing side: on the Duo that is the rail under
                 // the clock, which leaves the whole bar for the tape's name.
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    EditButton()
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {

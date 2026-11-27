@@ -90,6 +90,8 @@ struct OnboardingView: View {
             Text("How the deck works")
                 .font(Typeface.display(27))
                 .foregroundColor(.white)
+            Text("After this, a short tour has you try each one on the deck yourself.")
+                .foregroundColor(.white.opacity(0.7))
             VStack(alignment: .leading, spacing: 16) {
                 tip("play.fill", "Play and stop", "They are a pair. Press one in and the other pops out.")
                 tip("forward.fill", "Skip or wind", "Tap fast forward or rewind to skip a song. Hold to wind the tape.")

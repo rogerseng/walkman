@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 /// Everything that can be switched, how the deck works, and what the app is.
 struct SettingsView: View {
     @EnvironmentObject private var model: PlayerModel
+    @EnvironmentObject private var tour: Tour
+    @AppStorage(Prefs.player) private var player = "tape"
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage(Prefs.hiss) private var hissOn = true
@@ -117,6 +119,12 @@ struct SettingsView: View {
                     Label("Tap fast forward or rewind to skip a song. Hold to wind the tape.", systemImage: "forward.fill")
                     Label("Double-tap the tape to turn it over.", systemImage: "arrow.triangle.2.circlepath")
                     Label("Open the phone to choose a tape, then close it to start playing.", systemImage: "rectangle.portrait.on.rectangle.portrait")
+                    Button("Take the hands-on tour") {
+                        // The tour is done on the tape deck itself.
+                        player = "tape"
+                        dismiss()
+                        tour.start(hasTape: model.hasTape)
+                    }
                     Button("Show the introduction again") {
                         dismiss()
                         introSeen = false

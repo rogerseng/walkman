@@ -13,6 +13,7 @@ import SwiftUI
 /// get a strip of their own inside the safe area.
 struct DeckView: View {
     @EnvironmentObject private var model: PlayerModel
+    @EnvironmentObject private var tour: Tour
     /// The phone's volume, which the fader on the panel sets.
     @StateObject private var volume = SystemVolume()
     @State private var showSettings = false
@@ -145,10 +146,42 @@ struct DeckView: View {
                     .offset(x: faderX, y: window.maxY + 9)
                     .accessibilityHidden(true)
             }
+            // The tour: the tape lit up when it is the thing to touch, and
+            // the card saying what to do
+            .overlay(alignment: .topLeading) {
+                if tour.step?.onTape == true {
+                    TourPulse(corner: 20)
+                        .frame(width: window.width, height: window.height)
+                        .offset(x: window.minX, y: window.minY)
+                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                TourCard(tour: tour)
+                    .frame(width: max(240, window.width + 20))
+                    .offset(x: max(10, window.minX - 10), y: -(insets.bottom + 14))
+            }
+            .environment(\.tourKey, tour.step?.key)
             .ignoresSafeArea()
         }
         .fullScreenCover(isPresented: $showSettings) {
             SettingsView()
+        }
+        // The tour moves on when the listener has done what it asked
+        .onChange(of: model.hasTape) { _, has in
+            if has { tour.completed(.chooseTape) }
+        }
+        .onChange(of: model.motion) { old, new in
+            if new == .playing { tour.completed(.play) }
+            if old == .playing, new == .paused || new == .stopped { tour.completed(.stop) }
+            if old == .rewind || old == .fastForward, new != .rewind, new != .fastForward {
+                tour.completed(.wind)
+            }
+        }
+        .onChange(of: model.trackTitle) { _, _ in
+            if model.motion != .rewind, model.motion != .fastForward { tour.completed(.skip) }
+        }
+        .onChange(of: model.sideLetter) { _, _ in
+            tour.completed(.flip)
         }
     }
 
@@ -559,6 +592,8 @@ struct TapeKey: View {
 
     @State private var pressed = false
     @AppStorage(Prefs.skin) private var skinName = Skin.standard.rawValue
+    /// The tour lights up the key it wants pressed.
+    @Environment(\.tourKey) private var tourKey
 
     private var skin: Skin { Skin(rawValue: skinName) ?? Skin.standard }
 
@@ -608,6 +643,9 @@ struct TapeKey: View {
                 )
                 .padding(-3)
         )
+        .overlay {
+            if tourKey == symbol { TourPulse(corner: corner + 3) }
+        }
         .animation(.easeOut(duration: 0.08), value: down)
         .contentShape(Rectangle())
         .gesture(
