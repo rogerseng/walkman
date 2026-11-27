@@ -32,7 +32,9 @@ struct DeckView: View {
     /// allows. The phone has no rail of its own, so one is made for it.
     var sideKeys = false
     /// The width of the column made for the keys on such a phone.
-    private let phoneRail: CGFloat = 92
+    private let phoneRail: CGFloat = 104
+    /// On such a phone, the width of the keys in that column.
+    private let phoneKeyWidth: CGFloat = 72
 
     private var skin: Skin {
         let stored = Skin(rawValue: skinName) ?? Skin.standard
@@ -67,7 +69,9 @@ struct DeckView: View {
             let full = CGSize(width: geo.size.width + real.leading + real.trailing,
                               height: geo.size.height + real.top + real.bottom)
             let plan = layout(full: full, insets: insets, phone: phone)
-            let window = plan.window
+            // The part of the window that shows: on a phone the window runs
+            // on under the side panel.
+            let window = plan.seen ?? plan.window
             ZStack(alignment: .topLeading) {
                 // The face itself is drawn in the background, full screen.
                 // Double-tap the tape to turn it over.
@@ -133,7 +137,7 @@ struct DeckView: View {
                         // far enough in that the keys sit inside it top to
                         // bottom.
                         casePanel(seam: plan.railLeading ? .trailing : .leading, bow: phone ? 10 : nil)
-                            .frame(width: phone ? plan.panelWidth + 16 : plan.panelWidth)
+                            .frame(width: phone ? plan.panelWidth + 4 : plan.panelWidth)
                             .frame(maxWidth: .infinity, alignment: plan.railLeading ? .leading : .trailing)
                     } else {
                         // Along the foot, the panel the keys sit in
@@ -191,7 +195,7 @@ struct DeckView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Songs on this tape")
-                    .offset(x: window.maxX - 46, y: insets.top + 6 + headLift(plan, insets))
+                    .offset(x: window.maxX - (plan.seen == nil ? 46 : 54), y: insets.top + 6 + headLift(plan, insets))
                 }
             }
             // A word in outline lettering above the window, on cases that have one
@@ -413,6 +417,8 @@ struct DeckView: View {
         var railWidth: CGFloat
         /// On the Duo, the width of the solid side of the case.
         var panelWidth: CGFloat = 0
+        /// On a phone, the part of the window left uncovered by the panel.
+        var seen: CGRect? = nil
     }
 
     /// The length of the cassette the window always shows, in millimetres of
@@ -476,29 +482,36 @@ struct DeckView: View {
     private func railLayout(full: CGSize, insets: EdgeInsets, railWidth: CGFloat, leading: Bool,
                             phone: Bool = false) -> Layout {
         if phone {
-            // The window takes all the width the keys leave, or all the
-            // height under the name, whichever runs out first.
+            // The window starts near the left edge and runs on under the
+            // side panel. It shows nearly the whole length of the tape, as
+            // tall as the screen allows under the name and over the song.
             // The name above it and the song under it go with it, and the
             // three together sit in the middle of the screen.
+            let lengthMM: CGFloat = 86
+            let farMM: CGFloat = 94
             let nameBand: CGFloat = 58
-            let songBand: CGFloat = 56
+            let songBand: CGFloat = 48
             let foot: CGFloat = skin.hasStripes ? 34 : 0
-            let roomWide = full.width - railWidth - 32
+            // The panel's seam at its furthest in, and where its ends are
+            let seam = full.width - railWidth - 4
+            let windowX: CGFloat = 11 + insets.leading
+            let seenWidth = seam - windowX
             let usable = full.height - insets.top - insets.bottom - foot
-            let roomTall = usable - nameBand - songBand - 16
-            let scale = min(roomWide / windowMinWidth, roomTall / windowLength)
-            let windowX = 10 + (roomWide - windowMinWidth * scale) / 2
-            let free = usable - (nameBand + windowLength * scale + songBand)
+            let roomTall = usable - nameBand - songBand - 8
+            let scale = min(seenWidth / windowMinWidth, roomTall / lengthMM)
+            let height = lengthMM * scale
+            let free = usable - (nameBand + height + songBand)
             let windowY = insets.top + max(0, free / 2) + nameBand
             let left = windowX - windowEdgeInset * scale
-            let bottom = windowY + windowFarEnd * scale
-            let window = CGRect(x: windowX, y: windowY, width: windowMinWidth * scale, height: windowLength * scale)
+            let bottom = windowY + farMM * scale
+            let window = CGRect(x: windowX, y: windowY, width: seam + 18 - windowX, height: height)
+            let seen = CGRect(x: windowX, y: windowY, width: seenWidth, height: height)
             return Layout(scale: scale, window: window,
                           cassetteCenter: CGPoint(x: left + 31.5 * scale, y: bottom - 50 * scale),
                           panelTop: full.height, keyHeight: 0,
                           contentLeft: 14 + insets.leading,
                           rail: true, railLeading: false, railWidth: railWidth,
-                          panelWidth: railWidth)
+                          panelWidth: railWidth, seen: seen)
         }
         // As big as the screen allows. The cassette may run a little past
         // the edges, but never far enough to lose the label.
@@ -663,27 +676,31 @@ struct DeckView: View {
                                fromFoot: Bool = false) -> some View {
         let width = max(insets.leading, insets.trailing)
         // On a phone the panel reaches further in, so the keys sit in its middle
-        let outer: CGFloat = fromFoot ? 20 : railOuterMargin
-        let inner = max(0, width - railKeyWidth - outer)
+        let keyWidth = fromFoot ? phoneKeyWidth : railKeyWidth
+        let outer: CGFloat = fromFoot ? 14 : railOuterMargin
+        let inner = max(0, width - keyWidth - outer)
         // The gap kept under the last key
-        let foot: CGFloat = fromFoot ? insets.bottom + 6 : insets.bottom + 4
+        let foot: CGFloat = fromFoot ? (insets.bottom > 0 ? insets.bottom - 3 : 16) : insets.bottom + 4
         return GeometryReader { geo in
             let room = geo.size.height - statusHeight - foot
-            let keyHeight = min(fromFoot ? 78 : railKeyMaxHeight, max(36, (room - 5 * keyGap) / 6))
+            // On a phone the keys take what the fader leaves, keeping room
+            // for a fader of a fair height.
+            let keyHeight = fromFoot
+                ? min(84, max(44, (room - 150 - 5 * keyGap) / 6))
+                : min(railKeyMaxHeight, max(36, (room - 5 * keyGap) / 6))
             VStack(spacing: 0) {
                 if fromFoot {
-                    // Over the keys, the volume fader stands upright in
-                    // the column, as tall as the room allows.
+                    // At the top of the column, under the clock, the volume
+                    // fader stands upright; the keys run down to the foot.
                     Color.clear.frame(height: statusHeight)
-                    Spacer(minLength: 0)
                     VStack(spacing: 8) {
                         fader
                             .frame(width: 48)
-                            .frame(maxHeight: 240)
+                            .frame(minHeight: 80, maxHeight: 200)
                         volumeWord.fixedSize()
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.bottom, 16)
+                    Spacer(minLength: 16)
                 } else {
                     // Fixed size and fixed distance from the foot, shared
                     // with the open phone, so the keys do not move when the
@@ -697,7 +714,7 @@ struct DeckView: View {
                     Color.clear.frame(height: DuoRail.bottomGap)
                 }
             }
-            .frame(width: railKeyWidth)
+            .frame(width: keyWidth)
             .padding(.leading, leading ? outer : inner)
             .padding(.trailing, leading ? inner : outer)
         }
