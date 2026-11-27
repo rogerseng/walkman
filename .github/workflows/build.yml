@@ -1,0 +1,30 @@
+name: Build
+
+# Compiles the app for the iOS simulator on a Mac runner, so every push is
+# checked by the real Swift compiler. Nothing is signed or uploaded.
+on:
+  push:
+    branches: ["claude/**", "main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show Xcode
+        run: |
+          ls /Applications | grep -i xcode || true
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i ios || true
+      - name: Build for the simulator
+        run: |
+          xcodebuild -project TapeDeck.xcodeproj -target TapeDeck \
+            -sdk iphonesimulator -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO build > build.log 2>&1
+          status=$?
+          grep -E "error:|error :|BUILD (SUCCEEDED|FAILED)|fatal|cannot be opened|xcodebuild: error" build.log | sort -u | head -150
+          tail -15 build.log
+          exit $status
+        shell: bash {0}
