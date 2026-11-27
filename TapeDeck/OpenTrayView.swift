@@ -295,13 +295,13 @@ struct OpenTrayView: View {
                 PianoKey(symbol: BeamedNotes.symbol, label: "Music library", height: height,
                          onDown: {
                              model.ejectKey(removeTape: false)
-                             showShelf = true
+                             TransportKeys.afterKeyGoesDown { showShelf = true }
                          })
                 PianoKey(symbol: "gearshape.fill", label: "Settings", dark: true, height: height,
                          lowerRight: corner - 7,
                          onDown: {
                              Haptics.keyDown()
-                             showSettings = true
+                             TransportKeys.afterKeyGoesDown { showSettings = true }
                          })
             }
             .padding(.horizontal, 7)

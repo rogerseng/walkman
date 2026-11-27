@@ -578,7 +578,7 @@ struct DeckView: View {
                     height: height, showsLabel: false, corner: 17, symbolSize: 23,
                     onDown: {
                         Haptics.keyDown()
-                        showSettings = true
+                        TransportKeys.afterKeyGoesDown { showSettings = true }
                     })
         }
     }
@@ -797,19 +797,25 @@ struct TransportKeys: View {
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: {
                         model.ejectKey(removeTape: ejectRemovesTape)
-                        onEject()
+                        Self.afterKeyGoesDown(onEject)
                     })
             if let onSettings {
                 TapeKey(symbol: "gearshape.fill", label: "Settings", dark: true,
                         height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                         onDown: {
                             Haptics.keyDown()
-                            onSettings()
+                            Self.afterKeyGoesDown(onSettings)
                         })
             }
         }
         .padding(bare ? 0 : 6)
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(bare ? 0 : 0.28)))
+    }
+
+    /// Runs what a key opens a moment after the press, so the key is seen
+    /// going down before a page slides up over it.
+    static func afterKeyGoesDown(_ action: @escaping () -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.17, execute: action)
     }
 
     static func clock(_ time: TimeInterval) -> String {
