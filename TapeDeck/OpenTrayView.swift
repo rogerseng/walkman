@@ -274,8 +274,8 @@ struct OpenTrayView: View {
     /// with what each one does lettered on the ledge above it.
     private func keyTrough(height: CGFloat) -> some View {
         let keys: [(symbol: String, word: String)] = [
-            ("play.fill", "PLAY"), ("stop.fill", "STOP"), ("forward.fill", "F.FWD"),
-            ("backward.fill", "REW"), (BeamedNotes.symbol, "MUSIC"), ("gearshape.fill", "SETTINGS")
+            ("play.fill", "PLAY"), ("stop.fill", "STOP"), ("backward.fill", "REW"),
+            ("forward.fill", "F.FWD"), (BeamedNotes.symbol, "MUSIC"), ("gearshape.fill", "SETTINGS")
         ]
         // The corner of the case beside the end keys, less the gap to it
         let corner: CGFloat = 20
@@ -304,14 +304,14 @@ struct OpenTrayView: View {
                 PianoKey(symbol: "stop.fill", label: "Stop",
                          latched: model.hasTape && (model.motion == .paused || model.motion == .stopped),
                          height: height, onDown: { model.stopKey() })
-                PianoKey(symbol: "forward.fill", label: "Fast forward",
-                         latched: model.motion == .fastForward, height: height,
-                         onDown: { model.seekKeyDown(forward: true) },
-                         onUp: { model.seekKeyUp(forward: true) })
                 PianoKey(symbol: "backward.fill", label: "Rewind",
                          latched: model.motion == .rewind, height: height,
                          onDown: { model.seekKeyDown(forward: false) },
                          onUp: { model.seekKeyUp(forward: false) })
+                PianoKey(symbol: "forward.fill", label: "Fast forward",
+                         latched: model.motion == .fastForward, height: height,
+                         onDown: { model.seekKeyDown(forward: true) },
+                         onUp: { model.seekKeyUp(forward: true) })
                 PianoKey(symbol: BeamedNotes.symbol, label: "Music library", height: height,
                          onDown: {
                              model.ejectKey(removeTape: false)

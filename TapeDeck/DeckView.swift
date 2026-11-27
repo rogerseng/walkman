@@ -808,14 +808,15 @@ struct TransportKeys: View {
                 TapeKey(symbol: "pause.fill", label: "PAUSE", latched: model.motion == .paused,
                         height: keyHeight, showsLabel: labels, onDown: { model.pauseKey() })
             }
-            TapeKey(symbol: "forward.fill", label: "FF", latched: model.motion == .fastForward,
-                    height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
-                    onDown: { model.seekKeyDown(forward: true) },
-                    onUp: { model.seekKeyUp(forward: true) })
+            // Rewind sits before fast forward, as back comes before on
             TapeKey(symbol: "backward.fill", label: "REW", latched: model.motion == .rewind,
                     height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
                     onDown: { model.seekKeyDown(forward: false) },
                     onUp: { model.seekKeyUp(forward: false) })
+            TapeKey(symbol: "forward.fill", label: "FF", latched: model.motion == .fastForward,
+                    height: keyHeight, showsLabel: labels, corner: corner, symbolSize: symbol,
+                    onDown: { model.seekKeyDown(forward: true) },
+                    onUp: { model.seekKeyUp(forward: true) })
             // On the closed phone this key opens the tape library; where it
             // takes the tape out, it is an eject key.
             // The two-note mark is the one Apple Music itself goes by.
