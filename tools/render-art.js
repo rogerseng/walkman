@@ -12,6 +12,7 @@ const path = require('path');
     // a small copy for the lock screen, where large images are refused
     ['front', 600, 378, '../../TapeDeckWidgets/Assets.xcassets/CassetteFrontSmall.imageset/cassette-front-small.png'],
     ['hub', 480, 480, 'ReelHub.imageset/reel-hub.png'],
+    ['grain', 384, 384, 'Grain.imageset/grain.png'],
   ]) {
     const tab = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
     await tab.goto(page + '?layer=' + layer + '&w=' + w);

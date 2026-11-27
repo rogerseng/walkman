@@ -85,9 +85,19 @@ struct DeckView: View {
             }
             // Volume: on the solid panel, level with the window and as tall as it
             .overlay(alignment: .topLeading) {
+                let faderX = railLeading ? panelWidth - 70 : full.width - panelWidth + 22
                 VolumeFader(volume: volume)
                     .frame(width: 48, height: window.height)
-                    .offset(x: railLeading ? panelWidth - 70 : full.width - panelWidth + 22, y: window.minY)
+                    .offset(x: faderX, y: window.minY)
+                // Engraved under the fader
+                Text("VOLUME")
+                    .font(.system(size: 6.5, weight: .bold))
+                    .tracking(1.6)
+                    .foregroundColor(Color.white.opacity(0.5))
+                    .shadow(color: .black.opacity(0.8), radius: 0.3, y: -0.7)
+                    .frame(width: 48)
+                    .offset(x: faderX, y: window.maxY + 9)
+                    .accessibilityHidden(true)
             }
             .ignoresSafeArea()
         }
@@ -155,6 +165,11 @@ struct DeckView: View {
                                                                  Color.white.opacity(0.45)],
                                                         startPoint: .topLeading, endPoint: .bottomTrailing),
                                          lineWidth: 2.5)
+                    // The cut has thickness: a dark inner face and a second lit lip
+                    opening.strokeBorder(Color.black.opacity(0.55), lineWidth: 1.5).padding(2.5)
+                    RoundedRectangle(cornerRadius: 17)
+                        .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
+                        .padding(4)
                     opening.strokeBorder(Color.white.opacity(0.10), lineWidth: 1).padding(-6)
                 }
                 .frame(width: window.width, height: window.height)
@@ -270,9 +285,13 @@ struct DeckView: View {
             edge.fill(LinearGradient(colors: [Color.white.opacity(0.07), .clear],
                                      startPoint: seamOnLeading ? .leading : .trailing,
                                      endPoint: .center))
-            // The seam, following the curve
+            PlasticGrain(strength: 0.5).clipShape(edge)
+            // The seam, following the curve: a dark cut with a lit lip
             BowedPanel(bow: 26, bowOnLeading: seamOnLeading, edgeOnly: true)
-                .stroke(Color.white.opacity(0.24), lineWidth: 1)
+                .stroke(Color.black.opacity(0.8), lineWidth: 2.5)
+            BowedPanel(bow: 26, bowOnLeading: seamOnLeading, edgeOnly: true)
+                .stroke(Color.white.opacity(0.30), lineWidth: 1)
+                .offset(x: seamOnLeading ? 1.6 : -1.6)
         }
         .shadow(color: .black.opacity(0.65), radius: 7, x: seamOnLeading ? -3 : 3)
     }
@@ -451,6 +470,9 @@ struct TapeKey: View {
 
     @State private var pressed = false
 
+    /// How far the key moves when pressed.
+    private let travel: CGFloat = 5
+
     var body: some View {
         let down = pressed || latched
         VStack(spacing: 4) {
@@ -459,25 +481,39 @@ struct TapeKey: View {
                 Text(label).font(.system(size: 7, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.6)
             }
         }
-        .foregroundColor(accent ? Color(white: 0.10) : .white)
+        // The symbol is engraved and filled with paint, so it has a thin
+        // edge of shadow or light where the cut catches it.
+        .foregroundColor(accent ? Color(white: 0.12) : Color(white: 0.94))
+        .shadow(color: accent ? Color.white.opacity(0.65) : Color.black.opacity(0.75),
+                radius: 0.4, y: accent ? 0.8 : -0.8)
         .padding(.horizontal, 2)
         .frame(maxWidth: .infinity)
-        .frame(height: height)
+        // The face is shorter than the key, leaving its side showing below.
+        .frame(height: height - travel)
+        .background(KeyCap(corner: corner, colors: keyColors(down: down)))
+        // Pressed, the face sinks until the side is hidden.
+        .offset(y: down ? travel - 1 : 0)
+        .frame(height: height, alignment: .top)
         .background(
+            // The side of the key
             RoundedRectangle(cornerRadius: corner)
-                .fill(LinearGradient(colors: keyColors(down: down), startPoint: .top, endPoint: .bottom))
+                .fill(LinearGradient(colors: accent ? [Color(white: 0.55), Color(white: 0.36)]
+                                                    : [Color(white: 0.17), Color(white: 0.09)],
+                                     startPoint: .top, endPoint: .bottom))
+                .shadow(color: .black.opacity(down ? 0.25 : 0.6), radius: down ? 1.5 : 4, y: down ? 1 : 4)
         )
-        .overlay(RoundedRectangle(cornerRadius: corner).strokeBorder(Color.white.opacity(0.30), lineWidth: 0.75))
-        // Light catching the moulded top edge
-        .overlay(alignment: .top) {
-            Capsule()
-                .fill(Color.white.opacity(0.55))
-                .frame(height: 1)
-                .padding(.horizontal, corner)
-                .padding(.top, 2)
-        }
-        .offset(y: down ? 3 : 0)
-        .shadow(color: .black.opacity(down ? 0.1 : 0.5), radius: down ? 1 : 3, y: down ? 1 : 3)
+        .background(
+            // The well the key sits in, cut into the panel
+            RoundedRectangle(cornerRadius: corner + 3)
+                .fill(Color.black.opacity(0.6))
+                .overlay(
+                    RoundedRectangle(cornerRadius: corner + 3)
+                        .strokeBorder(LinearGradient(colors: [Color.black.opacity(0.9), Color.white.opacity(0.16)],
+                                                     startPoint: .top, endPoint: .bottom),
+                                      lineWidth: 1)
+                )
+                .padding(-3)
+        )
         .animation(.easeOut(duration: 0.08), value: down)
         .contentShape(Rectangle())
         .gesture(
@@ -505,15 +541,52 @@ struct TapeKey: View {
 
     private func keyColors(down: Bool) -> [Color] {
         if accent {
-            // The play key: plain bright plastic, so it stands out without colour
+            // The play key: plain pale plastic, so it stands out without colour
             return down
-                ? [Color(white: 0.62).opacity(0.95), Color(white: 0.74).opacity(0.95)]
-                : [Color(white: 0.96).opacity(0.95), Color(white: 0.74).opacity(0.95)]
+                ? [Color(white: 0.74), Color(white: 0.64)]
+                : [Color(white: 0.92), Color(white: 0.74)]
         }
-        // Solid plastic, like the panel the keys sit in
+        // Dark plastic, like the panel the keys sit in
         return down
-            ? [Color(white: 0.15), Color(white: 0.21)]
-            : [Color(white: 0.42), Color(white: 0.25)]
+            ? [Color(white: 0.30), Color(white: 0.22)]
+            : [Color(white: 0.41), Color(white: 0.28)]
+    }
+}
+
+/// The top face of a key: moulded plastic with a fine grain, a slightly
+/// dished middle, and an edge that is lit from above.
+private struct KeyCap: View {
+    let corner: CGFloat
+    let colors: [Color]
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: corner)
+        ZStack {
+            shape.fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom))
+            PlasticGrain().clipShape(shape)
+            // The dish: shaded at the top of the hollow, lit at the bottom
+            RoundedRectangle(cornerRadius: max(2, corner - 5))
+                .fill(LinearGradient(colors: [Color.black.opacity(0.14), .clear, Color.white.opacity(0.09)],
+                                     startPoint: .top, endPoint: .bottom))
+                .padding(5)
+            shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.62), Color.white.opacity(0.08),
+                                                       Color.black.opacity(0.32)],
+                                              startPoint: .top, endPoint: .bottom),
+                               lineWidth: 1.2)
+        }
+    }
+}
+
+/// Fine moulded grain, laid over a plastic surface.
+struct PlasticGrain: View {
+    var strength = 0.45
+
+    var body: some View {
+        Image("Grain")
+            .resizable(resizingMode: .tile)
+            .blendMode(.overlay)
+            .opacity(strength)
+            .allowsHitTesting(false)
     }
 }
 

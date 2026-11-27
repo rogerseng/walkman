@@ -82,37 +82,59 @@ struct VolumeFader: View {
             let travel = max(1, geo.size.height - capHeight)
             let capTop = CGFloat(1 - volume.level) * travel
             ZStack(alignment: .top) {
-                // Tick marks down the left of the groove
+                // Tick marks engraved down the left of the slot
                 VStack(spacing: 0) {
                     ForEach(0..<11, id: \.self) { tick in
                         Rectangle()
-                            .fill(Color.white.opacity(tick % 5 == 0 ? 0.55 : 0.28))
+                            .fill(Color.white.opacity(tick % 5 == 0 ? 0.6 : 0.32))
                             .frame(width: tick % 5 == 0 ? 9 : 5, height: 1)
+                            .shadow(color: .black.opacity(0.8), radius: 0, y: -0.75)
                         if tick < 10 { Spacer(minLength: 0) }
                     }
                 }
                 .padding(.vertical, capHeight / 2)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // The groove
+                // The slot, cut into the panel: dark inside, shadowed along
+                // its upper lip and lit along its lower one
                 Capsule()
-                    .fill(Color.black.opacity(0.85))
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75))
-                    .frame(width: 6)
-                    .padding(.vertical, capHeight / 2 - 3)
+                    .fill(LinearGradient(colors: [Color.black, Color(white: 0.07)],
+                                         startPoint: .leading, endPoint: .trailing))
+                    .overlay(
+                        Capsule().strokeBorder(LinearGradient(colors: [Color.black, Color.white.opacity(0.30)],
+                                                              startPoint: .topLeading, endPoint: .bottomTrailing),
+                                               lineWidth: 1)
+                    )
+                    .frame(width: 8)
+                    .padding(.vertical, capHeight / 2 - 4)
                     .frame(maxWidth: .infinity)
 
-                // The cap
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(LinearGradient(colors: [Color(white: 0.95), Color(white: 0.62), Color(white: 0.80)],
-                                         startPoint: .top, endPoint: .bottom))
-                    .overlay(Rectangle().fill(Color(white: 0.15)).frame(height: 1.5))
-                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.black.opacity(0.5), lineWidth: 0.75))
-                    .frame(width: capWidth, height: capHeight)
-                    .shadow(color: .black.opacity(0.55), radius: 3, y: 2)
-                    // Centred on the groove
-                    .offset(y: capTop)
-                    .frame(maxWidth: .infinity)
+                // The cap: brushed metal with grip ridges and a marker line
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(LinearGradient(stops: [
+                            .init(color: Color(white: 0.98), location: 0),
+                            .init(color: Color(white: 0.74), location: 0.18),
+                            .init(color: Color(white: 0.56), location: 0.5),
+                            .init(color: Color(white: 0.70), location: 0.82),
+                            .init(color: Color(white: 0.40), location: 1)
+                        ], startPoint: .top, endPoint: .bottom))
+                    VStack(spacing: 2.5) {
+                        ForEach(0..<5, id: \.self) { ridge in
+                            Rectangle()
+                                .fill(ridge == 2 ? Color(white: 0.08) : Color.black.opacity(0.22))
+                                .frame(height: ridge == 2 ? 1.5 : 1)
+                                .shadow(color: .white.opacity(0.5), radius: 0, y: 0.75)
+                        }
+                    }
+                    .padding(.horizontal, 3)
+                    RoundedRectangle(cornerRadius: 4).strokeBorder(Color.black.opacity(0.55), lineWidth: 0.75)
+                }
+                .frame(width: capWidth, height: capHeight)
+                .shadow(color: .black.opacity(0.65), radius: 4, y: 3)
+                // Centred on the slot
+                .offset(y: capTop)
+                .frame(maxWidth: .infinity)
             }
             .contentShape(Rectangle())
             .gesture(

@@ -2,7 +2,8 @@
 <!-- Source artwork for the clear cassette. Rendered to PNG by tools/render-art.js.
      ?layer=front  everything on the front of the clear shell: edges, ribs, stickers,
                    label strip, rollers, screws and reflections (the plastic itself is see-through)
-     ?layer=hub    one clear reel hub -->
+     ?layer=hub    one clear reel hub
+     ?layer=grain  a tile of plastic grain -->
 <html><body style="margin:0;background:transparent"><script>
 const query = new URLSearchParams(location.search);
 const layer = query.get('layer') || 'front';
@@ -114,5 +115,13 @@ ${pockets}
 ${teeth}
 <path d="M2.6 6A8.4 8.4 0 0 1 7 2.2" fill="none" stroke="#fff" stroke-width=".3" stroke-linecap="round"/>
 </svg>`;
-document.body.innerHTML = layer === 'hub' ? hub : front;
+// A tile of fine speckle, laid over plastic surfaces to give them a moulded grain.
+const grain = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${W}">
+<filter id="g" x="0" y="0" width="100%" height="100%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" stitchTiles="stitch"/>
+  <feColorMatrix type="matrix" values=".6 .6 .6 0 -.4  .6 .6 .6 0 -.4  .6 .6 .6 0 -.4  0 0 0 0 1"/>
+</filter>
+<rect width="100%" height="100%" filter="url(#g)"/></svg>`;
+document.body.innerHTML = layer === 'hub' ? hub : layer === 'grain' ? grain : front;
 </script></body></html>
