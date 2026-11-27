@@ -4,7 +4,7 @@ import Foundation
 import Security
 import UIKit
 
-// Spotify, reached through its Web API. Cassety signs in with Spotify's own
+// Spotify, reached through its Web API. Casseti signs in with Spotify's own
 // login page (PKCE, so no secret is kept in the app), reads the library and
 // tells the Spotify app what to play. The audio is played by the Spotify app.
 
@@ -14,8 +14,8 @@ enum SpotifyConfig {
         (Bundle.main.object(forInfoDictionaryKey: "SpotifyClientID") as? String ?? "")
             .trimmingCharacters(in: .whitespaces)
     }
-    static let redirectURI = "cassety://spotify-callback"
-    static let callbackScheme = "cassety"
+    static let redirectURI = "casseti://spotify-callback"
+    static let callbackScheme = "casseti"
     static let scopes = [
         "user-read-playback-state", "user-modify-playback-state", "user-read-currently-playing",
         "playlist-read-private", "playlist-read-collaborative", "user-library-read",
@@ -32,11 +32,11 @@ struct SpotifyError: LocalizedError {
 
     var errorDescription: String? {
         switch kind {
-        case .notSetUp: return "Spotify is not set up in this copy of Cassety yet."
+        case .notSetUp: return "Spotify is not set up in this copy of Casseti yet."
         case .notSignedIn: return "Connect Spotify in Settings first."
         case .cancelled: return "Spotify was not connected."
         case .premiumRequired: return "Spotify only lets other apps start music on Premium accounts."
-        case .noDevice: return "Spotify needs to be open. Cassety has opened it; come back and press play again."
+        case .noDevice: return "Spotify needs to be open. Casseti has opened it; come back and press play again."
         case .notOwnPlaylist: return "Spotify only shares the songs of playlists you made or collaborate on."
         case .other: return detail.isEmpty ? "Spotify did not answer." : detail
         }
@@ -112,7 +112,7 @@ struct SpotifyPlaylist: Decodable, Hashable {
 }
 
 /// A list entry that is dropped, rather than failing the whole list, when
-/// Spotify sends something Cassety cannot read (a podcast, a gap).
+/// Spotify sends something Casseti cannot read (a podcast, a gap).
 struct Lossy<T: Decodable>: Decodable {
     let value: T?
     init(from decoder: Decoder) throws { value = try? T(from: decoder) }
@@ -425,7 +425,7 @@ final class SpotifyAPI {
         return me.id
     }
 
-    /// The playlists Spotify will play for Cassety: ones you made or collaborate on.
+    /// The playlists Spotify will play for Casseti: ones you made or collaborate on.
     func playlists() async throws -> [SpotifyPlaylist] {
         let me = try await currentUserID()
         let all = try await all(SpotifyPlaylist.self, "/me/playlists")

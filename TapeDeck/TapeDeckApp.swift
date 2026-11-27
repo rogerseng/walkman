@@ -125,7 +125,7 @@ extension View {
     /// appear until the cover is gone. `when` lets the view underneath stand
     /// down while its cover is up.
     func errorAlert(_ model: PlayerModel, when active: Bool = true) -> some View {
-        alert("Cassety", isPresented: Binding(
+        alert("Casseti", isPresented: Binding(
             get: { active && model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } })
         ) {

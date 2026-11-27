@@ -1,4 +1,4 @@
-# Cassety
+# Casseti
 
 A cassette player for Apple Music. Your playlists and albums are tapes on a shelf. Pick one and it drops into the deck, the reels turn, and the keys clunk.
 
@@ -6,7 +6,7 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 
 * Plays your Apple Music library and anything from the Apple Music catalogue (MusicKit).
 * Closed phone (or any ordinary phone screen): the whole screen is the body of a tape player with the cassette inside it. The cassette is as large as the screen allows and runs underneath the body and the keys. The smoked casing covers most of it, dimly showing what is underneath, and a clear window over the label and reels shows the tape itself. The look is eighties throughout: the Neon theme (deep purple, hot pink keys, a five colour stripe) is the default, and the Smoke and Yellow themes are there for a plainer deck. Glare on the body moves only when the phone moves: reflections slide as it tilts left and right, and a hot spot follows both tilts.
-* Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; six large keys (play, stop, fast forward, rewind, tape library, settings) sit in that column underneath them, on a solid plastic panel that is not see-through. Play and stop are a latching pair: pressing one in lets the other out. Stop holds the tape where it is. Play is orange, settings is black, and the library key carries the two-note music mark. On other phones the keys get their own strip. The panel, keys and fader are drawn as moulded parts: grained plastic, keys that stand proud of wells cut into the panel and sink when pressed, engraved symbols, and a metal fader cap in a recessed slot. The solid panel's inner edge is a shallow curve that comes closest to the tape window at mid height. A vertical volume fader stands on the panel beside the keys, exactly as tall as the window. Inside its slot a ladder of amber level lights is lit from the bottom up to the knob, never past it, and pulses while a tape plays. The pulse is for show: Apple Music does not let an app read the audio. The name Cassety is moulded faintly into the top left corner of the case. It sets the phone's volume and follows the side buttons.
+* Built for the iPhone Duo's outer display, 466 x 678 points. iOS reserves an 84 point column down one side for the camera, clock and status icons; six large keys (play, stop, fast forward, rewind, tape library, settings) sit in that column underneath them, on a solid plastic panel that is not see-through. Play and stop are a latching pair: pressing one in lets the other out. Stop holds the tape where it is. Play is orange, settings is black, and the library key carries the two-note music mark. On other phones the keys get their own strip. The panel, keys and fader are drawn as moulded parts: grained plastic, keys that stand proud of wells cut into the panel and sink when pressed, engraved symbols, and a metal fader cap in a recessed slot. The solid panel's inner edge is a shallow curve that comes closest to the tape window at mid height. A vertical volume fader stands on the panel beside the keys, exactly as tall as the window. Inside its slot a ladder of amber level lights is lit from the bottom up to the knob, never past it, and pulses while a tape plays. The pulse is for show: Apple Music does not let an app read the audio. The name Casseti is moulded faintly into the top left corner of the case. It sets the phone's volume and follows the side buttons.
 * Haptics: a firm tap when a key goes down, a lighter one when it springs back, a heavy thud for the cassette door, and a soft pulse four times a second while the tape winds.
 * The cassette is a clear one, built in layers. At the back is the inside of the shell: the slip sheet, the wells the reels turn in, the steel shield and the pressure pad's spring. On that sit the reels of wound tape, drawn turn upon turn, with clear hubs and the tape running down to the rollers. Over them is the see-through front: bright moulded edges and ridges, stickers, a label strip, guide rollers, black screws, hairline scratches and reflections. The artwork source is `tools/cassette-art.html`; `node tools/render-art.js` re-renders it.
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. The shelf shows each playlist and album as a cassette spine: an off-white card with the name handwritten on it and a band in one of the five stripe colours, on a deep purple shelf. Pick a tape, then close the phone to start it playing. The same keys as on the closed phone are there in a row (play, stop, fast forward, rewind, eject, settings), for screens that cannot fold.
@@ -18,7 +18,7 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 
 ## First run
 
-The first time it opens, Cassety shows a four page introduction: what it is, how the deck works, connecting Apple Music, and a few starting choices (iCloud sync, the lock screen tape, and the skin). It can be skipped, and shown again from Settings.
+The first time it opens, Casseti shows a four page introduction: what it is, how the deck works, connecting Apple Music, and a few starting choices (iCloud sync, the lock screen tape, and the skin). It can be skipped, and shown again from Settings.
 
 ## Themes
 
@@ -35,7 +35,7 @@ A theme is what the closed phone looks like: which player it is and what colour 
 | Click wheel, Black | A screen above a click wheel. Xcode builds only. |
 | Click wheel, Silver | The same in silver with a white wheel. Xcode builds only. |
 
-On the MP3 player, turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The four keys beside it are back, play/pause, previous and next; hold previous or next to wind the tape. Its menus are Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape, and Settings and Themes. It is Cassety's own design: a knurled dial with no buttons on it, keys set apart, and an amber display.
+On the MP3 player, turn the dial to scroll and press it to choose. While a song is showing, the dial changes the volume and a press plays or pauses. The four keys beside it are back, play/pause, previous and next; hold previous or next to wind the tape. Its menus are Music (Mixtapes, Playlists, Albums), Now Playing, Flip Tape, and Settings and Themes. It is Casseti's own design: a knurled dial with no buttons on it, keys set apart, and an amber display.
 
 The two click wheel themes resemble the iPod closely enough to risk rejection from the App Store, so they are for your own phone only. They appear when the app is run from Xcode onto a device (a Debug build) and are left out of the build archived for the App Store (a Release build). The switch is `includesClickWheel` in `Skin.swift`.
 
@@ -77,17 +77,17 @@ Sync needs the iCloud capability on the app's identifier. The project carries th
 
 ## Selling it
 
-The `store/` folder has what is needed to put Cassety on the App Store at $4.99: the listing text, a privacy policy, notes for App Review, and a checklist of what is done and what is left, including the risks to know about before submitting. Start with `store/checklist.md`.
+The `store/` folder has what is needed to put Casseti on the App Store at $4.99: the listing text, a privacy policy, notes for App Review, and a checklist of what is done and what is left, including the risks to know about before submitting. Start with `store/checklist.md`.
 
 ## Website
 
-The `website` folder is the site for cassety.com: a home page, the support page and the privacy policy, in flat bands of colour to match the app icon. It is plain files with nothing to build. `website/README.md` says how to put it online.
+The `website` folder is the site for casseti.com: a home page, the support page and the privacy policy, in flat bands of colour to match the app icon. It is plain files with nothing to build. `website/README.md` says how to put it online.
 
 ## Running it on your iPhone
 
 You need a Mac with Xcode 16 or later, an Apple Music subscription on the phone, and an Apple Developer Program membership (MusicKit needs it).
 
-1. Open `TapeDeck.xcodeproj` in Xcode. (The project and its folders keep the working name TapeDeck; the app installs as Cassety.)
+1. Open `TapeDeck.xcodeproj` in Xcode. (The project and its folders keep the working name TapeDeck; the app installs as Casseti.)
 2. Select the TapeDeck target, open Signing & Capabilities, and choose your team. If Xcode says a bundle identifier is taken, change both, keeping the widget one as the app one plus `.widgets`.
 3. Go to developer.apple.com, Certificates, Identifiers & Profiles, Identifiers. Open the identifier for your bundle ID, choose the App Services tab, tick MusicKit, and save.
 4. Plug in your iPhone, choose it as the run destination, and press Run.

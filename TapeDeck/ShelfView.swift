@@ -39,12 +39,12 @@ struct ShelfView: View {
                 case .authorized:
                     shelf
                 case .notDetermined:
-                    prompt(text: "Cassety needs access to Apple Music to load your tapes.",
+                    prompt(text: "Casseti needs access to Apple Music to load your tapes.",
                            button: "Connect Apple Music") {
                         Task { await model.requestAccess() }
                     }
                 default:
-                    prompt(text: "Apple Music access is turned off for Cassety. Turn on Media & Apple Music in Settings.",
+                    prompt(text: "Apple Music access is turned off for Casseti. Turn on Media & Apple Music in Settings.",
                            button: "Open Settings") {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             UIApplication.shared.open(url)

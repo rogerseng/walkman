@@ -69,7 +69,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Music service")
                 } footer: {
-                    Text("Cassety plays from one music service at a time. Apple Music needs a subscription. To disconnect, iOS asks you to switch off Media & Apple Music for Cassety in the Settings app.")
+                    Text("Casseti plays from one music service at a time. Apple Music needs a subscription. To disconnect, iOS asks you to switch off Media & Apple Music for Casseti in the Settings app.")
                 }
 
                 Section {
@@ -161,12 +161,12 @@ struct SettingsView: View {
                 } header: {
                     Text("How the deck works")
                 } footer: {
-                    Text("The tour walks you through the keys on the tape deck itself. The introduction is the short welcome shown the first time Cassety opens.")
+                    Text("The tour walks you through the keys on the tape deck itself. The introduction is the short welcome shown the first time Casseti opens.")
                 }
 
                 Section {
                     HStack {
-                        Text("Cassety")
+                        Text("Casseti")
                         Spacer()
                         Text(version).foregroundColor(.secondary)
                     }
@@ -186,7 +186,7 @@ struct SettingsView: View {
                 model.syncWithCloud()
             }
             .fileExporter(isPresented: $savingBackup, document: backup, contentType: .json,
-                          defaultFilename: "Cassety backup") { result in
+                          defaultFilename: "Casseti backup") { result in
                 if case .failure(let error) = result {
                     backupNote = "The backup could not be saved. \(error.localizedDescription)"
                 }
@@ -200,7 +200,7 @@ struct SettingsView: View {
                 Button("Open Settings") { openSystemSettings() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Only iOS can withdraw access. In Settings, switch off Media & Apple Music for Cassety. The tape in the deck will stop.")
+                Text("Only iOS can withdraw access. In Settings, switch off Media & Apple Music for Casseti. The tape in the deck will stop.")
             }
             .alert("Backup", isPresented: backupNoteShown) {
                 Button("OK", role: .cancel) {}

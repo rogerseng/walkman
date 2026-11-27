@@ -665,7 +665,7 @@ struct OpenTrayView: View {
         return VStack(spacing: 0) {
             // Title bar
             HStack {
-                Text(model.hasTape ? "Now Playing" : "Cassety")
+                Text(model.hasTape ? "Now Playing" : "Casseti")
                     .font(.system(size: 13, weight: .bold))
                 Spacer(minLength: 0)
                 Image(systemName: model.motion == .playing ? "play.fill" : "pause.fill")

@@ -2,7 +2,7 @@ import MusicKit
 import SwiftUI
 import UIKit
 
-/// The introduction shown the first time the app is opened: what Cassety is,
+/// The introduction shown the first time the app is opened: what Casseti is,
 /// how the deck works, connecting Apple Music, and a few choices to start with.
 struct OnboardingView: View {
     @EnvironmentObject private var model: PlayerModel
@@ -111,7 +111,7 @@ struct OnboardingView: View {
             Text("Connect Apple Music")
                 .font(Typeface.display(27))
                 .foregroundColor(.white)
-            Text("Cassety plays music from your Apple Music library and catalogue. It needs your permission, and an Apple Music subscription.")
+            Text("Casseti plays music from your Apple Music library and catalogue. It needs your permission, and an Apple Music subscription.")
                 .foregroundColor(.white.opacity(0.7))
 
             switch model.authStatus {

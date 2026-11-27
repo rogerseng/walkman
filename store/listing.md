@@ -1,4 +1,4 @@
-# App Store listing for Cassety
+# App Store listing for Casseti
 
 Paste these into App Store Connect. Character limits are Apple's.
 
@@ -6,7 +6,7 @@ Paste these into App Store Connect. Character limits are Apple's.
 
 | Field | Value |
 | --- | --- |
-| Name (30) | Cassety |
+| Name (30) | Casseti |
 | Subtitle (30) | A tape deck for your music |
 | Primary category | Music |
 | Secondary category | Entertainment |
@@ -21,7 +21,7 @@ Your albums and playlists, on tape. Two sides, real reels, keys that clunk. Flip
 
 ## Description (4000)
 
-Cassety turns your music into cassettes.
+Casseti turns your music into cassettes.
 
 Browse your library by playlist, artist, album or song, or search all of Apple Music. Whatever you pick becomes a tape with two sides. Drop it in, press play, and watch the reels turn. When side A runs out the play key pops up and the music stops. Flip the tape to carry on.
 
@@ -53,7 +53,7 @@ MORE
 • Open a folding iPhone and the player becomes a boombox, with the tape dropping in behind its door.
 • Your settings sync with iCloud.
 
-Cassety plays music from Apple Music. An Apple Music subscription is required.
+Casseti plays music from Apple Music. An Apple Music subscription is required.
 
 ## Keywords (100)
 
@@ -65,15 +65,15 @@ No other company's names are in the keywords. Words already in the name and subt
 
 | Field | What it needs |
 | --- | --- |
-| Support URL | `https://cassety.com/support.html` |
-| Privacy Policy URL | `https://cassety.com/privacy.html` |
-| Marketing URL | `https://cassety.com` |
+| Support URL | `https://casseti.com/support.html` |
+| Privacy Policy URL | `https://casseti.com/privacy.html` |
+| Marketing URL | `https://casseti.com` |
 
 These pages are in the `website` folder and need putting online first. See `website/README.md`.
 
 ## Age rating
 
-Cassety has no content of its own, but it plays whatever is in the buyer's Apple Music, which can include explicit songs. Suggested answers:
+Casseti has no content of its own, but it plays whatever is in the buyer's Apple Music, which can include explicit songs. Suggested answers:
 
 | Question | Answer |
 | --- | --- |
@@ -84,7 +84,7 @@ Cassety has no content of its own, but it plays whatever is in the buyer's Apple
 | User-generated content, messaging, chat | No |
 | Advertising | No |
 
-The phone's own content restrictions for explicit music still apply inside Cassety.
+The phone's own content restrictions for explicit music still apply inside Casseti.
 
 ## Content rights
 
@@ -107,4 +107,4 @@ Apple needs real screenshots taken from the running app, at the sizes it lists f
 
 ## App privacy answers ("nutrition label")
 
-Data collected: none. Cassety has no accounts, no analytics and no advertising, and sends nothing to its developer. Settings stay on the device and in the buyer's own iCloud.
+Data collected: none. Casseti has no accounts, no analytics and no advertising, and sends nothing to its developer. Settings stay on the device and in the buyer's own iCloud.

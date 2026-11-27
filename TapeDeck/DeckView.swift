@@ -691,7 +691,7 @@ struct Wordmark: View {
     var size: CGFloat = 22
 
     var body: some View {
-        Text("Cassety")
+        Text("Casseti")
             .font(Typeface.displayFixed(size))
             .tracking(size * 0.02)
     }
@@ -1266,7 +1266,7 @@ struct TapeEatenCard: View {
 /// It takes the colour of the text around it.
 struct BeamedNotes: View {
     /// The name the library key goes by where keys are told apart by symbol.
-    nonisolated static let symbol = "cassety.notes"
+    nonisolated static let symbol = "casseti.notes"
 
     var body: some View {
         GeometryReader { geo in

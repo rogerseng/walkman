@@ -940,7 +940,7 @@ final class PlayerModel: ObservableObject {
     /// checked first and said outright.
     func explain(_ error: Error, doing what: String) async -> String {
         if let subscription = try? await MusicSubscription.current, !subscription.canPlayCatalogContent {
-            return "\(what) Cassety plays music from Apple Music, and this Apple Account has no active Apple Music subscription. Music you have bought or added to your library may still play."
+            return "\(what) Casseti plays music from Apple Music, and this Apple Account has no active Apple Music subscription. Music you have bought or added to your library may still play."
         }
         return "\(what) \(error.localizedDescription)"
     }

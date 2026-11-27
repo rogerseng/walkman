@@ -170,7 +170,7 @@ enum Skin: String, CaseIterable, Identifiable {
     /// light below on pale.
     var engravingEdgeOffset: CGFloat { hasPalePanel ? 0.7 : -0.7 }
 
-    /// The faint Cassety name on the case.
+    /// The faint Casseti name on the case.
     var mark: Color {
         if self == .neon { return Self.hotPink.opacity(0.85) }
         if self == .blue { return Color.white.opacity(0.55) }

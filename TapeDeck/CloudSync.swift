@@ -114,7 +114,7 @@ final class CloudSync {
 
 /// Everything worth keeping, as one file: mixtapes and settings.
 struct Backup: Codable {
-    var app = "Cassety"
+    var app = "Casseti"
     var format = 1
     var created = Date()
     var library: MixtapeLibrary

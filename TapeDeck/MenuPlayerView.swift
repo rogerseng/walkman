@@ -61,7 +61,7 @@ struct MenuPlayerView: View {
 
         var title: String {
             switch self {
-            case .root: return "Cassety"
+            case .root: return "Casseti"
             case .music: return "Music"
             case .mixtapes: return "Mixtapes"
             case .playlists: return "Playlists"

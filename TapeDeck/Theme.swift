@@ -123,8 +123,8 @@ struct ThemePicker: View {
 /// Web pages the app links to from Settings. The pages are in the `website`
 /// folder. A row is shown only when its address is set.
 enum AppLinks {
-    static let privacyPolicy = "https://cassety.com/privacy.html"
-    static let support = "https://cassety.com/support.html"
+    static let privacyPolicy = "https://casseti.com/privacy.html"
+    static let support = "https://casseti.com/support.html"
 }
 
 /// The app's three typefaces, so every screen uses them the same way.

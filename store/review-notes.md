@@ -4,7 +4,7 @@ Paste this into "App Review Information, Notes" when you submit.
 
 ---
 
-Cassety is a music player that presents Apple Music albums and playlists as cassette tapes.
+Casseti is a music player that presents Apple Music albums and playlists as cassette tapes.
 
 **To test it you need an Apple Music subscription** on the test device, signed in. On first launch, go through the introduction and tap "Connect Apple Music". A short hands-on tour then starts on the player: it asks you to press each key in turn, and "End tour" on its card leaves it at any time. To play something, press the key with the music note to open the library, pick any album, and it will play.
 
@@ -18,4 +18,4 @@ Cassety is a music player that presents Apple Music albums and playlists as cass
 
 **Folding iPhone.** The app adapts to the closed and open displays of iPhone Duo and also runs on every other iPhone. It is an iPhone-only app.
 
-**Contact.** Roger Sengthavychith, support@cassety.com.
+**Contact.** Roger Sengthavychith, support@casseti.com.
