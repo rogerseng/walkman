@@ -160,6 +160,16 @@ struct DeckView: View {
                     .offset(x: faderX, y: window.maxY + 9)
                     .accessibilityHidden(true)
             }
+            // The tape has run out: say so in the window, with the way on
+            .overlay(alignment: .topLeading) {
+                if model.hasTape, model.sideEnded {
+                    EndOfSideCard()
+                        .frame(width: window.width - 28)
+                        .position(x: window.midX, y: window.midY)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: model.sideEnded)
             // The tour: the tape lit up when it is the thing to touch, and
             // the card saying what to do
             .overlay(alignment: .topLeading) {
@@ -207,7 +217,8 @@ struct DeckView: View {
     }
 
     private var underWindowNote: String? {
-        if let ended = model.endOfSideNote { return ended }
+        // The end of a side has its own card in the window.
+        guard model.endOfSideNote == nil else { return nil }
         guard model.hasTape, model.printedLabel, !model.trackTitle.isEmpty else { return nil }
         return model.trackTitle
     }
@@ -856,3 +867,51 @@ struct OutlinedWord: View {
         }
     }
 }
+
+/// Shown over the tape when a side has run out: which side ended, and a key
+/// to turn the tape over (or word that the other side is blank).
+struct EndOfSideCard: View {
+    @EnvironmentObject private var model: PlayerModel
+    @Environment(\.playerTheme) private var theme
+
+    var body: some View {
+        let other = model.sideLetter == "A" ? "B" : "A"
+        VStack(spacing: 10) {
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(theme.accentColor)
+            Text("End of side \(model.sideLetter)")
+                .font(Typeface.display(20))
+                .foregroundColor(.white)
+            if model.canFlip {
+                Text("Turn the tape over to keep listening.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+                Button {
+                    model.flipTape()
+                } label: {
+                    Text("Flip to side \(other)")
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 9)
+                }
+                .buttonStyle(PlainKeyButtonStyle())
+                .padding(.top, 2)
+            } else {
+                Text("The other side is blank. Rewind, or choose another tape.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.8))
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.black.opacity(0.84))
+                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(theme.accentColor.opacity(0.7), lineWidth: 1.5))
+        )
+        .shadow(color: .black.opacity(0.5), radius: 10, y: 5)
+    }
+}
+

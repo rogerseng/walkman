@@ -16,7 +16,6 @@ struct SettingsView: View {
     @AppStorage(Prefs.playOnClose) private var playOnCloseOn = true
     @AppStorage(Prefs.autoFlip) private var autoFlipOn = false
     @AppStorage(Prefs.tapeRamp) private var tapeRampOn = true
-    @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
     @AppStorage(Prefs.introSeen) private var introSeen = true
 
@@ -24,6 +23,7 @@ struct SettingsView: View {
     @State private var savingBackup = false
     @State private var choosingBackup = false
     @State private var backupNote: String?
+    @State private var disconnecting = false
 
     var body: some View {
         NavigationStack {
@@ -71,14 +71,6 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Toggle("Show the tape on the lock screen", isOn: $lockScreenTapeOn)
-                } header: {
-                    Text("Lock screen")
-                } footer: {
-                    Text("It keeps in step with the music while tape hiss is on. With hiss off, it shows the tape as it was when you left Cassety.")
-                }
-
-                Section {
                     Toggle("Sync with iCloud", isOn: $iCloudOn)
                     LabeledContent("Status", value: model.cloudStatus)
                     Button("Save a backup file") {
@@ -93,24 +85,34 @@ struct SettingsView: View {
                 } header: {
                     Text("iCloud and backup")
                 } footer: {
-                    Text("Sync keeps your mixtapes and these settings the same on every device signed in to your iCloud account. A backup file holds the same things and can be saved anywhere. Restoring brings back the tapes in the file and keeps any you have made since. Your Apple Music library is kept by Apple Music itself.")
+                    Text("Sync keeps these settings the same on every device signed in to your iCloud account. A backup file holds the same settings and can be saved anywhere. Your music library is kept by your music service.")
                 }
 
-                Section("Apple Music") {
+                // One music service at a time. Apple Music is the one built
+                // in; its access is granted and withdrawn in iOS Settings.
+                Section {
                     switch model.authStatus {
                     case .authorized:
-                        Label("Connected", systemImage: "checkmark.circle.fill")
+                        LabeledContent("Apple Music") {
+                            Label("Connected", systemImage: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                        }
+                        Button("Disconnect Apple Music") {
+                            disconnecting = true
+                        }
                     case .notDetermined:
+                        LabeledContent("Apple Music", value: "Not connected")
                         Button("Connect Apple Music") {
                             Task { await model.requestAccess() }
                         }
                     default:
-                        Button("Turn on access in Settings") {
-                            if let url = URL(string: UIApplication.openSettingsURLString) {
-                                UIApplication.shared.open(url)
-                            }
-                        }
+                        LabeledContent("Apple Music", value: "Access is off")
+                        Button("Turn on access in Settings") { openSystemSettings() }
                     }
+                } header: {
+                    Text("Music service")
+                } footer: {
+                    Text("Cassety plays from one music service at a time. Apple Music needs a subscription. To disconnect, iOS asks you to switch off Media & Apple Music for Cassety in the Settings app.")
                 }
 
                 Section("How the deck works") {
@@ -146,7 +148,7 @@ struct SettingsView: View {
                         Link("Help and support", destination: url)
                     }
                 } footer: {
-                    Text("Music is played by Apple Music and needs a subscription.")
+                    Text("Music is played by your music service and needs its subscription.")
                 }
             }
             .navigationTitle("Settings")
@@ -165,6 +167,12 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(ShelfBackground())
+            .confirmationDialog("Disconnect Apple Music?", isPresented: $disconnecting, titleVisibility: .visible) {
+                Button("Open Settings") { openSystemSettings() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Only iOS can withdraw access. In Settings, switch off Media & Apple Music for Cassety. The tape in the deck will stop.")
+            }
             .alert("Backup", isPresented: backupNoteShown) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -191,11 +199,16 @@ struct SettingsView: View {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             let count = try model.restore(from: Data(contentsOf: url))
-            backupNote = count == 1
-                ? "Restored your settings and 1 mixtape."
-                : "Restored your settings and \(count) mixtapes."
+            _ = count
+            backupNote = "Restored your settings."
         } catch {
             backupNote = "That file could not be restored. \(error.localizedDescription)"
+        }
+    }
+
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
         }
     }
 

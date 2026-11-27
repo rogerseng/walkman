@@ -16,7 +16,7 @@ Cassety is a music player. This page says what it does with your information. Th
 
 **Your Apple Music library.** With your permission, Cassety reads your Apple Music library and searches the Apple Music catalogue so it can show and play your music. This happens through Apple's own MusicKit on your device. What you listen to is not sent to the developer of Cassety. Apple's handling of it is covered by Apple's privacy policy.
 
-**Your mixtapes and settings.** The mixtapes you make, and your settings, are stored on your device. If iCloud sync is on, they are also stored in your own iCloud account so your other devices can use them. The developer of Cassety cannot see them. You can turn sync off in Cassety's settings.
+**Your settings.** Your settings are stored on your device. If iCloud sync is on, they are also stored in your own iCloud account so your other devices can use them. The developer of Cassety cannot see them. You can turn sync off in Cassety's settings.
 
 **Backup files.** If you save a backup file, it goes wherever you choose to put it. Cassety does not keep a copy anywhere else.
 

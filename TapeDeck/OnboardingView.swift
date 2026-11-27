@@ -10,7 +10,6 @@ struct OnboardingView: View {
     var done: () -> Void
 
     @AppStorage(Prefs.iCloudSync) private var iCloudOn = true
-    @AppStorage(Prefs.lockScreenTape) private var lockScreenTapeOn = true
     @State private var page = 0
     @Environment(\.playerTheme) private var theme
 
@@ -99,7 +98,7 @@ struct OnboardingView: View {
                 tip("forward.fill", "Skip or wind", "Tap fast forward or rewind to skip a song. Hold to wind the tape.")
                 tip("arrow.triangle.2.circlepath", "Two sides", "When a side runs out the music stops. Double-tap the tape to turn it over.")
                 tip("rectangle.portrait.on.rectangle.portrait", "Open and close", "Open the phone to choose a tape. Close it to start playing.")
-                tip("music.note", "Your tapes", "The music key opens your shelf, where you can also record mixtapes.")
+                tip("music.note", "Your tapes", "The music key opens your shelf: playlists, artists, albums and songs, and a search of Apple Music.")
             }
         }
     }
@@ -155,10 +154,7 @@ struct OnboardingView: View {
                 .foregroundColor(.white.opacity(0.7))
 
             VStack(spacing: 0) {
-                Toggle("Sync mixtapes and settings with iCloud", isOn: $iCloudOn)
-                    .padding(.vertical, 10)
-                Divider().overlay(Color.white.opacity(0.15))
-                Toggle("Show the tape on the lock screen", isOn: $lockScreenTapeOn)
+                Toggle("Sync settings with iCloud", isOn: $iCloudOn)
                     .padding(.vertical, 10)
                 Divider().overlay(Color.white.opacity(0.15))
                 ThemePicker()

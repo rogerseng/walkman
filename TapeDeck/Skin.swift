@@ -253,9 +253,6 @@ struct PlayerTheme: Equatable {
     var secondaryColor: Color { Self.color(secondary) }
     var accentInkColor: Color { Self.color(accentInk) }
 
-    /// Nine numbers for the lock screen: the background, the accent, and the
-    /// colour for symbols drawn on the accent.
-    var lockScreen: [Double] { background + accent + accentInk }
 }
 
 extension Skin {

@@ -37,7 +37,6 @@ A REAL DECK
 YOUR TAPES
 • Every tape is labelled in marker pen. Albums wear a label in the colours of their cover art.
 • Open an album or playlist to see its songs, and start the tape at any one of them.
-• Record your own mixtapes. Pick a C-60 or a C-90, add songs to each side, and stop when the tape is full.
 
 MADE FOR FOLDING PHONES
 • Closed, the whole screen is the player.
@@ -49,16 +48,16 @@ TWO PLAYERS IN ONE
 • MP3 player: a display of menus and a white jog dial. Turn to scroll, press to choose.
 
 MORE
-• The tape on your Lock Screen, with keys.
-• Tape deck in retro 80s, black, yellow or blue. MP3 player in retro 80s or black. The colours carry through the whole app and the Lock Screen.
+• Tape deck in retro 80s, black, yellow or blue. MP3 player in retro 80s or black. The colours carry through the whole app.
 • A hands-on tour teaches the keys by having you press them.
-• Your mixtapes and settings sync with iCloud, and can be saved to a backup file.
+• Open a folding iPhone and the player becomes a boombox, with the tape dropping in behind its door.
+• Your settings sync with iCloud.
 
 Cassety plays music from Apple Music. An Apple Music subscription is required.
 
 ## Keywords (100)
 
-cassette,mixtape,retro,player,vintage,80s,album,reels,analog,hifi,boombox,nostalgia,lofi,stereo
+cassette,retro,player,vintage,80s,album,reels,analog,hifi,boombox,nostalgia,lofi,stereo,playlist
 
 No other company's names are in the keywords. Words already in the name and subtitle (tape, deck, music) are left out because Apple indexes those anyway.
 
@@ -104,9 +103,8 @@ Apple needs real screenshots taken from the running app, at the sizes it lists f
 3. The MP3 player with its white dial.
 4. The open screen with the tape shelf.
 5. The library: playlists, artists, albums and songs.
-6. Recording a mixtape.
-7. The Lock Screen tape.
+6. The open folding phone: the album's songs beside the boombox.
 
 ## App privacy answers ("nutrition label")
 
-Data collected: none. Cassety has no accounts, no analytics and no advertising, and sends nothing to its developer. Mixtapes and settings stay on the device and in the buyer's own iCloud.
+Data collected: none. Cassety has no accounts, no analytics and no advertising, and sends nothing to its developer. Settings stay on the device and in the buyer's own iCloud.

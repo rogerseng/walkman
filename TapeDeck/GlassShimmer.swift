@@ -35,11 +35,9 @@ final class TiltSensor {
     }
 }
 
-/// Glare on the clear case, kept faint. It is driven only by how the phone is
-/// moved: a broad sheen and a thin streak slide across as it is tilted left
-/// and right, and a soft hot spot travels with both tilts, the way a ceiling
-/// light does on a real piece of plastic. With Reduce Motion on, or
-/// with no motion sensor, the glare stays still.
+/// Glare on the clear case: one soft, faint glow that drifts as the phone is
+/// tilted, the way a ceiling light does on plastic. No streaks or lines.
+/// With Reduce Motion on, or with no motion sensor, it stays still.
 struct GlassShimmer: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -54,11 +52,9 @@ struct GlassShimmer: View {
             let roll = still ? 0 : tilt.roll
             let pitch = still ? 0 : tilt.pitch
             ZStack {
-                band(at: 0.35 + roll * 0.45, width: 0.55, strength: 0.05, in: size)
-                band(at: 0.62 + roll * 0.6, width: 0.08, strength: 0.09, in: size)
                 // Hot spot
                 Circle()
-                    .fill(RadialGradient(colors: [Color.white.opacity(min(1, 0.09 * strength)), .clear],
+                    .fill(RadialGradient(colors: [Color.white.opacity(min(1, 0.07 * strength)), .clear],
                                          center: .center, startRadius: 0,
                                          endRadius: size.width * 0.45))
                     .frame(width: size.width * 0.9, height: size.width * 0.9)
@@ -92,14 +88,6 @@ struct GlassShimmer: View {
     /// The glare holds still when Reduce Motion is on or the setting is off.
     private var still: Bool { reduceMotion || !glareOn }
 
-    private func band(at position: Double, width: Double, strength: Double, in size: CGSize) -> some View {
-        Rectangle()
-            .fill(LinearGradient(colors: [.clear, Color.white.opacity(min(1, strength * self.strength)), .clear],
-                                 startPoint: .leading, endPoint: .trailing))
-            .frame(width: size.width * width, height: size.height * 2.2)
-            .rotationEffect(.degrees(22))
-            .offset(x: (position - 0.5) * size.width)
-    }
 }
 
 /// Brushed aluminium, for the plates and trim on the player body.

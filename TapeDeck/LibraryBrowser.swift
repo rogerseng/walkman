@@ -300,6 +300,7 @@ struct LibrarySongRow: View {
 /// that track.
 struct CollectionDetail: View {
     let tape: Tape
+    @EnvironmentObject private var model: PlayerModel
     @Environment(\.playerTheme) private var theme
     @Environment(\.pickTape) private var pick
     @State private var tracks: [Track] = []
@@ -356,15 +357,24 @@ struct CollectionDetail: View {
                 Button {
                     pick(tape, startingAt: track.id)
                 } label: {
+                    let current = isPlaying(track)
                     HStack(spacing: 12) {
-                        Text("\(number + 1)")
-                            .font(.system(size: 14, weight: .medium).monospacedDigit())
-                            .foregroundColor(.white.opacity(0.4))
-                            .frame(width: 26, alignment: .trailing)
+                        Group {
+                            if current {
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(theme.accentColor)
+                            } else {
+                                Text("\(number + 1)")
+                                    .font(.system(size: 14, weight: .medium).monospacedDigit())
+                                    .foregroundColor(.white.opacity(0.4))
+                            }
+                        }
+                        .frame(width: 26, alignment: .trailing)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(track.title)
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(.white)
+                                .font(.system(size: 15, weight: current ? .bold : .medium))
+                                .foregroundColor(current ? theme.accentColor : .white)
                             if showsArtist {
                                 Text(track.artistName)
                                     .font(.system(size: 12))
@@ -383,6 +393,7 @@ struct CollectionDetail: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(isPlaying(track) ? .isSelected : [])
                 .listRowBackground(Color.clear)
                 .listRowSeparatorTint(Color.white.opacity(0.1))
             }
@@ -404,6 +415,12 @@ struct CollectionDetail: View {
             }
             loading = false
         }
+    }
+
+    /// The song the deck is on, when this is the tape in it.
+    private func isPlaying(_ track: Track) -> Bool {
+        model.currentTape?.id == tape.id && model.trackTitle == track.title
+            && (model.trackArtist.isEmpty || model.trackArtist == track.artistName)
     }
 
     /// Playlists mix artists, so each track says whose it is.

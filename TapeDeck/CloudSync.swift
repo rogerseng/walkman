@@ -17,7 +17,7 @@ final class CloudSync {
 
     /// The settings that travel between devices.
     static let syncedPrefs = [Prefs.sounds, Prefs.hiss, Prefs.haptics, Prefs.glare, Prefs.levelLights,
-                              Prefs.playOnClose, Prefs.autoFlip, Prefs.lockScreenTape]
+                              Prefs.playOnClose, Prefs.autoFlip]
 
     /// Settings that are words rather than switches.
     static let syncedChoices = [Prefs.skin, Prefs.player]

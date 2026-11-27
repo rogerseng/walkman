@@ -63,6 +63,12 @@ enum Haptics {
         notch.prepare()
     }
 
+    /// The tape has run out: the system's own "attention" pattern.
+    static func endOfSide() {
+        guard on else { return }
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+    }
+
     /// One beat of the motor while the tape winds.
     static func windTick() {
         guard on else { return }

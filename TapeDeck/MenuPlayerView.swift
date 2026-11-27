@@ -515,7 +515,7 @@ struct MenuPlayerView: View {
         case .root:
             var list = [Row(id: "music", title: "Music", action: .open(.music)),
                         // Everything the tape deck's shelf has: search,
-                        // artists, songs, and recording mixtapes
+                        // artists and songs
                         Row(id: "shelf", title: "Browse and Search", action: .shelf)]
             if model.hasTape {
                 list.append(Row(id: "now", title: "Now Playing", action: .open(.nowPlaying)))
@@ -528,11 +528,10 @@ struct MenuPlayerView: View {
             list.append(Row(id: "settings", title: "Settings and Themes", action: .settings))
             return list
         case .music:
-            return [Row(id: "mixtapes", title: "Mixtapes", action: .open(.mixtapes)),
-                    Row(id: "playlists", title: "Playlists", action: .open(.playlists)),
+            return [Row(id: "playlists", title: "Playlists", action: .open(.playlists)),
                     Row(id: "albums", title: "Albums", action: .open(.albums))]
         case .mixtapes:
-            return tapeRows(model.mixtapes.map { Tape.mixtape($0) })
+            return []
         case .playlists:
             return tapeRows(model.libraryPlaylists)
         case .albums:

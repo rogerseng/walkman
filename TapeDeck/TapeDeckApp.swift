@@ -43,7 +43,7 @@ struct ContentView: View {
             Group {
                 if open {
                     HStack(spacing: 0) {
-                        ShelfView(playOnPick: false, onPick: {})
+                        ShelfView(playOnPick: false, onPick: {}, showsCurrentTape: true)
                             .frame(width: geo.size.width * 0.5)
                         OpenTrayView()
                     }

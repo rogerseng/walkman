@@ -2,9 +2,9 @@
 
 ## Done in this repository
 
-* **Privacy manifest.** `PrivacyInfo.xcprivacy` in the app and the widget extension, declaring no tracking, no data collection, and the app's use of stored settings.
+* **Privacy manifest.** `PrivacyInfo.xcprivacy` in the app, declaring no tracking, no data collection, and the app's use of stored settings.
 * **Export compliance.** The app declares it uses no non-exempt encryption, so App Store Connect will not ask each time.
-* **No silent background audio.** The app used to play silence to stay awake behind the Lock Screen. App Review rejects that, so it is gone. The Lock Screen tape now keeps in step with the music while tape hiss is on.
+* **No silent background audio.** The app pauses its audio engine whenever nothing audible is playing in the background. There is no lock screen widget; the system's own media controls are used.
 * **Click-wheel skins held back.** They are built but switched off for the store build (see Risks).
 * **App icon.** In the project, with the dark and tinted versions newer iPhones can show. A copy is in this folder as `app-icon-1024.png`.
 * **Settings reachable everywhere.** Every screen and theme has a way to Settings, where the theme is changed.
@@ -15,7 +15,7 @@
 1. **Join the Apple Developer Program** if you have not ($99 a year). Selling requires it.
 2. **Sign the Paid Apps agreement** in App Store Connect, under Business, and enter your bank and tax details. Without it a paid app cannot go on sale.
 3. **Get the app building.** Done: the app builds in Debug and Release with no warnings and runs on a real iPhone Duo.
-4. **Test on a real phone** with an Apple Music subscription: playing, flipping, winding, mixtapes, sync between two devices, backup and restore, the Lock Screen tape.
+4. **Test on a real phone** with an Apple Music subscription: playing, flipping, winding, the open-phone boombox, and settings sync between two devices.
 5. **Turn on MusicKit** (under App Services) for the app ID `com.rogerseng.tapedeck` at developer.apple.com, and check iCloud is on for it.
 6. **Take real screenshots** (see `listing.md`).
 7. **Put the website online.** Buy cassety.com and publish the `website` folder to it, following `website/README.md`. It carries the privacy policy and support pages Apple requires. The app's Settings already links to them. Set up the `support@cassety.com` address, or change it in the pages.
@@ -24,9 +24,9 @@
 
 ## Risks to know about before you submit
 
-**A paid app that plays Apple Music.** Apple's rules say an app may not "require payment or indirectly monetize access to the Apple Music service". Paid Apple Music players are on the store today, so a purchase price for the app itself has been accepted. But the rule is worded broadly and a reviewer could read it against you. The review notes make the case. If it is rejected on this point, the fallback is a free app with a one-time purchase that unlocks extras which have nothing to do with playback, such as skins and mixtapes.
+**A paid app that plays Apple Music.** Apple's rules say an app may not "require payment or indirectly monetize access to the Apple Music service". Paid Apple Music players are on the store today, so a purchase price for the app itself has been accepted. But the rule is worded broadly and a reviewer could read it against you. The review notes make the case. If it is rejected on this point, the fallback is a free app with a one-time purchase that unlocks extras which have nothing to do with playback, such as skins.
 
-**Background audio.** The app keeps the audio background mode so the tape hiss carries on with the music. Reviewers sometimes question this mode. The review notes explain it. If it is refused, the fallback is to remove the mode, which means no hiss in the background and a Lock Screen tape that is not kept up to date.
+**Background audio.** The app keeps the audio background mode so the tape hiss carries on with the music. Reviewers sometimes question this mode. The review notes explain it. If it is refused, the fallback is to remove the mode, which means no hiss in the background.
 
 **The MP3 player.** It was redesigned so it does not look like an iPod: a jog dial with no buttons on it, separate keys, an amber display, and Cassety's own case colours. That removes the obvious reason for a rejection but does not guarantee approval. Do not call it an iPod, or compare it to one, anywhere in the listing.
 

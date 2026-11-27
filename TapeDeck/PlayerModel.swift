@@ -14,6 +14,8 @@ final class PlayerModel: ObservableObject {
         didSet { if motion != oldValue { motionChanged(from: oldValue) } }
     }
     @Published private(set) var hasTape = false
+    /// The album or playlist in the deck, for showing its songs.
+    @Published private(set) var currentTape: Tape?
     @Published private(set) var trackTitle = ""
     @Published private(set) var trackArtist = ""
     /// Position in, and length of, the current track.
@@ -75,7 +77,6 @@ final class PlayerModel: ObservableObject {
 
     private let player = ApplicationMusicPlayer.shared
     private let sounds = TapeSounds()
-    private let lockScreen = LockScreenTape()
     private let cloud = CloudSync()
     private var library = MixtapeStore.load()
     private var sides: [TapeSide] = []
@@ -187,25 +188,6 @@ final class PlayerModel: ObservableObject {
 
     // MARK: Mixtapes
 
-    /// Songs from the Apple Music catalogue, for recording onto a mixtape.
-    func searchSongs(_ term: String) async -> [MixSong] {
-        let term = term.trimmingCharacters(in: .whitespaces)
-        guard !term.isEmpty else { return [] }
-        do {
-            var request = MusicCatalogSearchRequest(term: term, types: [Song.self])
-            request.limit = 20
-            let response = try await request.response()
-            return response.songs.map {
-                MixSong(id: $0.id.rawValue, title: $0.title, artist: $0.artistName, duration: $0.duration ?? 0)
-            }
-        } catch {
-            if !Task.isCancelled {
-                errorMessage = "Search failed. \(error.localizedDescription)"
-            }
-            return []
-        }
-    }
-
     func save(_ mixtape: Mixtape) {
         library.put(mixtape)
         libraryChanged()
@@ -293,6 +275,34 @@ final class PlayerModel: ObservableObject {
         playKey()
     }
 
+    /// Puts a tape in, or, if that tape is already in the deck and a song on
+    /// it was chosen, winds straight to that song without taking it out.
+    func put(_ tape: Tape, startingAt trackID: MusicItemID?, autoPlay: Bool) {
+        if let trackID, hasTape, !swapping, currentTape?.id == tape.id {
+            for (number, side) in sides.enumerated() {
+                guard let index = side.index(of: trackID) else { continue }
+                resetTransport()
+                lastKeyPress = Date()
+                sideIndex = number
+                sideEnded = false
+                elapsed = 0
+                progress = side.duration > 0 ? side.start(of: index) / side.duration : 0
+                setQueue(side: side, startAt: index)
+                pressFeedback()
+                promise(.playing)
+                startTape()
+                return
+            }
+        }
+        insert(tape, autoPlay: autoPlay, startingAt: trackID)
+    }
+
+    /// True when the other side has something on it to turn over to.
+    var canFlip: Bool {
+        let other = 1 - sideIndex
+        return hasTape && other < sides.count && !sides[other].isBlank
+    }
+
     /// Ejects whatever is in the deck and drops the new tape in. With
     /// `autoPlay` it then presses play; without, it waits for the play key or
     /// for the phone to be closed. With `startingAt`, the tape is wound on to
@@ -308,8 +318,8 @@ final class PlayerModel: ObservableObject {
                 sounds.play(.eject)
                 Haptics.door()
                 player.stop()
-                withAnimation(.easeIn(duration: 0.25)) { hasTape = false }
-                await pause(seconds: 0.6)
+                withAnimation(.easeIn(duration: 0.4)) { hasTape = false }
+                await pause(seconds: 0.8)
             }
             do {
                 let loaded = try await loadSides(of: tape)
@@ -333,6 +343,7 @@ final class PlayerModel: ObservableObject {
                 let side = loaded[first]
                 progress = side.duration > 0 ? side.start(of: startIndex) / side.duration : 0
                 trackIndex = startIndex
+                currentTape = tape
                 tapeTitle = tape.title
                 tapeSubtitle = tape.subtitle
                 printedLabel = tape.hasPrintedLabel
@@ -351,7 +362,7 @@ final class PlayerModel: ObservableObject {
                     try? await Task.sleep(nanoseconds: 180_000_000)
                     Haptics.door()
                 }
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { hasTape = true }
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.75)) { hasTape = true }
                 events.send(.inserted)
                 if autoPlay {
                     await pause(seconds: 0.55)
@@ -441,8 +452,9 @@ final class PlayerModel: ObservableObject {
         Haptics.door()
         player.stop()
         player.queue = []
-        withAnimation(.easeIn(duration: 0.25)) { hasTape = false }
+        withAnimation(.easeIn(duration: 0.4)) { hasTape = false }
         sides = []
+        currentTape = nil
         sideIndex = 0
         sideEnded = false
         progress = 0
@@ -766,6 +778,7 @@ final class PlayerModel: ObservableObject {
         if windPosition >= side.duration - 0.5 {
             sideEnded = true
             progress = 1
+            Haptics.endOfSide()
             refresh()
             return
         }
@@ -878,6 +891,7 @@ final class PlayerModel: ObservableObject {
                duration <= 0 || duration - elapsed < 3 || elapsed < 1.5 {
                 sideEnded = true
                 progress = 1
+                Haptics.endOfSide()
                 // Auto reverse, for those who have it switched on
                 let other = 1 - sideIndex
                 if Prefs.isOn(Prefs.autoFlip), other < sides.count, !sides[other].isBlank {
@@ -896,7 +910,6 @@ final class PlayerModel: ObservableObject {
             if !hasTape {
                 if motion != .stopped { motion = .stopped }
                 sounds.keepAlive = false
-                lockScreen.end()
             }
             return
         }
@@ -984,21 +997,11 @@ final class PlayerModel: ObservableObject {
         syncLockScreen()
     }
 
-    /// Keeps the lock screen tape current, and keeps the app awake behind the
-    /// lock screen so it can do that. A tape left paused for ten minutes is put
-    /// away so nothing stale is left showing and no battery is wasted.
+    /// Keeps the hiss going with the music behind the lock screen, and lets it
+    /// go once the tape has been stopped or left paused for ten minutes.
     private func syncLockScreen() {
         let parked = motion == .paused
             && Date().timeIntervalSince(pausedSince ?? Date()) > 600
-        guard motion != .stopped, !parked, Prefs.isOn(Prefs.lockScreenTape) else {
-            sounds.keepAlive = false
-            lockScreen.end()
-            return
-        }
-        sounds.keepAlive = true
-        lockScreen.sync(title: tapeTitle, subtitle: trackLine, isPlaying: motion == .playing,
-                        elapsed: elapsed, duration: duration,
-                        tapeProgress: progress, side: sideLetter, tint: labelColor?.rgb,
-                        theme: Theme.shownSkin().theme.lockScreen)
+        sounds.keepAlive = motion != .stopped && !parked
     }
 }

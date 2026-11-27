@@ -12,10 +12,8 @@ A cassette player for Apple Music. Your playlists and albums are tapes on a shel
 * Open phone (a large, wide screen): the tape shelf on the left and the chosen tape on the right. The shelf shows each playlist and album as a cassette spine: an off-white card with the name handwritten on it and a band in one of the five stripe colours, on a deep purple shelf. Pick a tape, then close the phone to start it playing. The same keys as on the closed phone are there in a row (play, stop, fast forward, rewind, eject, settings), for screens that cannot fold.
 * It behaves like tape. The reels show where you are on the whole side, not in the current song: the left pack shrinks and the right one grows across the side, and each reel turns at the rate its pack size calls for.
 * Two sides. Every album and playlist is split into side A and side B of about equal length. When a side runs out the play key pops up and the music stops. Double-tap the tape to turn it over. Turn it over part way through and, as with a real cassette, you land as far from the end of the other side as you were from the start of this one.
-* Mixtapes. Pick a blank C-60 or C-90, name it, and add songs from Apple Music to each side until the tape is full. A song that is too long for the tape left on a side cannot be added. Mixtapes are kept on the phone.
 * Labels come from the music. An album tape has a printed label with the album's title and artist, in the colours of its cover art, and the clear shell is tinted the same colour. The song that is playing is shown on the casing under the window. Playlists and mixtapes have a paper label with the name and current track written by hand.
 * Winding. Tap fast forward or rewind to skip a song. Hold either and the deck winds the tape as an old one would: the music stops, the reels spin up to speed, and the tape runs on through song after song until you let go or it runs out. Music picks up from wherever the tape stopped.
-* Lock screen tape: while a tape is in the deck, a Live Activity shows the same clear cassette on the lock screen (and its reels in the Dynamic Island) with previous, play / pause and next keys. The hubs step round once a second, because iOS does not allow free running animation there. A tape left paused for ten minutes is taken off the lock screen.
 * Tape deck sounds: key clunks, door and eject, tape hiss while playing, motor whir while winding. They are generated in code and mix over the music. The speaker button on the deck turns them off. They are not muted by the silent switch, because the app has to hold a playback audio session to stay awake behind the lock screen.
 
 ## First run
@@ -65,16 +63,14 @@ Opened from the black key at the foot of the column.
 | Level lights in the volume slot | The amber lights under the knob | On |
 | Play when the phone is closed | A tape chosen with the phone open starts when it shuts | On |
 | Flip at the end of a side | Turns the tape over by itself when a side runs out | Off |
-| Show the tape on the lock screen | The Live Activity. It keeps in step with the music while tape hiss is on | On |
-| Sync with iCloud | Keeps mixtapes and settings the same across your devices | On |
+| Sync with iCloud | Keeps settings the same across your devices | On |
 
 Settings also shows whether Apple Music is connected, with a button to connect or to open the system settings, and a short guide to the deck.
 
 ## iCloud sync and backup
 
-* Sync. Mixtapes and settings are kept in iCloud's key-value store and merged on every device signed in to the same account. If two devices have changed the same mixtape, the more recent change wins. A deleted mixtape stays deleted everywhere. The sync switch itself is per device.
-* Backup file. Settings has "Save a backup file", which writes one JSON file holding the mixtapes and settings to wherever you choose: Files, iCloud Drive, AirDrop and so on. "Restore from a backup file" reads one back. Restoring sets the settings to the backup's and brings back its mixtapes, keeping any made since.
-* The mixtape file also lives in the app's documents folder, so the phone's own iCloud or computer backup includes it.
+* Sync. Settings are kept in iCloud's key-value store and merged on every device signed in to the same account. If two devices have changed the same mixtape, the more recent change wins. A deleted mixtape stays deleted everywhere. The sync switch itself is per device.
+* Backup file. Settings has "Save a backup file", which writes one JSON file holding the settings to wherever you choose: Files, iCloud Drive, AirDrop and so on. "Restore from a backup file" reads one back. Restoring sets the settings to the backup's and brings back its mixtapes, keeping any made since.
 * Not covered: your Apple Music library and playlists, which Apple Music keeps itself, and which tape was in the deck.
 
 Sync needs the iCloud capability on the app's identifier. The project carries the entitlement in `Config/TapeDeck.entitlements`; with automatic signing Xcode registers it when you pick your team.
@@ -92,7 +88,7 @@ The `website` folder is the site for cassety.com: a home page, the support page 
 You need a Mac with Xcode 16 or later, an Apple Music subscription on the phone, and an Apple Developer Program membership (MusicKit needs it).
 
 1. Open `TapeDeck.xcodeproj` in Xcode. (The project and its folders keep the working name TapeDeck; the app installs as Cassety.)
-2. Select the TapeDeck target, open Signing & Capabilities, and choose your team. Do the same for the TapeDeckWidgets target. If Xcode says a bundle identifier is taken, change both, keeping the widget one as the app one plus `.widgets`.
+2. Select the TapeDeck target, open Signing & Capabilities, and choose your team. If Xcode says a bundle identifier is taken, change both, keeping the widget one as the app one plus `.widgets`.
 3. Go to developer.apple.com, Certificates, Identifiers & Profiles, Identifiers. Open the identifier for your bundle ID, choose the App Services tab, tick MusicKit, and save.
 4. Plug in your iPhone, choose it as the run destination, and press Run.
 5. On first launch, open the shelf and tap Connect Apple Music.
@@ -115,7 +111,6 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `TapeDeckApp.swift` | App entry and the closed / open layout switch |
 | `PlayerModel.swift` | Apple Music access, library, search, playback, sides, flipping and key handling |
 | `TapeModels.swift` | Tapes, their two sides, mixtapes and where mixtapes are stored |
-| `MixtapeEditor.swift` | Recording and editing a mixtape |
 | `TapeSounds.swift` | Synthesised sound effects |
 | `CassetteView.swift` | The cassette and its reels |
 | `DeckView.swift` | The closed phone: player body, cassette door and key strip |
@@ -131,8 +126,5 @@ These came from developer write-ups, not from a device, so check them in Xcode's
 | `CloudSync.swift` | iCloud sync of mixtapes and settings, and the backup file format |
 | `VolumeFader.swift` | The vertical volume fader and its link to the system volume |
 | `ShelfView.swift` | The tape shelf and search |
-| `LockScreenTape.swift` | Starts and updates the lock screen Live Activity |
-| `Shared/TapeActivity.swift` | Data and key actions shared by the app and the widget extension |
-| `TapeDeckWidgets/` | The lock screen and Dynamic Island views, and the reel font |
 | `tools/make_reel_font.py` | Regenerates the reel font |
 | `Config/` | Info.plist additions for the two targets |
