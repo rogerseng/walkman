@@ -13,7 +13,7 @@ struct TapeDeckWidgets: WidgetBundle {
 private enum Palette {
     static let body = Color(white: 0.07)
     static let ink = Color(red: 0.07, green: 0.10, blue: 0.33)
-    static let orange = Color(red: 0.96, green: 0.48, blue: 0.13)
+    static let accent = Color(white: 0.92)
     static let oxide = Color(red: 0.24, green: 0.18, blue: 0.14)
 }
 
@@ -80,7 +80,7 @@ struct LockScreenTapeView: View {
                         ProgressView(value: state.progress)
                     }
                 }
-                .tint(Palette.orange)
+                .tint(Palette.accent)
                 TapeKeys(isPlaying: state.isPlaying)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -194,11 +194,11 @@ struct TapeKeys: View {
     private func key(_ symbol: String, accent: Bool) -> some View {
         Image(systemName: symbol)
             .font(.system(size: 14, weight: .bold))
-            .foregroundColor(.white)
+            .foregroundColor(accent ? Color(white: 0.10) : .white)
             .frame(maxWidth: .infinity)
             .frame(height: 30)
             .background(RoundedRectangle(cornerRadius: 6)
-                .fill(accent ? Palette.orange.opacity(0.9) : Color.white.opacity(0.22)))
+                .fill(accent ? Palette.accent.opacity(0.92) : Color.white.opacity(0.22)))
             .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.white.opacity(0.3), lineWidth: 0.75))
     }
 }

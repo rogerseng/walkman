@@ -1,9 +1,10 @@
 import SwiftUI
 
 /// The closed phone: the whole screen is the body of a tape player in dark
-/// clear plastic. The cassette sits inside it at full size: the compartment
-/// and its clear door take up the whole face, and the body's edge and the
-/// column of keys frame it.
+/// plastic with the cassette inside it. The cassette is as large as the screen
+/// allows and runs underneath the body and the keys. The smoked body covers
+/// most of it, dimly showing what is underneath, and a clear window over the
+/// label and reels shows the tape itself.
 ///
 /// Laid out for the iPhone Duo's outer display: 466 x 678 points, with an
 /// 84 point column down one side that iOS reports as a safe area inset. The
@@ -34,18 +35,20 @@ struct DeckView: View {
             let railLeading = rail && insets.leading > insets.trailing
             HStack(spacing: 0) {
                 if railLeading { keyColumn(insets: insets, rail: true, leading: true) }
-                // The compartment runs to the edges of the screen, leaving
-                // only a rim of the body showing around it.
-                compartment.padding(6)
+                // The face itself is drawn in the background, full screen.
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if !model.hasTape { openShelf() }
+                    }
                 if !railLeading { keyColumn(insets: insets, rail: rail, leading: false) }
             }
             .frame(width: geo.size.width + insets.leading + insets.trailing,
                    height: geo.size.height + insets.top + insets.bottom)
             .background(
                 ZStack {
-                    // The body of the player: dark smoked plastic
-                    LinearGradient(colors: [Color(white: 0.20), Color(white: 0.11), Color(white: 0.07)],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                    Color(white: 0.03)
+                    tapeUnderCasing
                     clearCase
                 }
             )
@@ -53,26 +56,30 @@ struct DeckView: View {
         }
     }
 
-    // MARK: Cassette compartment
+    // MARK: Tape and casing
 
-    /// The compartment the cassette sits in: a recessed well, the cassette
-    /// seated in it (on end when the space is taller than wide, head opening
-    /// toward the keys), and the clear door over the top.
-    private var compartment: some View {
+    /// The part of the cassette the window shows, in millimetres of its
+    /// 100 x 63 shell: the label strip and both reels. Everything else, the
+    /// ends, the guide rollers and the head opening, is under the casing.
+    private let windowOnCassette = CGRect(x: 19, y: 2.5, width: 62, height: 40)
+
+    /// The cassette filling the whole screen (on end when the screen is
+    /// taller than wide, head opening toward the keys), with the player's
+    /// smoked casing over it and a window cut through the casing.
+    private var tapeUnderCasing: some View {
         GeometryReader { geo in
-            let upright = geo.size.height > geo.size.width
-            let long = upright ? geo.size.height : geo.size.width
-            let short = upright ? geo.size.width : geo.size.height
-            // Fill the compartment. The cassette may run a hair past the
+            let size = geo.size
+            let upright = size.height > size.width
+            let long = upright ? size.height : size.width
+            let short = upright ? size.width : size.height
+            // As big as the screen allows. It may run a little past the
             // edges, but never far enough to lose the label.
             let fit = min(long / 100, short / 63)
             let fill = max(long / 100, short / 63)
             let scale = min(fill, fit * 1.04)
-            let shape = RoundedRectangle(cornerRadius: 26)
+            let window = windowRect(in: size, upright: upright, scale: scale)
+            let opening = RoundedRectangle(cornerRadius: 20)
             ZStack {
-                // The well, with shadow falling in from its edges
-                shape.fill(LinearGradient(colors: [Color.black, Color(white: 0.06)],
-                                          startPoint: .top, endPoint: .bottom))
                 if model.hasTape {
                     CassetteView(title: model.tapeTitle,
                                  subtitle: model.trackLine,
@@ -84,27 +91,54 @@ struct DeckView: View {
                 } else {
                     emptyWell(upright: upright, length: 100 * scale)
                 }
-                shape.strokeBorder(Color.black.opacity(0.8), lineWidth: 7).blur(radius: 5)
 
-                // The clear door
-                shape.fill(Color.white.opacity(0.03))
-                shape.fill(LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.02), .clear],
-                                          startPoint: .topLeading, endPoint: .center))
+                // The casing: smoked plastic with the window cut out of it
+                Path { path in
+                    path.addRect(CGRect(origin: .zero, size: size))
+                    path.addRoundedRect(in: window, cornerSize: CGSize(width: 20, height: 20))
+                }
+                .fill(LinearGradient(colors: [Color(white: 0.16).opacity(0.86),
+                                              Color(white: 0.08).opacity(0.86),
+                                              Color(white: 0.05).opacity(0.86)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing),
+                      style: FillStyle(eoFill: true))
+
+                // The window: shadow where the casing overhangs the tape,
+                // a trace of glass, and the bright cut edge of the plastic.
+                Group {
+                    opening.strokeBorder(Color.black.opacity(0.75), lineWidth: 8).blur(radius: 5)
+                        .clipShape(opening)
+                    opening.fill(LinearGradient(colors: [Color.white.opacity(0.10), Color.white.opacity(0.02), .clear],
+                                                startPoint: .topLeading, endPoint: .center))
+                    opening.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.75), Color.white.opacity(0.18),
+                                                                 Color.white.opacity(0.45)],
+                                                        startPoint: .topLeading, endPoint: .bottomTrailing),
+                                         lineWidth: 2.5)
+                    opening.strokeBorder(Color.white.opacity(0.10), lineWidth: 1).padding(-6)
+                }
+                .frame(width: window.width, height: window.height)
+                .position(x: window.midX, y: window.midY)
             }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .clipShape(shape)
-            // Bright moulded edge of the door
-            .overlay(
-                shape.strokeBorder(LinearGradient(colors: [Color.white.opacity(0.75), Color.white.opacity(0.18),
-                                                           Color.white.opacity(0.45)],
-                                                  startPoint: .topLeading, endPoint: .bottomTrailing),
-                                   lineWidth: 2.5)
-            )
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if !model.hasTape { openShelf() }
-            }
+            .frame(width: size.width, height: size.height)
+            .clipped()
         }
+    }
+
+    /// Where `windowOnCassette` lands on screen.
+    private func windowRect(in size: CGSize, upright: Bool, scale: CGFloat) -> CGRect {
+        let w = windowOnCassette
+        if upright {
+            // Turned a quarter turn: the cassette's top edge is at the left
+            // of the screen and its left end is at the bottom.
+            let left = size.width / 2 - 63 * scale / 2
+            let bottom = size.height / 2 + 100 * scale / 2
+            return CGRect(x: left + w.minY * scale, y: bottom - w.maxX * scale,
+                          width: w.height * scale, height: w.width * scale)
+        }
+        let left = size.width / 2 - 100 * scale / 2
+        let top = size.height / 2 - 63 * scale / 2
+        return CGRect(x: left + w.minX * scale, y: top + w.minY * scale,
+                      width: w.width * scale, height: w.height * scale)
     }
 
     /// The well with nothing in it: the two drive spindles and a prompt.
@@ -306,7 +340,7 @@ struct TapeKey: View {
                 Text(label).font(.system(size: 7, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.6)
             }
         }
-        .foregroundColor(.white)
+        .foregroundColor(accent ? Color(white: 0.10) : .white)
         .padding(.horizontal, 2)
         .frame(maxWidth: .infinity)
         .frame(height: height)
@@ -353,9 +387,10 @@ struct TapeKey: View {
 
     private func keyColors(down: Bool) -> [Color] {
         if accent {
+            // The play key: plain bright plastic, so it stands out without colour
             return down
-                ? [Color(red: 0.80, green: 0.36, blue: 0.08).opacity(0.90), Color(red: 0.90, green: 0.44, blue: 0.12).opacity(0.90)]
-                : [Color(red: 0.99, green: 0.58, blue: 0.20).opacity(0.85), Color(red: 0.92, green: 0.42, blue: 0.08).opacity(0.85)]
+                ? [Color(white: 0.62).opacity(0.95), Color(white: 0.74).opacity(0.95)]
+                : [Color(white: 0.96).opacity(0.95), Color(white: 0.74).opacity(0.95)]
         }
         return down
             ? [Color.white.opacity(0.10), Color.white.opacity(0.18)]
